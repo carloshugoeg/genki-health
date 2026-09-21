@@ -27,4 +27,4 @@ Then claim, branch, and build that ticket. The handoff is `handoff.md`. The exit
 | `queue/backlog.md` | Ordered list after NOW |
 | `queue/tickets/` | Full ticket bodies |
 
-GitHub issues, when they exist, are mirrors of `queue/tickets/`. If the issue and the file disagree, the file in this directory is the one the agent executes, and the PR must update the issue to match.
+GitHub issues, when they exist, are mirrors of `queue/tickets/`. They do not exist yet. The blocker is in `queue/backlog.md`. If an issue and a ticket file ever disagree, the file in this directory is the one the agent executes.
