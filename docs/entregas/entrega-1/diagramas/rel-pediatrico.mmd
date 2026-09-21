@@ -1,0 +1,84 @@
+%% Reconstruido desde la sección 7.5. Centro médico pediátrico (MySQL).
+%% Reutiliza sin cambios acceso, paciente, atención y facturación. Este archivo solo tiene las relaciones propias.
+%% Tipos lógicos. Supuesto 15.
+erDiagram
+    RESPONSABLE {
+        int id_responsable PK
+        int id_paciente FK
+        string tipo_documento
+        string numero_documento
+        string nombre_completo
+        string parentesco
+        string telefono
+        string correo
+        string direccion
+        bool es_principal
+    }
+    ANTECEDENTE_PERINATAL {
+        int id_expediente PK
+        int semanas_gestacion
+        string tipo_parto
+        int peso_nacimiento_g
+        string talla_nacimiento_cm
+        int apgar_1min
+        int apgar_5min
+        string complicaciones
+    }
+    MEDICION_ANTROPOMETRICA {
+        int id_medicion PK
+        int id_consulta UK
+        string fecha_medicion
+        int edad_meses
+        string peso_kg
+        string talla_cm
+        string perimetro_cefalico_cm
+        string percentil_peso_edad
+        string percentil_talla_edad
+        string percentil_pc_edad
+        string puntuacion_z_peso
+        string puntuacion_z_talla
+        string version_referencia
+    }
+    VACUNA {
+        int id_vacuna PK
+        string nombre UK
+        string enfermedad_previene
+        int dosis_totales
+        string via_administracion
+        int edad_recomendada_meses
+    }
+    DOSIS_VACUNA {
+        int id_dosis PK
+        int id_expediente FK
+        int id_vacuna FK
+        int id_profesional FK
+        int numero_dosis
+        string fecha_programada
+        string fecha_aplicacion
+        string lote
+        string fabricante
+        string sitio_aplicacion
+        string estado
+        string reaccion_adversa
+    }
+    HITO_DESARROLLO {
+        int id_hito PK
+        string nombre UK
+        string area
+        int edad_esperada_meses
+    }
+    SEGUIMIENTO_HITO {
+        int id_expediente PK
+        int id_hito PK
+        bool alcanzado
+        string fecha_evaluacion
+        string observacion
+    }
+    VACUNA ||--o{ DOSIS_VACUNA : "se compone de"
+    HITO_DESARROLLO ||--o{ SEGUIMIENTO_HITO : "evalua"
+%% RESPONSABLE.id_paciente apunta a PACIENTE (rel-paciente-expediente.mmd). Participación total del paciente.
+%% ANTECEDENTE_PERINATAL.id_expediente es PK y FK. Extensión 1:1 del expediente.
+%% MEDICION_ANTROPOMETRICA.id_consulta es FK y UK. Como máximo una medición por consulta.
+%% UK compuesta: DOSIS_VACUNA (id_expediente, id_vacuna, numero_dosis).
+%% SEGUIMIENTO_HITO PK compuesta (id_expediente, id_hito).
+%% Un solo responsable principal por paciente. Índice único parcial en PostgreSQL. En MySQL, la sección 7.5 lo deja a la aplicación más un índice funcional.

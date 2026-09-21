@@ -1,0 +1,29 @@
+// Vista general Chen. Sección 6.3. Reconstrucción, no el PNG original.
+digraph er_pediatrico {
+  rankdir=LR;
+  graph [fontname="Helvetica", label="Centro médico pediátrico — relaciones propias sección 6.3", labelloc=t];
+  node [fontname="Helvetica"];
+  edge [fontname="Helvetica", arrowhead=none];
+
+  node [shape=box];
+  PACIENTE; EXPEDIENTE; CONSULTA; VACUNA; HITO_DESARROLLO;
+  node [shape=box, peripheries=2];
+  RESPONSABLE; ANTECEDENTE_PERINATAL; DOSIS_VACUNA; SEGUIMIENTO_HITO; MEDICION_ANTROPOMETRICA;
+
+  node [shape=diamond];
+  representa [label="Representa a\nN:1 total del paciente"];
+  nace [label="Nace con\n1:1 identificadora"];
+  registra [label="Registra\n1:1 parcial"];
+  cumple [label="Se cumple con\n1:N"];
+  compone [label="Se compone de\n1:N"];
+  evalua [label="Evalúa\n1:N"];
+  corresponde [label="Corresponde a\nFK id_hito, sección 7.5"];
+
+  RESPONSABLE -> representa -> PACIENTE;
+  EXPEDIENTE -> nace -> ANTECEDENTE_PERINATAL;
+  CONSULTA -> registra -> MEDICION_ANTROPOMETRICA;
+  EXPEDIENTE -> cumple -> DOSIS_VACUNA;
+  VACUNA -> compone -> DOSIS_VACUNA;
+  EXPEDIENTE -> evalua -> SEGUIMIENTO_HITO;
+  HITO_DESARROLLO -> corresponde -> SEGUIMIENTO_HITO;
+}

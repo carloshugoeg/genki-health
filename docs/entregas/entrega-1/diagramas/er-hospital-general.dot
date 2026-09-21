@@ -1,0 +1,37 @@
+// Vista general Chen. Sección 6.2. Reconstrucción, no el PNG original.
+digraph er_hospital {
+  rankdir=LR;
+  graph [fontname="Helvetica", label="Hospital general — vista ER sección 6.2", labelloc=t];
+  node [fontname="Helvetica"];
+  edge [fontname="Helvetica", arrowhead=none];
+
+  node [shape=box];
+  PACIENTE; EXPEDIENTE; CONSULTA; CITA; DIAGNOSTICO; TRATAMIENTO; RECETA; MEDICAMENTO; SERVICIO; ADMISION; ORDEN_ESTUDIO;
+  node [shape=box, peripheries=2];
+  CAMA; NOTA_EVOLUCION;
+
+  node [shape=diamond];
+  posee [label="Posee\n1:1 total"];
+  contiene_c [label="Contiene\n1:N"];
+  concreta [label="Se concreta en\n1:1 parcial"];
+  produce [label="Produce\n1:N"];
+  origina [label="Origina\n1:N"];
+  emite [label="Emite\n1:1 parcial"];
+  detalla [label="Detalla\nM:N"];
+  contiene_cama [label="Contiene\n1:N identificadora"];
+  aloja [label="Aloja\n1:N"];
+  documenta [label="Documenta\n1:N identificadora"];
+  solicita [label="Solicita\n1:N"];
+
+  PACIENTE -> posee -> EXPEDIENTE;
+  EXPEDIENTE -> contiene_c -> CONSULTA;
+  CITA -> concreta -> CONSULTA;
+  CONSULTA -> produce -> DIAGNOSTICO;
+  DIAGNOSTICO -> origina -> TRATAMIENTO;
+  CONSULTA -> emite -> RECETA;
+  RECETA -> detalla -> MEDICAMENTO;
+  SERVICIO -> contiene_cama -> CAMA;
+  CAMA -> aloja -> ADMISION;
+  ADMISION -> documenta -> NOTA_EVOLUCION;
+  CONSULTA -> solicita -> ORDEN_ESTUDIO;
+}

@@ -1,0 +1,13 @@
+%% Vista general ER. Sección 6.3. Centro médico pediátrico.
+%% El núcleo de paciente, expediente y atención es el del hospital. Aquí solo las cuatro relaciones propias.
+erDiagram
+    RESPONSABLE }|--|| PACIENTE : "representa a"
+    EXPEDIENTE ||--|| ANTECEDENTE_PERINATAL : "nace con"
+    CONSULTA ||--o| MEDICION_ANTROPOMETRICA : "registra"
+    EXPEDIENTE ||--o{ DOSIS_VACUNA : "se cumple con"
+    VACUNA ||--o{ DOSIS_VACUNA : "se compone de"
+    EXPEDIENTE ||--o{ SEGUIMIENTO_HITO : "evalua"
+    HITO_DESARROLLO ||--o{ SEGUIMIENTO_HITO : "corresponde a"
+%% Participación total de PACIENTE en Representa a. No se abre expediente sin responsable.
+%% ANTECEDENTE_PERINATAL es entidad débil 1:1 del expediente.
+%% La sección 6.3 nombra Evalúa entre expediente y seguimiento. La arista "corresponde a" es la FK id_hito de la sección 7.5, no un nombre de relación de la sección 6.3.
