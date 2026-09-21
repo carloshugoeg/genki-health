@@ -1,0 +1,20 @@
+%% Vista general ER. Sección 6.2. Hospital general. Solo las relaciones que esa sección enumera.
+%% Notación de cardinalidad de Mermaid, no la notación de Chen. La Chen detallada es el ticket en curso.
+erDiagram
+    PACIENTE ||--|| EXPEDIENTE : "posee"
+    EXPEDIENTE ||--o{ CONSULTA : "contiene"
+    CITA |o--o| CONSULTA : "se concreta en"
+    CONSULTA ||--o{ DIAGNOSTICO : "produce"
+    DIAGNOSTICO ||--o{ TRATAMIENTO : "origina"
+    CONSULTA ||--o| RECETA : "emite"
+    RECETA }o--o{ MEDICAMENTO : "detalla"
+    SERVICIO ||--o{ CAMA : "contiene"
+    CAMA ||--o{ ADMISION : "aloja"
+    ADMISION ||--o{ NOTA_EVOLUCION : "documenta"
+    CONSULTA ||--o{ ORDEN_ESTUDIO : "solicita"
+%% Participación total en ambos extremos de PACIENTE–EXPEDIENTE.
+%% CITA–CONSULTA es parcial. Una consulta puede existir sin cita.
+%% CONSULTA cerrada produce al menos un diagnóstico. Por eso el lado diagnóstico es obligatorio en esta lectura.
+%% RECETA–MEDICAMENTO es la única M:N. Atributos en el rombo, tabla DETALLE_RECETA en el modelo relacional.
+%% SERVICIO–CAMA y ADMISION–NOTA_EVOLUCION son relaciones identificadoras.
+%% CAMA aloja varias admisiones en el tiempo y solo una activa.

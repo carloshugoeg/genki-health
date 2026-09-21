@@ -1,0 +1,62 @@
+%% Reconstruido desde el esquema textual de la Entrega I.
+%% No es la figura PNG original del PDF.
+%% Los tipos int/string son marcadores lógicos. El supuesto 15 deja los tipos físicos para la Entrega II.
+%% Una columna UK marcada aquí es única por sí sola. Las claves únicas compuestas van en comentarios.
+
+%% Módulo de facturación. Sección 7.4. Núcleo compartido.
+erDiagram
+    SERVICIO_FACTURABLE {
+        string codigo_servicio PK
+        int id_institucion FK
+        string nombre
+        string tipo
+        string precio_unitario
+        string unidad
+        bool afecto_iva
+        bool vigente
+    }
+    FACTURA {
+        int id_factura PK
+        int id_institucion FK
+        int id_paciente FK
+        int id_usuario_emite FK
+        string serie
+        int numero
+        string fecha_emision
+        string nombre_receptor
+        string nit_receptor
+        string subtotal
+        string descuento
+        string impuesto
+        string total
+        string cobertura_seguro
+        string saldo_pendiente
+        string estado
+        string motivo_anulacion
+        string autorizacion_fel
+    }
+    DETALLE_FACTURA {
+        int id_factura PK
+        int linea PK
+        int id_cargo UK
+        string descripcion
+        int cantidad
+        string precio_unitario
+        string subtotal_linea
+    }
+    PAGO {
+        int id_pago PK
+        int id_factura FK
+        int id_usuario_recibe FK
+        string fecha_hora
+        string monto
+        string metodo
+        string referencia
+        bool anulado
+    }
+    FACTURA ||--|{ DETALLE_FACTURA : "linea"
+    FACTURA ||--o{ PAGO : "abona"
+%% UK compuesta: FACTURA (serie, numero). La PK sigue siendo id_factura.
+%% DETALLE_FACTURA.id_cargo es UK. Un cargo se factura una sola vez.
+%% total, subtotal_linea y saldo_pendiente se almacenan a propósito. Sección 8.4.
+%% El vínculo de DETALLE_FACTURA con CARGO está en rel-personal-insumos.mmd.

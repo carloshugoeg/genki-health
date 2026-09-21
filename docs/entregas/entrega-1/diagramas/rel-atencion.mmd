@@ -1,0 +1,113 @@
+%% Reconstruido desde el esquema textual de la Entrega I.
+%% No es la figura PNG original del PDF.
+%% Los tipos int/string son marcadores lógicos. El supuesto 15 deja los tipos físicos para la Entrega II.
+%% Una columna UK marcada aquí es única por sí sola. Las claves únicas compuestas van en comentarios.
+
+%% Módulo de atención clínica. Sección 7.4.
+erDiagram
+    CITA {
+        int id_cita PK
+        int id_paciente FK
+        int id_profesional FK
+        int id_especialidad FK
+        string fecha_hora
+        int duracion_minutos
+        string motivo
+        string estado
+        int id_usuario_registra FK
+        string fecha_creacion
+    }
+    CONSULTA {
+        int id_consulta PK
+        int id_expediente FK
+        int id_profesional FK
+        int id_cita FK
+        string fecha_hora_inicio
+        string fecha_hora_fin
+        string tipo
+        string motivo_consulta
+        string enfermedad_actual
+        string exploracion_fisica
+        string plan
+        string estado
+    }
+    SIGNOS_VITALES {
+        int id_signos PK
+        int id_consulta UK
+        string fecha_hora_toma
+        string presion_sistolica
+        string presion_diastolica
+        string frecuencia_cardiaca
+        string frecuencia_respiratoria
+        string temperatura_c
+        string saturacion_oxigeno
+        string peso_kg
+        string talla_cm
+    }
+    CATALOGO_CIE10 {
+        string codigo_cie10 PK
+        string descripcion
+        string capitulo
+    }
+    DIAGNOSTICO {
+        int id_diagnostico PK
+        int id_consulta FK
+        string codigo_cie10 FK
+        string descripcion
+        string tipo
+        bool es_principal
+        string fecha_registro
+    }
+    TRATAMIENTO {
+        int id_tratamiento PK
+        int id_diagnostico FK
+        string tipo
+        string descripcion
+        string indicaciones
+        string fecha_inicio
+        string fecha_fin_estimada
+        string estado
+    }
+    MEDICAMENTO {
+        int id_medicamento PK
+        string nombre_generico
+        string nombre_comercial
+        string principio_activo
+        string concentracion
+        string forma_farmaceutica
+        string presentacion
+        bool requiere_receta
+        bool activo
+    }
+    RECETA {
+        int id_receta PK
+        int id_consulta UK
+        int id_profesional FK
+        string folio UK
+        string fecha_emision
+        string observaciones
+        string estado
+    }
+    DETALLE_RECETA {
+        int id_receta PK
+        int id_medicamento PK
+        string dosis
+        string via_administracion
+        int frecuencia_horas
+        int duracion_dias
+        int cantidad
+        string indicaciones
+    }
+    CITA |o--o| CONSULTA : "se concreta en"
+    CONSULTA ||--o| SIGNOS_VITALES : "mide"
+    CONSULTA ||--o{ DIAGNOSTICO : "produce"
+    CATALOGO_CIE10 |o--o{ DIAGNOSTICO : "codifica"
+    DIAGNOSTICO ||--o{ TRATAMIENTO : "origina"
+    CONSULTA ||--o| RECETA : "emite"
+    RECETA ||--o{ DETALLE_RECETA : "detalla"
+    MEDICAMENTO ||--o{ DETALLE_RECETA : "prescribe"
+%% UK compuesta: CITA (id_profesional, fecha_hora).
+%% DETALLE_RECETA resuelve la única M:N del modelo. PK (id_receta, id_medicamento).
+%% SIGNOS_VITALES.id_consulta es FK y UK. Como máximo un juego de signos por consulta.
+%% RECETA.id_consulta es UK. Como máximo una receta por consulta.
+%% IMC no se almacena.
