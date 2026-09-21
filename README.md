@@ -12,6 +12,8 @@ Los agentes no eligen el alcance. El siguiente trabajo es un solo ticket.
 2. Leer `poteto-mode/queue/NOW.md`.
 3. Hacer ese ticket y nada más.
 
+El mapa de capacidades está en `poteto-mode/feature-map.md`. No es otro backlog.
+
 Carlos Hugo Escobar y Héctor Jordin Adolfo García Coyoy deciden la arquitectura y el modelo. La implementación se delega. Cursor trabaja los tickets de Carlos. Claude trabaja los de Jordin.
 
 ## Entrega I

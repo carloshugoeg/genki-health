@@ -26,5 +26,6 @@ Then claim, branch, and build that ticket. The handoff is `handoff.md`. The exit
 | `queue/NOW.md` | The one ticket in progress or next |
 | `queue/backlog.md` | Ordered list after NOW |
 | `queue/tickets/` | Full ticket bodies |
+| `feature-map.md` | Entregas and capabilities. Not a second queue |
 
 GitHub issues, when they exist, are mirrors of `queue/tickets/`. They do not exist yet. The blocker is in `queue/backlog.md`. If an issue and a ticket file ever disagree, the file in this directory is the one the agent executes.
