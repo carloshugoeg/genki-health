@@ -16,6 +16,10 @@ Humans own architecture and design. Agents implement the current ticket. Carlos 
 
 If the ticket says `needs-human`, do not pick it. Leave `NOW.md` on the first ticket that an agent can finish, and stop if every remaining ticket needs a human.
 
+## Progress
+
+In the same change as the work, update that ticket's `Status`, the matching row in `poteto-mode/feature-map.md` (and the rollup at the top of that file), and `poteto-mode/queue/NOW.md` when the current ticket changes. Do not save those updates for a later commit.
+
 ## Scope
 
 Entrega I only, until those tickets are done. Do not scaffold the app, choose an ORM, or add entities. The approved architecture note at `docs/superpowers/specs/2026-08-27-genki-health-architecture-and-agent-governance-design.md` is the Entrega II design. It is not permission to start that work.

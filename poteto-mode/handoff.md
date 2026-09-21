@@ -12,11 +12,12 @@ Edit `docs/progress/TASKS.md`. Set the ticket to `In Progress`, with owner and d
 2. `docs/progress/journal/YYYY-MM-DD-<ticket-id>.md` says what changed, which decision was already locked, and what the next ticket is.
 3. `docs/progress/TASKS.md` sets the ticket to `Done` only in the PR that should merge. Until merge, leave it `In Progress`.
 4. Move `queue/NOW.md` to the next ticket in `queue/backlog.md` that is not `needs-human` and whose dependencies are done or in review. Leave the finished ticket in the backlog with status `in review`.
-5. Open the PR with the template. Link the ticket id.
+5. In that same change, set the ticket `Status` and update every matching row and the rollup in `feature-map.md`. The finished ticket stays `now` on the map while it is `in review`. The ticket `NOW.md` now names becomes `now`.
+6. Open the PR with the template. Link the ticket id.
 
 ## Blocked
 
-If the work needs a design choice that is not in `decisions/locked.md`, add the question to `decisions/needs-human.md`, set the ticket to `Blocked` in `TASKS.md`, and stop. Do not pick the next ticket in the same session to "stay busy" unless `NOW.md` was this blocked ticket and the backlog has another unblocked ticket. In that case, point `NOW.md` at the unblocked ticket and stop after the blocker note. The next session starts clean.
+If the work needs a design choice that is not in `decisions/locked.md`, add the question to `decisions/needs-human.md`, set the ticket to `Blocked` in `TASKS.md` and on the feature map, and stop. Do not pick the next ticket in the same session to "stay busy" unless `NOW.md` was this blocked ticket and the backlog has another unblocked ticket. In that case, point `NOW.md` at the unblocked ticket, set that ticket's feature-map rows to `now`, and stop after the blocker note. The next session starts clean.
 
 ## Dependencies
 

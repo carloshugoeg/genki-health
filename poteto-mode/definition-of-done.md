@@ -19,3 +19,4 @@ For any ticket, these are also required.
 - Locked decisions are untouched.
 - `needs-human` items are untouched.
 - The PR description names the ticket id and the next ticket.
+- The matching rows and the rollup in `feature-map.md` match this ticket, and `queue/NOW.md` is the current ticket.
