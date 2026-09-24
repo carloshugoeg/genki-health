@@ -1,8 +1,9 @@
 # E1-02 Dibujar diagramas Chen del núcleo clínico
 
-- Status: now
-- Owner: either
-- Agent: either
+- Status: in progress
+- Owner: Carlos Hugo Escobar / Cursor
+- Agent: Cursor
+- Claimed: 2026-09-24 by Carlos Hugo Escobar / Cursor
 - Depends on: none
 - Needs human: no
 
