@@ -1,9 +1,9 @@
 # E1-03 Dibujar diagramas Chen de facturación, personal e insumos
 
-- Status: backlog
+- Status: now
 - Owner: either
 - Agent: either
-- Depends on: E1-02
+- Depends on: E1-02 (in review; start work after merge)
 - Needs human: no
 
 ## What to build

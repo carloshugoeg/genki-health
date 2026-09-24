@@ -1,0 +1,114 @@
+// Chen detallado. Sección 6.4.1. Núcleo paciente y expediente.
+// Símbolos: ver clave Graphviz en README.md (sección 6.1).
+digraph chen_6_4_1 {
+  rankdir=LR;
+  splines=true;
+  overlap=false;
+  nodesep=0.35;
+  ranksep=0.55;
+  graph [fontname="Helvetica", label="6.4.1 Paciente y expediente clínico (núcleo común)", labelloc=t, fontsize=14];
+  node [fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9, arrowhead=none];
+
+  // Entidades fuertes
+  node [shape=box, style=solid, peripheries=1];
+  PACIENTE;
+  EXPEDIENTE;
+
+  // Entidad débil
+  node [shape=box, peripheries=2];
+  CONTACTO_EMERGENCIA;
+
+  // Relaciones
+  node [shape=diamond, style=solid, peripheries=1, height=0.7, width=1.1];
+  Posee [label="Posee"];
+
+  // Relación identificadora
+  node [shape=diamond, peripheries=2, height=0.7, width=1.1];
+  Declara [label="Declara"];
+
+  // Atributos de PACIENTE
+  node [shape=ellipse, style=solid, peripheries=1, width=0, height=0];
+  id_paciente [label=<<U>id_paciente</U>>];
+  id_institucion_p [label="id_institucion"];
+  tipo_documento;
+  numero_documento;
+  nombre [label="nombre"];
+  primer_nombre;
+  segundo_nombre;
+  primer_apellido;
+  segundo_apellido;
+  fecha_nacimiento;
+  sexo;
+  tipo_sangre;
+  telefono [label="telefono", peripheries=2];
+  correo;
+  direccion;
+  id_municipio;
+  fecha_registro;
+  estado_p [label="estado"];
+  edad [label="edad", style=dashed];
+
+  // Atributos de EXPEDIENTE
+  id_expediente [label=<<U>id_expediente</U>>];
+  numero_expediente;
+  fecha_apertura;
+  estado_e [label="estado"];
+  fecha_archivo;
+  motivo_archivo;
+  observacion_archivo;
+
+  // Atributos de CONTACTO_EMERGENCIA (clave parcial subrayada y punteada)
+  nombre_completo [label=<<U>nombre_completo</U>>, style=dashed];
+  parentesco;
+  telefono_c [label="telefono"];
+  telefono_alterno;
+  es_principal;
+
+  // Posee: 1:1, participación total en ambos extremos (línea gruesa)
+  PACIENTE -> Posee [penwidth=3, headlabel="1", labeldistance=1.5];
+  Posee -> EXPEDIENTE [penwidth=3, taillabel="1", labeldistance=1.5];
+
+  // Declara: identificadora; paciente parcial (0..N contactos), contacto total
+  PACIENTE -> Declara [penwidth=1, headlabel="1", labeldistance=1.5];
+  Declara -> CONTACTO_EMERGENCIA [penwidth=3, taillabel="N", labeldistance=1.5];
+
+  // Atributos → PACIENTE
+  id_paciente -> PACIENTE;
+  id_institucion_p -> PACIENTE;
+  tipo_documento -> PACIENTE;
+  numero_documento -> PACIENTE;
+  nombre -> PACIENTE;
+  fecha_nacimiento -> PACIENTE;
+  sexo -> PACIENTE;
+  tipo_sangre -> PACIENTE;
+  telefono -> PACIENTE;
+  correo -> PACIENTE;
+  direccion -> PACIENTE;
+  id_municipio -> PACIENTE;
+  fecha_registro -> PACIENTE;
+  estado_p -> PACIENTE;
+  edad -> PACIENTE;
+
+  // Compuesto nombre → componentes (sección 5.1)
+  nombre -> primer_nombre;
+  nombre -> segundo_nombre;
+  nombre -> primer_apellido;
+  nombre -> segundo_apellido;
+
+  // Atributos → EXPEDIENTE
+  id_expediente -> EXPEDIENTE;
+  numero_expediente -> EXPEDIENTE;
+  fecha_apertura -> EXPEDIENTE;
+  estado_e -> EXPEDIENTE;
+  fecha_archivo -> EXPEDIENTE;
+  motivo_archivo -> EXPEDIENTE;
+  observacion_archivo -> EXPEDIENTE;
+
+  // Atributos → CONTACTO_EMERGENCIA
+  nombre_completo -> CONTACTO_EMERGENCIA;
+  parentesco -> CONTACTO_EMERGENCIA;
+  telefono_c -> CONTACTO_EMERGENCIA;
+  telefono_alterno -> CONTACTO_EMERGENCIA;
+  es_principal -> CONTACTO_EMERGENCIA;
+}
