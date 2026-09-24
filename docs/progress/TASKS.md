@@ -11,4 +11,4 @@ The live order is `poteto-mode/queue/backlog.md`. This table is the claim surfac
 | E1-06 | Decisión humana sobre atributos en conflicto | Blocked | either | | |
 | E2-01 | Entrega II, aplicación cliente-servidor | Backlog | either | | |
 
-E1-02 is the ticket in `poteto-mode/queue/NOW.md`. It stays Backlog until an agent claims it. E2-01 is future and depends on the Entrega I tickets. E1-06 waits on Carlos or Jordin.
+E1-02 is In Progress on branch `docs/e1-02-chen-nucleo` (PR #3). `poteto-mode/queue/NOW.md` already points at E1-03; do not start E1-03/E1-04/E1-05 until E1-02 merges. E2-01 is future. E1-06 waits on Carlos or Jordin.
