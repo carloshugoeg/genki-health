@@ -4,9 +4,9 @@ Order is the order a single agent follows. After E1-02 merges, E1-04 and E1-05 m
 
 | Order | Id | Title | Status | Owner | Depends on |
 | --- | --- | --- | --- | --- | --- |
-| 1 | E1-02 | Dibujar diagramas Chen del núcleo clínico | in review | Carlos / Cursor | none |
+| 1 | E1-02 | Dibujar diagramas Chen del núcleo clínico | done | Carlos / Cursor | none |
 | 2 | E1-03 | Dibujar diagramas Chen de facturación, personal e insumos | now | either | E1-02 |
-| 3 | E1-04 | Dibujar el diagrama Chen de hospitalización | backlog | Carlos | E1-02 |
+| 3 | E1-04 | Dibujar el diagrama Chen de hospitalización | in review | Carlos | E1-02 |
 | 4 | E1-05 | Dibujar los diagramas Chen del centro pediátrico | backlog | Jordin | E1-02 |
 | 5 | E1-06 | Decisión humana sobre atributos en conflicto | blocked | either | none |
 | 6 | E2-01 | Entrega II, aplicación cliente-servidor | future | either | E1-02, E1-03, E1-04, E1-05, E1-06 |

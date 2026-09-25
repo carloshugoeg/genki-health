@@ -50,9 +50,10 @@ La arista "corresponde a" del pediátrico es la clave foránea `id_hito` de la s
 | `chen-6.4.1-paciente-expediente.dot` (+ `.png`) | 6.4.1 Paciente y expediente | E1-02 |
 | `chen-6.4.2-agenda-consulta-signos.dot` (+ `.png`) | 6.4.2 Agenda, consulta y signos | E1-02 |
 | `chen-6.4.3-diagnostico-tratamiento-receta.dot` (+ `.png`) | 6.4.3 Diagnóstico, tratamiento y receta | E1-02 |
+| `chen-6.4.4-hospitalizacion.dot` (+ `.png`) | 6.4.4 Hospitalización y procedimientos | E1-04 |
 | `chen-6.4.5-acceso-roles-auditoria.dot` (+ `.png`) | 6.4.5 Acceso, roles y auditoría | E1-02 |
 
-Pendientes: 6.4.4 (E1-04, Carlos), 6.4.6–6.4.8 (E1-05, Jordin), 6.4.9–6.4.11 (E1-03).
+Pendientes: 6.4.6–6.4.8 (E1-05, Jordin), 6.4.9–6.4.11 (E1-03).
 
 ## Modelo relacional (secciones 7.4 y 7.5)
 

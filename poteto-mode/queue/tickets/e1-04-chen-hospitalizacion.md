@@ -1,8 +1,9 @@
 # E1-04 Dibujar el diagrama Chen de hospitalización
 
-- Status: backlog
-- Owner: Carlos
+- Status: in review
+- Owner: Carlos Hugo Escobar / Cursor
 - Agent: Cursor
+- Claimed: 2026-09-25 by Carlos Hugo Escobar / Cursor
 - Depends on: E1-02
 - Needs human: no
 

@@ -15,10 +15,10 @@ Rows that share a ticket share a status. Owner is `Carlos/Cursor`, `Jordin/Claud
 
 ## Rollup
 
-- **Now:** E1-02 (both, in review — Chen núcleo clínico) and E1-03 (both, current in `NOW.md` — facturación, personal e insumos). Claim E1-03 only after E1-02 merges if you need a clean base; the shape key in the diagram README must stay as E1-02 left it.
-- **Next:** E1-04 (Carlos/Cursor) and E1-05 (Jordin/Claude) after E1-02 merges (parallel OK). E2-01 (both) stays next until those and E1-06 are done. Do not split E2-01 until a human asks.
+- **Now:** E1-03 (both, current in `NOW.md` — facturación, personal e insumos) and E1-04 (Carlos/Cursor, in review — hospitalización). Do not rewrite the Graphviz shape key in the diagram README.
+- **Next:** E1-05 (Jordin/Claude) may run in parallel with E1-03/E1-04. E2-01 (both) stays next until those and E1-06 are done. Do not split E2-01 until a human asks.
 - **Blocked:** E1-06 (both). Sección 5 and sección 7.4 disagree. Agents do not pick a side.
-- **Done:** Entrega I analysis already in the tree (no ticket): entities, attributes, classification, normalization, plain-language operations, overview ER, relational model. No Chen or Entrega II row is done yet (E1-02 awaits merge).
+- **Done:** Entrega I analysis already in the tree (no ticket): entities, attributes, classification, normalization, plain-language operations, overview ER, relational model. E1-02 Chen núcleo clínico (merged).
 
 ## Entrega I
 
@@ -33,14 +33,14 @@ Analysis below is already in `docs/entregas/entrega-1/`. It has no ticket. The o
 | Plain-language operations | done | both | — |
 | ER overview, Hospital general and Centro médico pediátrico | done | both | — |
 | Relational model, secciones 7.4 and 7.5 | done | both | — |
-| Chen: paciente, expediente, contacto de emergencia | now | both | E1-02 |
-| Chen: agenda, consulta, signos vitales | now | both | E1-02 |
-| Chen: diagnóstico, tratamiento, receta | now | both | E1-02 |
-| Chen: acceso, roles, auditoría | now | both | E1-02 |
+| Chen: paciente, expediente, contacto de emergencia | done | both | E1-02 |
+| Chen: agenda, consulta, signos vitales | done | both | E1-02 |
+| Chen: diagnóstico, tratamiento, receta | done | both | E1-02 |
+| Chen: acceso, roles, auditoría | done | both | E1-02 |
 | Chen: facturación | now | both | E1-03 |
 | Chen: personal y honorarios | now | both | E1-03 |
 | Chen: insumos y cargos | now | both | E1-03 |
-| Chen: hospitalización (Hospital general) | next | Carlos/Cursor | E1-04 |
+| Chen: hospitalización (Hospital general) | now | Carlos/Cursor | E1-04 |
 | Chen: responsable y antecedente perinatal | next | Jordin/Claude | E1-05 |
 | Chen: crecimiento | next | Jordin/Claude | E1-05 |
 | Chen: vacunación | next | Jordin/Claude | E1-05 |

@@ -11,4 +11,4 @@ The live order is `poteto-mode/queue/backlog.md`. This table is the claim surfac
 | E1-06 | Decisión humana sobre atributos en conflicto | Blocked | either | | |
 | E2-01 | Entrega II, aplicación cliente-servidor | Backlog | either | | |
 
-E1-02 merged via PR #3. E1-04 claimed 2026-09-25 by Carlos Hugo Escobar / Cursor. `NOW.md` still points at E1-03 (either); E1-04 and E1-05 may run in parallel after E1-02. E2-01 is future. E1-06 waits on Carlos or Jordin.
+E1-02 is Done (merged PR #3). E1-04 is In Progress on `docs/e1-04-chen-hospitalizacion` (PR link filled when opened). `NOW.md` points at E1-03; E1-05 may run in parallel. E2-01 is future. E1-06 waits on Carlos or Jordin.
