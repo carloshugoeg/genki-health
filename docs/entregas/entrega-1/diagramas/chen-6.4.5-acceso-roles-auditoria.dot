@@ -1,0 +1,136 @@
+// Chen detallado. Sección 6.4.5. Acceso, roles y auditoría.
+// Símbolos: ver clave Graphviz en README.md (sección 6.1).
+// M:N entre ROL y PERMISO. hash_contrasena en USUARIO.
+digraph chen_6_4_5 {
+  rankdir=LR;
+  splines=true;
+  overlap=false;
+  nodesep=0.35;
+  ranksep=0.55;
+  graph [fontname="Helvetica", label="6.4.5 Acceso, roles y auditoría (núcleo común)", labelloc=t, fontsize=14];
+  node [fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9, arrowhead=none];
+
+  node [shape=box, style=solid, peripheries=1];
+  INSTITUCION;
+  USUARIO;
+  ROL;
+  PERMISO;
+  BITACORA;
+  PROFESIONAL;
+
+  node [shape=diamond, style=solid, peripheries=1, height=0.7, width=1.1];
+  Cuenta [label="Cuenta"];
+  Asigna [label="Asigna"];
+  Otorga [label="Otorga"];
+  Audita [label="Audita"];
+  Credencial [label="Credencial"];
+
+  node [shape=ellipse, style=solid, peripheries=1, width=0, height=0];
+
+  // INSTITUCION
+  id_institucion [label=<<U>id_institucion</U>>];
+  nombre_inst [label="nombre"];
+  tipo_inst [label="tipo"];
+  nit;
+  direccion_inst [label="direccion"];
+  telefono_inst [label="telefono"];
+  correo_inst [label="correo"];
+  motor_datos;
+  activo_inst [label="activo"];
+
+  // USUARIO
+  id_usuario [label=<<U>id_usuario</U>>];
+  nombre_usuario;
+  correo_u [label="correo"];
+  hash_contrasena;
+  estado_u [label="estado"];
+  intentos_fallidos;
+  ultimo_acceso;
+
+  // ROL
+  id_rol [label=<<U>id_rol</U>>];
+  nombre_rol [label="nombre"];
+  descripcion_rol [label="descripcion"];
+
+  // PERMISO
+  id_permiso [label=<<U>id_permiso</U>>];
+  codigo_perm [label="codigo"];
+  descripcion_perm [label="descripcion"];
+  nivel_dato;
+
+  // BITACORA
+  id_bitacora [label=<<U>id_bitacora</U>>];
+  entidad;
+  id_registro;
+  accion;
+  fecha_hora_bit [label="fecha_hora"];
+  direccion_ip;
+  detalle;
+
+  // PROFESIONAL (vínculo opcional de credencial; atributos de sección 5.1 sin cerrar needs-human)
+  id_profesional [label=<<U>id_profesional</U>>];
+  nombres;
+  apellidos;
+  activo_prof [label="activo"];
+
+  // INSTITUCION – Cuenta – USUARIO (1:N; usuario con participación total)
+  INSTITUCION -> Cuenta [penwidth=1, headlabel="1"];
+  Cuenta -> USUARIO [penwidth=3, taillabel="N"];
+
+  // ROL – Asigna – USUARIO (1:N; usuario con rol obligatorio)
+  ROL -> Asigna [penwidth=1, headlabel="1"];
+  Asigna -> USUARIO [penwidth=3, taillabel="N"];
+
+  // ROL – Otorga – PERMISO (M:N)
+  ROL -> Otorga [penwidth=1, headlabel="M"];
+  Otorga -> PERMISO [penwidth=1, taillabel="N"];
+
+  // USUARIO – Audita – BITACORA (1:N)
+  USUARIO -> Audita [penwidth=1, headlabel="1"];
+  Audita -> BITACORA [penwidth=3, taillabel="N"];
+
+  // PROFESIONAL – Credencial – USUARIO (1:1 parcial; nulo si no clínico)
+  PROFESIONAL -> Credencial [penwidth=1, headlabel="1"];
+  Credencial -> USUARIO [penwidth=1, taillabel="1"];
+
+  id_institucion -> INSTITUCION;
+  nombre_inst -> INSTITUCION;
+  tipo_inst -> INSTITUCION;
+  nit -> INSTITUCION;
+  direccion_inst -> INSTITUCION;
+  telefono_inst -> INSTITUCION;
+  correo_inst -> INSTITUCION;
+  motor_datos -> INSTITUCION;
+  activo_inst -> INSTITUCION;
+
+  id_usuario -> USUARIO;
+  nombre_usuario -> USUARIO;
+  correo_u -> USUARIO;
+  hash_contrasena -> USUARIO;
+  estado_u -> USUARIO;
+  intentos_fallidos -> USUARIO;
+  ultimo_acceso -> USUARIO;
+
+  id_rol -> ROL;
+  nombre_rol -> ROL;
+  descripcion_rol -> ROL;
+
+  id_permiso -> PERMISO;
+  codigo_perm -> PERMISO;
+  descripcion_perm -> PERMISO;
+  nivel_dato -> PERMISO;
+
+  id_bitacora -> BITACORA;
+  entidad -> BITACORA;
+  id_registro -> BITACORA;
+  accion -> BITACORA;
+  fecha_hora_bit -> BITACORA;
+  direccion_ip -> BITACORA;
+  detalle -> BITACORA;
+
+  id_profesional -> PROFESIONAL;
+  nombres -> PROFESIONAL;
+  apellidos -> PROFESIONAL;
+  activo_prof -> PROFESIONAL;
+}

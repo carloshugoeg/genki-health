@@ -4,6 +4,8 @@ Agents do not close these. Carlos or Jordin decides. Until then, diagrams and th
 
 These gaps were found by comparing the transcribed PDF. They are not new requirements.
 
+Human-facing decision brief (Spanish, no side chosen): `docs/progress/decision-brief-e1-06.md`.
+
 1. `PROFESIONAL` in sección 5.1 has `id_tipo_personal`, `modalidad_contrato`, and `fecha_ingreso`. The textual schema in sección 7.4 omits them. Sección 7.6 still describes `PROFESIONAL.id_tipo_personal` as a foreign key.
 2. `CAMA` in sección 5.2 has `tipo_cama` and `codigo_servicio`. Sección 7.4 has `id_cama`, `id_servicio`, `codigo`, and `estado` only.
 3. `PACIENTE.id_municipio` references `MUNICIPIO`. That catalog is not one of the 58 entities in sección 4.

@@ -1,0 +1,98 @@
+// Chen detallado. Sección 6.4.2. Agenda, consulta y signos vitales.
+// Símbolos: ver clave Graphviz en README.md (sección 6.1).
+// Nombres de relación: Contiene y Se concreta en (sección 6.2 / 6.4.2);
+// Mide es la relación identificadora de SIGNOS_VITALES (mismo nombre que en rel-atencion.mmd).
+digraph chen_6_4_2 {
+  rankdir=LR;
+  splines=true;
+  overlap=false;
+  nodesep=0.35;
+  ranksep=0.55;
+  graph [fontname="Helvetica", label="6.4.2 Agenda, consulta y signos vitales", labelloc=t, fontsize=14];
+  node [fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9, arrowhead=none];
+
+  node [shape=box, style=solid, peripheries=1];
+  CITA;
+  CONSULTA;
+  EXPEDIENTE;
+
+  node [shape=box, peripheries=2];
+  SIGNOS_VITALES;
+
+  node [shape=diamond, style=solid, peripheries=1, height=0.7, width=1.3];
+  Contiene [label="Contiene"];
+  Se_concreta [label="Se concreta en"];
+
+  node [shape=diamond, peripheries=2, height=0.7, width=1.0];
+  Mide [label="Mide"];
+
+  node [shape=ellipse, style=solid, peripheries=1, width=0, height=0];
+  id_cita [label=<<U>id_cita</U>>];
+  fecha_hora;
+  duracion_minutos;
+  motivo;
+  estado_cita [label="estado"];
+  fecha_creacion;
+
+  id_consulta [label=<<U>id_consulta</U>>];
+  fecha_hora_inicio;
+  fecha_hora_fin;
+  tipo_consulta [label="tipo"];
+  motivo_consulta;
+  enfermedad_actual;
+  exploracion_fisica;
+  plan;
+  estado_consulta [label="estado"];
+
+  fecha_hora_toma [label=<<U>fecha_hora_toma</U>>, style=dashed];
+  presion_sistolica;
+  presion_diastolica;
+  frecuencia_cardiaca;
+  frecuencia_respiratoria;
+  temperatura_c;
+  saturacion_oxigeno;
+  peso_kg;
+  talla_cm;
+  imc [label="imc", style=dashed];
+
+  // EXPEDIENTE – Contiene – CONSULTA (1:N; consulta con participación total)
+  EXPEDIENTE -> Contiene [penwidth=1, headlabel="1"];
+  Contiene -> CONSULTA [penwidth=3, taillabel="N"];
+
+  // CITA – Se concreta en – CONSULTA (1:1 parcial en ambos extremos)
+  CITA -> Se_concreta [penwidth=1, headlabel="1"];
+  Se_concreta -> CONSULTA [penwidth=1, taillabel="1"];
+
+  // CONSULTA – Mide – SIGNOS_VITALES (identificadora; como máximo un juego)
+  CONSULTA -> Mide [penwidth=1, headlabel="1"];
+  Mide -> SIGNOS_VITALES [penwidth=3, taillabel="1"];
+
+  id_cita -> CITA;
+  fecha_hora -> CITA;
+  duracion_minutos -> CITA;
+  motivo -> CITA;
+  estado_cita -> CITA;
+  fecha_creacion -> CITA;
+
+  id_consulta -> CONSULTA;
+  fecha_hora_inicio -> CONSULTA;
+  fecha_hora_fin -> CONSULTA;
+  tipo_consulta -> CONSULTA;
+  motivo_consulta -> CONSULTA;
+  enfermedad_actual -> CONSULTA;
+  exploracion_fisica -> CONSULTA;
+  plan -> CONSULTA;
+  estado_consulta -> CONSULTA;
+
+  fecha_hora_toma -> SIGNOS_VITALES;
+  presion_sistolica -> SIGNOS_VITALES;
+  presion_diastolica -> SIGNOS_VITALES;
+  frecuencia_cardiaca -> SIGNOS_VITALES;
+  frecuencia_respiratoria -> SIGNOS_VITALES;
+  temperatura_c -> SIGNOS_VITALES;
+  saturacion_oxigeno -> SIGNOS_VITALES;
+  peso_kg -> SIGNOS_VITALES;
+  talla_cm -> SIGNOS_VITALES;
+  imc -> SIGNOS_VITALES;
+}

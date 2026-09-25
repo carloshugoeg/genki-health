@@ -1,0 +1,138 @@
+// Chen detallado. Sección 6.4.3. Diagnóstico, tratamiento y receta.
+// Símbolos: ver clave Graphviz en README.md (sección 6.1).
+// Detalla es la única M:N del modelo; sus atributos cuelgan del rombo.
+digraph chen_6_4_3 {
+  rankdir=LR;
+  splines=true;
+  overlap=false;
+  nodesep=0.35;
+  ranksep=0.55;
+  graph [fontname="Helvetica", label="6.4.3 Diagnóstico, tratamiento y receta", labelloc=t, fontsize=14];
+  node [fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9, arrowhead=none];
+
+  node [shape=box, style=solid, peripheries=1];
+  CONSULTA;
+  DIAGNOSTICO;
+  TRATAMIENTO;
+  RECETA;
+  MEDICAMENTO;
+  CATALOGO_CIE10;
+
+  node [shape=diamond, style=solid, peripheries=1, height=0.7, width=1.1];
+  Produce [label="Produce"];
+  Origina [label="Origina"];
+  Emite [label="Emite"];
+  Detalla [label="Detalla"];
+  Codifica [label="Codifica"];
+
+  node [shape=ellipse, style=solid, peripheries=1, width=0, height=0];
+
+  // DIAGNOSTICO
+  id_diagnostico [label=<<U>id_diagnostico</U>>];
+  descripcion_dx [label="descripcion"];
+  tipo_dx [label="tipo"];
+  es_principal;
+  fecha_registro_dx [label="fecha_registro"];
+
+  // CATALOGO_CIE10
+  codigo_cie10 [label=<<U>codigo_cie10</U>>];
+  descripcion_cie [label="descripcion"];
+  capitulo;
+
+  // TRATAMIENTO
+  id_tratamiento [label=<<U>id_tratamiento</U>>];
+  tipo_tx [label="tipo"];
+  descripcion_tx [label="descripcion"];
+  indicaciones_tx [label="indicaciones"];
+  fecha_inicio;
+  fecha_fin_estimada;
+  estado_tx [label="estado"];
+
+  // RECETA
+  id_receta [label=<<U>id_receta</U>>];
+  folio;
+  fecha_emision;
+  observaciones;
+  estado_rx [label="estado"];
+
+  // MEDICAMENTO
+  id_medicamento [label=<<U>id_medicamento</U>>];
+  nombre_generico;
+  nombre_comercial;
+  principio_activo;
+  concentracion;
+  forma_farmaceutica;
+  presentacion;
+  requiere_receta;
+  activo_med [label="activo"];
+
+  // Atributos de la relación Detalla (cuelgan del rombo, no de las entidades)
+  dosis;
+  via_administracion;
+  frecuencia_horas;
+  duracion_dias;
+  cantidad;
+  indicaciones_det [label="indicaciones"];
+
+  // CONSULTA – Produce – DIAGNOSTICO (1:N)
+  CONSULTA -> Produce [penwidth=1, headlabel="1"];
+  Produce -> DIAGNOSTICO [penwidth=3, taillabel="N"];
+
+  // DIAGNOSTICO – Origina – TRATAMIENTO (1:N)
+  DIAGNOSTICO -> Origina [penwidth=1, headlabel="1"];
+  Origina -> TRATAMIENTO [penwidth=3, taillabel="N"];
+
+  // CONSULTA – Emite – RECETA (1:1 parcial)
+  CONSULTA -> Emite [penwidth=1, headlabel="1"];
+  Emite -> RECETA [penwidth=1, taillabel="1"];
+
+  // RECETA – Detalla – MEDICAMENTO (M:N con atributos en el rombo)
+  RECETA -> Detalla [penwidth=1, headlabel="M"];
+  Detalla -> MEDICAMENTO [penwidth=1, taillabel="N"];
+
+  // CATALOGO_CIE10 – Codifica – DIAGNOSTICO (opcional en el diagnóstico)
+  CATALOGO_CIE10 -> Codifica [penwidth=1, headlabel="1"];
+  Codifica -> DIAGNOSTICO [penwidth=1, taillabel="N"];
+
+  id_diagnostico -> DIAGNOSTICO;
+  descripcion_dx -> DIAGNOSTICO;
+  tipo_dx -> DIAGNOSTICO;
+  es_principal -> DIAGNOSTICO;
+  fecha_registro_dx -> DIAGNOSTICO;
+
+  codigo_cie10 -> CATALOGO_CIE10;
+  descripcion_cie -> CATALOGO_CIE10;
+  capitulo -> CATALOGO_CIE10;
+
+  id_tratamiento -> TRATAMIENTO;
+  tipo_tx -> TRATAMIENTO;
+  descripcion_tx -> TRATAMIENTO;
+  indicaciones_tx -> TRATAMIENTO;
+  fecha_inicio -> TRATAMIENTO;
+  fecha_fin_estimada -> TRATAMIENTO;
+  estado_tx -> TRATAMIENTO;
+
+  id_receta -> RECETA;
+  folio -> RECETA;
+  fecha_emision -> RECETA;
+  observaciones -> RECETA;
+  estado_rx -> RECETA;
+
+  id_medicamento -> MEDICAMENTO;
+  nombre_generico -> MEDICAMENTO;
+  nombre_comercial -> MEDICAMENTO;
+  principio_activo -> MEDICAMENTO;
+  concentracion -> MEDICAMENTO;
+  forma_farmaceutica -> MEDICAMENTO;
+  presentacion -> MEDICAMENTO;
+  requiere_receta -> MEDICAMENTO;
+  activo_med -> MEDICAMENTO;
+
+  dosis -> Detalla;
+  via_administracion -> Detalla;
+  frecuencia_horas -> Detalla;
+  duracion_dias -> Detalla;
+  cantidad -> Detalla;
+  indicaciones_det -> Detalla;
+}
