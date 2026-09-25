@@ -6,7 +6,7 @@ The live order is `poteto-mode/queue/backlog.md`. This table is the claim surfac
 | --- | --- | --- | --- | --- | --- |
 | E1-02 | Dibujar diagramas Chen del núcleo clínico | Done | Carlos Hugo Escobar / Cursor | docs/e1-02-chen-nucleo | https://github.com/carloshugoeg/genki-health/pull/3 |
 | E1-03 | Dibujar diagramas Chen de facturación, personal e insumos | Backlog | either | | |
-| E1-04 | Dibujar el diagrama Chen de hospitalización | In Progress | Carlos Hugo Escobar / Cursor | docs/e1-04-chen-hospitalizacion | |
+| E1-04 | Dibujar el diagrama Chen de hospitalización | In Progress | Carlos Hugo Escobar / Cursor | docs/e1-04-chen-hospitalizacion | https://github.com/carloshugoeg/genki-health/pull/4 |
 | E1-05 | Dibujar los diagramas Chen del centro pediátrico | Backlog | Jordin | | |
 | E1-06 | Decisión humana sobre atributos en conflicto | Blocked | either | | |
 | E2-01 | Entrega II, aplicación cliente-servidor | Backlog | either | | |
