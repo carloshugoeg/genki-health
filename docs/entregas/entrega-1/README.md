@@ -6,7 +6,7 @@ Documento de la primera entrega. Catedrático: Ing. José Arturo Monterroso. Int
 
 | Resultado esperado | Sección | Archivo |
 | --- | --- | --- |
-| Modelo entidad-relación de las instituciones relacionales | 6 | Vistas 6.2/6.3: `diagramas/er-hospital-general.*`, `diagramas/er-centro-pediatrico.*`. Detalle 6.4: `diagramas/chen-6.4.*` (E1-02 en curso de merge; E1-03–E1-05 siguen). |
+| Modelo entidad-relación de las instituciones relacionales | 6 | Vistas 6.2/6.3: `diagramas/er-hospital-general.*`, `diagramas/er-centro-pediatrico.*`. Detalle 6.4: `diagramas/chen-6.4.*` (E1-02 done; E1-04 in review; E1-03 y E1-05 siguen). |
 | Modelo relacional de las instituciones relacionales | 7 | `diagramas/rel-*.mmd` y la sección 7 de la transcripción |
 | Entidades identificadas | 4 | `analisis-y-modelo-relacional.md` |
 | Lista de atributos por entidad | 5 | `analisis-y-modelo-relacional.md` |

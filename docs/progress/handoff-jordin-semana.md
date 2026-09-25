@@ -2,15 +2,15 @@
 
 Documento para Héctor Jordin Adolfo García Coyoy y su agente Claude. No hace falta leer el chat de Carlos/Cursor.
 
-Fecha: 2026-09-24. Autor del trabajo: Carlos Hugo Escobar Gómez / Cursor.
+Fecha: 2026-09-25. Autor del trabajo: Carlos Hugo Escobar Gómez / Cursor.
 
 ---
 
-## Qué ya está hecho (E1-02)
+## Qué ya está hecho
 
-Carlos reclamó y completó **E1-02** (diagramas Chen del núcleo clínico compartido). Estado del ticket: **in review** (PR abierto; el ticket solo pasa a *done* al fusionar).
+### E1-02 (merged)
 
-Archivos nuevos:
+Carlos completó **E1-02** (diagramas Chen del núcleo clínico). **Fusionado en `main`** vía PR #3.
 
 | Sección | Fuente | PNG |
 | --- | --- | --- |
@@ -23,7 +23,17 @@ Clave de notación (obligatoria para copiar):
 
 - `docs/entregas/entrega-1/diagramas/README.md` → sección **«Clave Graphviz ↔ notación Chen (sección 6.1)»**
 
-Bitácora de sesión: `docs/progress/journal/2026-09-24-e1-02.md`.
+Bitácora: `docs/progress/journal/2026-09-24-e1-02.md`.
+
+### E1-04 (in review — Carlos)
+
+Carlos reclamó y dibujó **E1-04** (hospitalización, Hospital general). Estado: **in review** (PR abierto; *done* solo al fusionar).
+
+| Sección | Fuente | PNG |
+| --- | --- | --- |
+| 6.4.4 | `docs/entregas/entrega-1/diagramas/chen-6.4.4-hospitalizacion.dot` | `.png` |
+
+Bitácora: `docs/progress/journal/2026-09-25-e1-04.md`.
 
 ---
 
@@ -47,13 +57,13 @@ No inventes otras formas Graphviz. Copia la tabla del README. Resumen operativo:
 14. Render: `dot -Tpng archivo.dot -o archivo.png` y commit del PNG al lado
 15. Atributos solo de la sección 5 (para E1-05: **sección 5.3**). Nada nuevo. No edites `rel-*.mmd` para “arreglar” `needs-human.md`
 
-Nombres de relación del núcleo (para no desviarte si reusas entidades compartidas): Posee, Declara, Contiene, Se concreta en, Mide, Produce, Origina, Emite, Detalla. En acceso: Cuenta, Asigna, Otorga, Audita, Credencial (alineados con `rel-acceso.mmd`).
+Nombres de relación del núcleo (para no desviarte si reusas entidades compartidas): Posee, Declara, Contiene, Se concreta en, Mide, Produce, Origina, Emite, Detalla. En acceso: Cuenta, Asigna, Otorga, Audita, Credencial. En hospitalización (E1-04): Contiene, Aloja, Documenta, Incluye, Clasifica.
 
 ---
 
 ## Qué debe hacer Jordin a continuación (E1-05)
 
-**No empieces E1-05 hasta que E1-02 esté fusionado en `main`.** `poteto-mode/handoff.md` exige dependencias fusionadas. E1-04 (hospitalización, Carlos) y E1-05 pueden ir en paralelo después del merge.
+**E1-02 ya está en `main`.** Puedes empezar **E1-05** en paralelo con E1-03 / E1-04. No robes E1-03 ni E1-04 (E1-04 es de Carlos).
 
 Ticket: `poteto-mode/queue/tickets/e1-05-chen-pediatrico.md`
 
@@ -74,7 +84,7 @@ Criterios que no puedes omitir (del ticket):
 ### Cómo reclama Claude vía poteto-mode
 
 1. Leer `AGENTS.md`, `poteto-mode/queue/NOW.md`, `locked.md`, `needs-human.md`, el ticket, `definition-of-done.md`
-2. Si `NOW.md` aún apunta a E1-03 u otro ticket: **no robes** un ticket cuyo owner sea Carlos. E1-05 es de Jordin; reclámalo cuando sea el de `NOW.md` **o** cuando el backlog diga trabajo en paralelo post-merge de E1-02 y nadie más lo tenga *In Progress*
+2. E1-05 es de Jordin; reclámalo cuando nadie más lo tenga *In Progress*. `NOW.md` puede seguir en E1-03 mientras trabajas en paralelo
 3. En `docs/progress/TASKS.md`: Status `In Progress`, Owner `Héctor Jordin … / Claude`, fecha, branch. **Commit solo del claim** antes del resto
 4. Branch: `docs/e1-05-chen-pediatrico` (convención Entrega I)
 5. Hacer el ticket; no empezar otro en la misma sesión
@@ -88,14 +98,14 @@ Criterios que no puedes omitir (del ticket):
 
 | Ticket | Owner | Estado | Notas |
 | --- | --- | --- | --- |
-| E1-02 | Carlos / Cursor (era either) | in review | Notación fijada |
-| E1-03 | either | now en cola | No empezar hasta merge de E1-02 si necesitas base limpia; no reescribir la clave Graphviz |
-| E1-04 | Carlos / Cursor | backlog | Tras merge de E1-02; paralelo con E1-05 |
-| E1-05 | Jordin / Claude | backlog | Tu trabajo; paralelo con E1-04 tras merge |
+| E1-02 | Carlos / Cursor | done | Merged PR #3; notación fijada |
+| E1-03 | either | now en cola | No reescribir la clave Graphviz |
+| E1-04 | Carlos / Cursor | in review | Hospitalización 6.4.4 |
+| E1-05 | Jordin / Claude | backlog | **Tu trabajo**; paralelo OK |
 | E1-06 | either | blocked | Solo humanos |
 | E2-01 | either | future | Fuera de alcance Entrega I |
 
-Cola viva: `poteto-mode/queue/NOW.md` (hoy apunta a E1-03). Mapa: `poteto-mode/feature-map.md`.
+Cola viva: `poteto-mode/queue/NOW.md` (apunta a E1-03). Mapa: `poteto-mode/feature-map.md`.
 
 ---
 
