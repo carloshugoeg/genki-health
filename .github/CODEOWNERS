@@ -1,0 +1,21 @@
+# Sensitive paths — require @carloshugoeg review.
+# Every path below exists in the repository as of 2026-10-06.
+# Entrega II code paths (server/, infra/, migrations/) will be added when scaffolding lands.
+
+# Agent protocol and locked decisions
+/AGENTS.md @carloshugoeg
+/poteto-mode/decisions/ @carloshugoeg
+/docs/superpowers/specs/ @carloshugoeg
+
+# Auth, roles, and audit (Entrega I model)
+/docs/entregas/entrega-1/diagramas/chen-6.4.5-acceso-roles-auditoria.dot @carloshugoeg
+
+# Schema and relational model (includes access, billing, and tenancy)
+/docs/entregas/entrega-1/analisis-y-modelo-relacional.md @carloshugoeg
+/docs/entregas/entrega-1/diagramas/rel-acceso.mmd @carloshugoeg
+/docs/entregas/entrega-1/diagramas/rel-atencion.mmd @carloshugoeg
+/docs/entregas/entrega-1/diagramas/rel-facturacion.mmd @carloshugoeg
+/docs/entregas/entrega-1/diagramas/rel-hospitalizacion.mmd @carloshugoeg
+/docs/entregas/entrega-1/diagramas/rel-paciente-expediente.mmd @carloshugoeg
+/docs/entregas/entrega-1/diagramas/rel-pediatrico.mmd @carloshugoeg
+/docs/entregas/entrega-1/diagramas/rel-personal-insumos.mmd @carloshugoeg

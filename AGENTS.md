@@ -1,8 +1,70 @@
 # AGENTS.md
 
-Genki Health is the Bases de Datos II final project for Carlos Hugo Escobar Gómez and Héctor Jordin Adolfo García Coyoy. One clinical-record platform, four institutions, four database engines. Entrega I is analysis and the relational model. Entrega II is the application. The course brief is `PROJECT-DESC.md`. The Entrega I document is `docs/entregas/entrega-1/`.
+Genki Health is the Bases de Datos II final project for Carlos Hugo Escobar Gómez and Héctor Jordin Adolfo García Coyoy. One clinical-record platform serves four independent medical institutions, each on its own database engine (PostgreSQL, MySQL, MongoDB, Firebase). The course brief is `PROJECT-DESC.md`. The Entrega I document lives in `docs/entregas/entrega-1/`.
+
+**Current phase:** Entrega I — analysis and relational model. The repository is documentation-only; there is no application code yet. The approved Entrega II design is at `docs/superpowers/specs/2026-08-27-genki-health-architecture-and-agent-governance-design.md`. Do not scaffold the app until Entrega I tickets are done.
 
 Humans own architecture and design. Agents implement the current ticket. Carlos delegates to Cursor. Jordin delegates to Claude.
+
+## Commands
+
+Verified in this repository on 2026-10-06:
+
+| Command | Result |
+| --- | --- |
+| `git status` | Works |
+| `git --version` | Works (2.43.0) |
+| `npm install` | Fails — no `package.json` (Entrega II scaffolding not started) |
+| `npm test` | Fails — no `package.json` |
+| `npm run lint` | Fails — no `package.json` |
+| `dot -Tpng <file>.dot -o <file>.png` | Not verified here — Graphviz (`dot`) is not installed in this agent VM. Documented in `docs/entregas/entrega-1/diagramas/README.md` for Chen diagram renders. |
+
+When Entrega II scaffolding lands, expect `scripts/validate.sh` as the local gate (mirrors CI per the architecture spec). No CI workflow exists yet.
+
+## Repository structure
+
+```
+genki-health/
+├── AGENTS.md                 # This file — agent rulebook
+├── PROJECT-DESC.md           # Course brief (Spanish)
+├── README.md                 # Human entry point (Spanish)
+├── poteto-mode/              # Agent OS: queue, tickets, decisions
+│   ├── queue/NOW.md          # Current ticket
+│   ├── decisions/            # Locked and needs-human decisions
+│   └── feature-map.md        # Capability status rollup
+├── docs/
+│   ├── ARCHITECTURE.md       # System behavior summary
+│   ├── entregas/entrega-1/   # Entrega I deliverable (Spanish)
+│   ├── governance/
+│   ├── progress/             # TASKS.md, journals
+│   ├── roadmap/
+│   └── superpowers/specs/    # Entrega II architecture spec
+└── .github/
+    ├── CODEOWNERS
+    └── PULL_REQUEST_TEMPLATE.md
+```
+
+Future Entrega II layout (not present yet): `server/`, `web/`, `shared/`, `infra/`, `scripts/`.
+
+## Conventions
+
+- Professor-facing text in Spanish, with section names from the brief. Agent protocol in English.
+- Do not invent clinical entities, attributes, or business rules that are not in the Entrega I document.
+- Locked decisions: `poteto-mode/decisions/locked.md`. Open questions: `poteto-mode/decisions/needs-human.md` — do not resolve by guessing.
+- Chen diagram shape key in `docs/entregas/entrega-1/diagramas/README.md` is fixed since E1-02. Copy it; do not rewrite.
+- Branches for Entrega I tickets: `docs/<ticket-id>-<slug>`.
+- Future agents must update `docs/ARCHITECTURE.md` whenever a PR changes application behavior.
+
+## Stop and ask Carlos
+
+Do not proceed without explicit human approval on:
+
+- **Auth** — login flows, JWT claims, password policy, session handling
+- **Payments** — billing integration beyond the simulated quetzales + 12% IVA in the model
+- **DB migrations** — schema changes once SQL migrations exist in Entrega II
+- **Multitenant permissions** — institution routing, role grants, data-classification enforcement
+- **Deleting data** — clinical rows are never deleted; archive only (`estado = archivado`)
+- **Protocol changes** — `AGENTS.md`, CI workflows, `ports/` interfaces
 
 ## Session loop
 
