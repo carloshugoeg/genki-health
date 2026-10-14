@@ -1,6 +1,8 @@
 # Brief de decisión — E1-06 (atributos en conflicto)
 
-Para Carlos Hugo Escobar Gómez y Héctor Jordin Adolfo García Coyoy. Los agentes **no** eligen. Este brief solo aclara qué hay que decidir y qué queda congelado hasta entonces.
+**Estado: cerrado.** Carlos decidió el 2026-10-14. Resultados en `poteto-mode/decisions/locked.md`. Este brief queda como historial de la pregunta; no volver a elegir.
+
+Para Carlos Hugo Escobar Gómez y Héctor Jordin Adolfo García Coyoy. Los agentes **no** eligen. Este brief solo aclaraba qué había que decidir.
 
 Fuente de los huecos: comparación de la transcripción del PDF (`docs/entregas/entrega-1/analisis-y-modelo-relacional.md`). Lista operativa: `poteto-mode/decisions/needs-human.md`.
 

@@ -28,7 +28,7 @@ Convenciones de archivo:
 - Fuente: `chen-6.4.X-<slug>.dot`
 - Render: `dot -Tpng chen-….dot -o chen-….png` (PNG al lado del `.dot`)
 - Comentario de cabecera: sección cubierta y remisión a esta clave
-- Atributos solo de la sección 5. No inventar entidades. No “cerrar” huecos de `poteto-mode/decisions/needs-human.md` en los `rel-*.mmd`
+- Atributos solo de la sección 5. No inventar entidades. Los huecos E1-06 ya están locked en `poteto-mode/decisions/locked.md`; no reabrirlos
 
 ## Vistas generales (secciones 6.2 y 6.3)
 
@@ -57,7 +57,7 @@ Pendientes: 6.4.6–6.4.8 (E1-05, Jordin), 6.4.9–6.4.11 (E1-03).
 
 ## Modelo relacional (secciones 7.4 y 7.5)
 
-Estos archivos siguen el esquema textual. No rellenan los huecos de `poteto-mode/decisions/needs-human.md`.
+Estos archivos siguen el esquema textual de 7.4 / 7.5, actualizado con las decisiones E1-06 (Carlos, 2026-10-14) en `locked.md`.
 
 | Archivo | Módulo |
 | --- | --- |

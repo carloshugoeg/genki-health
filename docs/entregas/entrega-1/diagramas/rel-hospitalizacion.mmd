@@ -1,5 +1,6 @@
 %% Reconstruido desde la sección 7.4. Hospital general (PostgreSQL). No es el PNG original.
 %% Tipos int/string/bool son marcadores lógicos. Supuesto 15: el tipo físico es de la Entrega II.
+%% E1-06 (Carlos, 2026-10-14): CAMA gana tipo_cama y codigo_servicio; NOTA_EVOLUCION gana id_nota_anterior opcional.
 erDiagram
     SERVICIO {
         int id_servicio PK
@@ -11,6 +12,8 @@ erDiagram
         int id_cama PK
         int id_servicio FK
         string codigo
+        string tipo_cama
+        string codigo_servicio FK
         string estado
     }
     ADMISION {
@@ -30,6 +33,7 @@ erDiagram
         int id_nota PK
         int id_admision FK
         int id_profesional FK
+        int id_nota_anterior FK
         string fecha_hora
         string contenido
         string turno
@@ -67,7 +71,8 @@ erDiagram
     ADMISION ||--o{ NOTA_EVOLUCION : "documenta"
     ADMISION ||--o{ PROCEDIMIENTO : "incluye"
     CATALOGO_PROCEDIMIENTO ||--o{ PROCEDIMIENTO : "clasifica"
+    NOTA_EVOLUCION |o--o{ NOTA_EVOLUCION : "corrige"
 %% UK compuesta: CAMA (id_servicio, codigo).
 %% PROCEDIMIENTO: exactamente una de id_admision o id_consulta. La sección 6.5 dice "nunca de ninguna de las dos" cuando falta una, y "nunca de ambas".
-%% La sección 5.2 agrega CAMA.tipo_cama y CAMA.codigo_servicio. La sección 7.4 no los trae. No se agregaron.
-%% La prosa de notas inmutables pide referenciar la nota anterior. No hay columna para eso en 7.4.
+%% CAMA.codigo_servicio → SERVICIO_FACTURABLE (rel-facturacion.mmd). E1-06 elección A.
+%% id_nota_anterior es FK opcional a la nota previa. E1-06 elección A.

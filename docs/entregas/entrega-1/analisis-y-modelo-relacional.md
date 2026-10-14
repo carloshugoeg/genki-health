@@ -311,55 +311,58 @@ modelan aquí a nivel de análisis y se implementarán como documentos en la Ent
 3    CONSUMO_INSUMO         Qué material se gastó, en qué atención y en qué cantidad                                 Transaccional
 3
 
-3    CARGO                  Cada concepto cobrable que genera la atención, antes de facturarse                       Transaccional
+ 3    CARGO                  Cada concepto cobrable que genera la atención, antes de facturarse                       Transaccional
 4
+
+ 3    MUNICIPIO              Catálogo geográfico al que apunta el paciente (municipio de residencia)                 Catálogo
+5
 
 4.2 Extensiones del Hospital general (PostgreSQL)
 #        Entidad                             Qué representa
 
-35       SERVICIO                            Área o departamento del hospital (medicina interna, cirugía, emergencia)
+36       SERVICIO                            Área o departamento del hospital (medicina interna, cirugía, emergencia)
 
-36       CAMA                                Cama física asignable dentro de un servicio
+37       CAMA                                Cama física asignable dentro de un servicio
 
-37       ADMISION                            Ingreso hospitalario del paciente, con egreso y condición de salida
+38       ADMISION                            Ingreso hospitalario del paciente, con egreso y condición de salida
 
-38       NOTA_EVOLUCION                      Registro cronológico del estado del paciente durante la admisión
+39       NOTA_EVOLUCION                      Registro cronológico del estado del paciente durante la admisión
 
-39       PROCEDIMIENTO                       Intervención realizada al paciente (quirúrgica o diagnóstica)
+40       PROCEDIMIENTO                       Intervención realizada al paciente (quirúrgica o diagnóstica)
 
-40       CATALOGO_PROCEDIMIENTO              Catálogo de procedimientos con su código y duración estimada
+41       CATALOGO_PROCEDIMIENTO              Catálogo de procedimientos con su código y duración estimada
 
-41       ORDEN_ESTUDIO                       Solicitud de examen que el hospital envía al laboratorio de la red
+42       ORDEN_ESTUDIO                       Solicitud de examen que el hospital envía al laboratorio de la red
 
 4.3 Extensiones del Centro médico pediátrico (MySQL)
 #        Entidad                                  Qué representa
 
-42       RESPONSABLE                              Padre, madre o tutor legal del paciente menor de edad
+43       RESPONSABLE                              Padre, madre o tutor legal del paciente menor de edad
 
-43       ANTECEDENTE_PERINATAL                    Datos del nacimiento: semanas de gestación, tipo de parto, Apgar
+44       ANTECEDENTE_PERINATAL                    Datos del nacimiento: semanas de gestación, tipo de parto, Apgar
 
-44       MEDICION_ANTROPOMETRICA                  Peso, talla y perímetro cefálico en una fecha, con percentiles
+45       MEDICION_ANTROPOMETRICA                  Peso, talla y perímetro cefálico en una fecha, con percentiles
 
-45       VACUNA                                   Catálogo de vacunas del esquema nacional
+46       VACUNA                                   Catálogo de vacunas del esquema nacional
 
-46       DOSIS_VACUNA                             Dosis concreta programada o aplicada a un paciente
+47       DOSIS_VACUNA                             Dosis concreta programada o aplicada a un paciente
 
-47       HITO_DESARROLLO                          Catálogo de hitos psicomotores esperados por edad
+48       HITO_DESARROLLO                          Catálogo de hitos psicomotores esperados por edad
 
-48       SEGUIMIENTO_HITO                         Registro de si el paciente alcanzó un hito y cuándo
+49       SEGUIMIENTO_HITO                         Registro de si el paciente alcanzó un hito y cuándo
 
 4.4 Extensiones del Laboratorio clínico (MongoDB)
  #     Entidad                      Qué representa
 
- 49     ORDEN_EXAMEN                Solicitud de uno o varios exámenes para un paciente
+ 50     ORDEN_EXAMEN                Solicitud de uno o varios exámenes para un paciente
 
- 50     EXAMEN                      Catálogo de exámenes: tipo, área, método, tiempo de entrega
+ 51     EXAMEN                      Catálogo de exámenes: tipo, área, método, tiempo de entrega
 
- 51     MUESTRA                     Material biológico recolectado, con su condición y trazabilidad
+ 52     MUESTRA                     Material biológico recolectado, con su condición y trazabilidad
 
- 52     RESULTADO                   Resultado del examen; su estructura varía según el tipo de examen
+ 53     RESULTADO                   Resultado del examen; su estructura varía según el tipo de examen
 
- 53     VALOR_REFERENCIA            Rango normal de un analito según sexo y edad
+ 54     VALOR_REFERENCIA            Rango normal de un analito según sexo y edad
 
 RESULTADO es la entidad que motiva la elección de un motor documental: una hematología completa registra hemoglobina,
 hematocrito, leucocitos, plaquetas y fórmula diferencial; un examen de orina registra color, aspecto, densidad, pH y sedimento;
@@ -369,28 +372,30 @@ Modelarlo en tablas obligaría a columnas dispersas o a un esquema entidad-atrib
 4.5 Extensiones de la Clínica odontológica (Firebase)
  #     Entidad                         Qué representa
 
- 54    ODONTOGRAMA                     Fotografía del estado de la dentadura del paciente en una fecha
+ 55    ODONTOGRAMA                     Fotografía del estado de la dentadura del paciente en una fecha
 
- 55    PIEZA_DENTAL                    Estado de una pieza concreta y de sus superficies, dentro del odontograma
+ 56    PIEZA_DENTAL                    Estado de una pieza concreta y de sus superficies, dentro del odontograma
 
- 56    PROCEDIMIENTO_DENTAL            Catálogo de procedimientos odontológicos con costo de referencia
+ 57    PROCEDIMIENTO_DENTAL            Catálogo de procedimientos odontológicos con costo de referencia
 
- 57    PLAN_TRATAMIENTO                Conjunto de procedimientos planificados por pieza, con presupuesto
+ 58    PLAN_TRATAMIENTO                Conjunto de procedimientos planificados por pieza, con presupuesto
 
- 58    SESION_TRATAMIENTO              Cada visita en la que se avanza el plan
+ 59    SESION_TRATAMIENTO              Cada visita en la que se avanza el plan
 
 Las once entidades de personal, insumos y cobro pertenecen al núcleo compartido porque las cuatro instituciones tienen equipo
 que atiende, material que se gasta y cuentas que cobrar: el hospital cobra consulta, procedimientos y días de cama; el pediátrico,
 consulta y vacunas; el laboratorio, cada examen de la orden; y la odontológica, las sesiones del plan de tratamiento. Lo único que
-cambia entre ellas es el contenido del catálogo SERVICIO_FACTURABLE , no la estructura.
+cambia entre ellas es el contenido del catálogo SERVICIO_FACTURABLE , no la estructura. `MUNICIPIO` (n.º 35) también es núcleo
+compartido.
 
 CARGO es la pieza que articula lo clínico con lo económico. Cada cosa que se le hace al paciente —la consulta, el procedimiento,
 cada día de cama, cada gasa que se gasta, el honorario de cada miembro del equipo— genera un cargo con su precio. La factura
 no se construye leyendo el expediente: se construye juntando los cargos pendientes del paciente. Esa separación es lo que permite
 que recepción facture sin leer historias clínicas.
 
-Total: 58 entidades identificadas, de las cuales 34 son comunes a las cuatro instituciones, 7 son propias del hospital, 7 del
-centro pediátrico, 5 del laboratorio y 5 de la clínica odontológica.
+Total: 59 entidades identificadas, de las cuales 35 son comunes a las cuatro instituciones, 7 son propias del hospital, 7 del
+centro pediátrico, 5 del laboratorio y 5 de la clínica odontológica. `MUNICIPIO` se añadió al inventario (E1-06 / Carlos,
+2026-10-14) para que `PACIENTE.id_municipio` tenga destino real.
 
 5. Atributos por entidad
 
@@ -419,6 +424,16 @@ INSTITUCION
  motor_datos        VARCHAR(20)                   Sí      postgresql, mysql, mongodb, firebase                    C
 
  activo             BOOLEAN                       Sí      Por defecto verdadero                                   P
+
+MUNICIPIO
+Catálogo geográfico al que apunta `PACIENTE.id_municipio`. Añadido al inventario en E1-06 (Carlos, 2026-10-14). Solo se
+conserva lo necesario para el destino de la FK; el departamento no se modela como entidad aparte en esta entrega.
+
+ Atributo                  Tipo                  Clave     Obl.      Dominio / regla                             Clasif.
+
+ id_municipio              INT                   PK        Sí        Autoincremental                             P
+
+ nombre                    VARCHAR(80)           UK        Sí        Nombre del municipio                        P
 
 PACIENTE
  Atributo                  Tipo                  Clave     Obl.      Dominio / regla                             Clasif.
@@ -543,7 +558,7 @@ y numero_colegiado pasa a ser opcional porque no todas las categorías se colegi
 
  id_tipo_personal                    INT                    FK               Sí         → TIPO_PERSONAL                                   P
 
- numero_colegiado                    VARCHAR(15)            UK               No         Obligatorio si el tipo de personal lo exige       P
+ numero_colegiado                    VARCHAR(15)            UK               No         Si TIPO_PERSONAL.requiere_colegiado: obligatorio; si no: NULL (nunca cadena vacía). UNIQUE entre no nulos (E1-06)       P
 
  nombres                             VARCHAR(80)                             Sí         —                                                 P
 
@@ -1211,8 +1226,10 @@ NOTA_EVOLUCION
 
  turno                    VARCHAR(10)                                 No            matutino, vespertino, nocturno                         C
 
-Las notas de evolución son inmutables: una corrección se registra como una nota nueva que referencia la anterior, nunca como
-una modificación del texto original.
+ id_nota_anterior         INT                         FK              No            → NOTA_EVOLUCION (nota previa); nulo si no es corrección  R
+
+Las notas de evolución son inmutables: una corrección se registra como una nota nueva que referencia la anterior
+(`id_nota_anterior`), nunca como una modificación del texto original. (E1-06 / Carlos, elección A.)
 
 PROCEDIMIENTO y CATALOGO_PROCEDIMIENTO
  Entidad                           Atributo                    Tipo                     Clave    Obl.   Dominio / regla                            Clasif.
@@ -1836,6 +1853,9 @@ Módulo institucional y de acceso
  PROFESIONAL(__id_profesional__, #id_institucion, #id_especialidad,
              numero_colegiado*, nombres, apellidos, telefono, correo, activo)
 
+Nota (E1-06 / Carlos, B): este esquema omite id_tipo_personal , modalidad_contrato y fecha_ingreso .
+ numero_colegiado es UNIQUE entre valores no nulos; admite NULL ; nunca cadena vacía.
+
  ROL(__id_rol__, nombre*, descripcion)
 
  PERMISO(__id_permiso__, codigo*, descripcion, nivel_dato)
@@ -1850,6 +1870,8 @@ Módulo institucional y de acceso
           fecha_hora, direccion_ip, detalle)
 
 Módulo de paciente y expediente
+
+ MUNICIPIO(__id_municipio__, nombre*)
 
  PACIENTE(__id_paciente__, #id_institucion, tipo_documento, numero_documento*,
           primer_nombre, segundo_nombre, primer_apellido, segundo_apellido,
@@ -1952,14 +1974,16 @@ Módulo de hospitalización
 
  SERVICIO(__id_servicio__, nombre*, piso, activo)
 
- CAMA(__id_cama__, #id_servicio, codigo*, estado)
+ CAMA(__id_cama__, #id_servicio, codigo*, tipo_cama, #codigo_servicio, estado)
 
  ADMISION(__id_admision__, #id_expediente, #id_consulta_origen, #id_cama,
           #id_diagnostico_ingreso, #id_diagnostico_egreso, tipo_ingreso,
           fecha_hora_ingreso, fecha_hora_egreso, condicion_egreso, estado)
 
- NOTA_EVOLUCION(__id_nota__, #id_admision, #id_profesional, fecha_hora,
-                contenido, turno)
+ NOTA_EVOLUCION(__id_nota__, #id_admision, #id_profesional, #id_nota_anterior,
+                fecha_hora, contenido, turno)
+
+Nota (E1-06 / Carlos, A): id_nota_anterior es FK opcional a la nota previa (corrección = nota nueva).
 
  CATALOGO_PROCEDIMIENTO(__codigo_procedimiento__, nombre, categoria,
                             duracion_estimada_min)
@@ -2131,7 +2155,13 @@ ROL_PERMISO        id_rol / id_permiso   ROL / PERMISO         CASCA    CASCA   
  PAGO                 id_factura          FACTURA                     RESTRI        CASCA      Un pago recibido no se borra, se anula
                                                                       CT            DE
 
- PROFESIONAL          id_tipo_personal    TIPO_PERSONAL               RESTRI        CASCA      Catálogo de referencia
+ PACIENTE             id_municipio        MUNICIPIO                   RESTRI        CASCA      Catálogo geográfico (E1-06)
+                                                                      CT            DE
+
+ CAMA                 codigo_servicio     SERVICIO_FACTURABLE         RESTRI        CASCA      Tarifa por día de la cama (E1-06)
+                                                                      CT            DE
+
+ NOTA_EVOLUCION       id_nota_anterior    NOTA_EVOLUCION              RESTRI        CASCA      Corrección = nota nueva; FK opcional (E1-06)
                                                                       CT            DE
 
  TARIFA_HONORARIO     id_profesional      PROFESIONAL                 RESTRI        CASCA      El histórico de tarifas se conserva
@@ -2382,8 +2412,10 @@ Dependencias transitivas detectadas y eliminadas:
  CARGO          id_cargo → codigo_servicio → nombre, tipo, afecto_iva                 El cargo conserva su propia descripción congelada, no la
                                                                                       del catálogo
 
- PROFESIONA     id_profesional → id_tipo_personal → requiere_colegiado,               Reglas de la categoría, no de la persona
- L              genera_honorario
+ TIPO_PERSON     requiere_colegiado / genera_honorario viven en el catálogo            El esquema 7.4 de PROFESIONAL no lleva
+ AL /            TIPO_PERSONAL; no se modelan como atributos de la persona             id_tipo_personal (E1-06 / Carlos, B). La
+ PROFESIONAL                                                                           obligatoriedad de numero_colegiado se
+                                                                                       expresa vía requiere_colegiado en Entrega II
 
 Atributos derivados que se eliminaron:
 

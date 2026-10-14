@@ -1,29 +1,30 @@
 # E1-06 Decisión humana sobre atributos en conflicto
 
-- Status: blocked
-- Owner: either
-- Agent: either
+- Status: in review
+- Owner: Carlos / Cursor
+- Agent: Cursor
 - Depends on: none
-- Needs human: yes
+- Needs human: no (closed 2026-10-14)
 
 ## What to build
 
-Nothing, until Carlos or Jordin writes the decision into `poteto-mode/decisions/locked.md` and removes the matching item from `poteto-mode/decisions/needs-human.md`.
-
-The conflict is listed in `needs-human.md`. Sección 5 and sección 7.4 disagree on `PROFESIONAL`, `CAMA`, `MUNICIPIO`, the evolution-note self-reference, and `numero_colegiado`.
+Carlos wrote the five decisions into `poteto-mode/decisions/locked.md` and struck the matching items in `poteto-mode/decisions/needs-human.md`. This ticket also applies the model/prose follow-through that those decisions require (transcription, `rel-*.mmd`, entity inventory, 7.6). It does not redraw Chen diagrams.
 
 ## Acceptance criteria
 
-- Each of the five items has a written decision in `locked.md` signed by naming which partner decided.
-- `rel-*.mmd` is updated only after that decision, in a follow-up ticket. This ticket does not redraw diagrams.
-- The transcription is not silently edited to hide the conflict.
+- Each of the five items has a written decision in `locked.md` naming Carlos as decider (2026-10-14).
+- `needs-human.md` strikes or clears the five items.
+- Transcription / `rel-*.mmd` / sección 4 / 7.6 updated only as the locked choices require — no invented clinical rules.
+- Chen diagrams are not redrawn in this ticket.
 
 ## Out of scope
 
 - An agent choosing the winning section.
-- Entrega II migrations.
+- Entrega II migrations / concrete DDL for `numero_colegiado`.
+- Redrawing sección 6.4 Chen sources.
 
 ## Links
 
+- `poteto-mode/decisions/locked.md` (E1-06 section)
 - `poteto-mode/decisions/needs-human.md`
-- Secciones 5 and 7 of the transcription
+- Secciones 4, 5, and 7 of the transcription

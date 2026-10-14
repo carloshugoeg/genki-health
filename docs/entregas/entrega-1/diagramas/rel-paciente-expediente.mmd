@@ -4,7 +4,12 @@
 %% Una columna UK marcada aquí es única por sí sola. Las claves únicas compuestas van en comentarios.
 
 %% Módulo de paciente y expediente. Sección 7.4. Idéntico en las dos instituciones relacionales.
+%% E1-06 (Carlos, 2026-10-14): MUNICIPIO añadido como destino de PACIENTE.id_municipio.
 erDiagram
+    MUNICIPIO {
+        int id_municipio PK
+        string nombre UK
+    }
     PACIENTE {
         int id_paciente PK
         int id_institucion FK
@@ -71,6 +76,7 @@ erDiagram
         string hash_sha256
         string fecha_carga
     }
+    MUNICIPIO |o--o{ PACIENTE : "ubica"
     PACIENTE ||--|| EXPEDIENTE : "posee"
     PACIENTE ||--o{ CONTACTO_EMERGENCIA : "declara"
     EXPEDIENTE ||--o{ ANTECEDENTE : "contiene"
@@ -78,6 +84,6 @@ erDiagram
     EXPEDIENTE ||--o{ DOCUMENTO_ADJUNTO : "adjunta"
 %% UK compuesta: ALERGIA (id_expediente, sustancia).
 %% UK de búsqueda: PACIENTE (id_institucion, numero_documento). El asterisco de 7.4 está sobre numero_documento.
-%% id_municipio apunta a un catálogo MUNICIPIO que no está entre las 58 entidades. No se dibujó esa tabla.
+%% MUNICIPIO es catálogo geográfico (sección 4 / E1-06). id_municipio en PACIENTE es opcional.
 %% id_paciente en EXPEDIENTE es FK y UK. Implementa el 1:1.
 %% edad e IMC no se almacenan.

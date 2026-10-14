@@ -32,6 +32,16 @@ These come from the Entrega I PDF and from the architecture note dated 2026-08-2
 - Insurance is one covered amount plus the patient balance. Policies are out of scope.
 - Physical SQL types (`SERIAL`, `TIMESTAMPTZ`, `AUTO_INCREMENT`, `DATETIME`) wait until Entrega II migrations. Supuesto 15.
 
+## E1-06 attribute conflicts (Carlos, 2026-10-14)
+
+Carlos Hugo Escobar Gómez closed the five gaps between sección 5 and sección 7.4. Agents do not reopen them.
+
+1. **PROFESIONAL (choice B).** Leave the sección 7.4 relational schema as-is: omit `id_tipo_personal`, `modalidad_contrato`, and `fecha_ingreso` from the relational model. Sección 5.1 may still list those attributes for analysis/Chen. Correct sección 7.6 and any prose that treated `PROFESIONAL.id_tipo_personal` as a foreign key present in 7.4.
+2. **CAMA (choice A).** Add `tipo_cama` and `codigo_servicio` to relational sección 7.4 and to `rel-*.mmd`. Chen 6.4.4 may already show them from sección 5.2.
+3. **PACIENTE / MUNICIPIO (choice A).** Add `MUNICIPIO` to the entity inventory (sección 4) and to the relational model so `PACIENTE.id_municipio` has a real target.
+4. **NOTA_EVOLUCION (choice A).** Add an optional foreign key from a note to the previous note in the relational model. A correction is a new note that references the prior one.
+5. **`numero_colegiado` (Carlos accepted the coordinator recommendation).** If `TIPO_PERSONAL.requiere_colegiado` is true, `numero_colegiado` is required. Otherwise it is `NULL` (never an empty string). It is UNIQUE among non-null values; PostgreSQL and MySQL nullable UNIQUE are enough. Concrete DDL waits for Entrega II. Do not invent a compound unique key.
+
 ## How the pair works
 
 - Humans own design. Cursor codes for Carlos. Claude codes for Jordin.
