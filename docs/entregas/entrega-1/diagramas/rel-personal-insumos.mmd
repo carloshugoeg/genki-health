@@ -85,11 +85,11 @@ erDiagram
     INSUMO ||--o{ CONSUMO_INSUMO : "consume"
     CONSUMO_INSUMO ||--o| CARGO : "origina cargo"
     PARTICIPACION ||--o| CARGO : "origina honorario"
-%% TIPO_PERSONAL no tiene arista. La sección 7.4 no pone id_tipo_personal en PROFESIONAL. La sección 7.6 sí describe esa FK.
+%% TIPO_PERSONAL no tiene arista a PROFESIONAL: E1-06 / Carlos (B) deja 7.4 sin id_tipo_personal. Sección 7.6 ya no lista esa FK.
 %% CARGO también referencia EXPEDIENTE, SERVICIO_FACTURABLE, CONSULTA, PROCEDIMIENTO y ADMISION, definidos en otros archivos.
 %% DETALLE_FACTURA.id_cargo (rel-facturacion.mmd) cierra el 1:1 con CARGO.
 %% UK compuesta: TARIFA_HONORARIO (id_profesional, codigo_servicio, vigente_desde).
 %% UK compuesta: PARTICIPACION (id_profesional, codigo_rol, id_consulta, id_procedimiento).
 %% UK compuesta: INSUMO (id_institucion, codigo).
 %% CARGO admite como máximo un origen entre consulta, procedimiento, admisión, consumo y participación. CHECK, no varias FK obligatorias.
-%% La sección 7.4 no dibuja la FK de PROFESIONAL hacia TIPO_PERSONAL, aunque la sección 5.1 y la sección 7.6 sí. No se inventó la columna en PROFESIONAL.
+%% numero_colegiado / requiere_colegiado: ver locked.md E1-06; sin clave única compuesta inventada.

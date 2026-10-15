@@ -2,7 +2,7 @@
 
 Documento para Héctor Jordin Adolfo García Coyoy y su agente Claude. No hace falta leer el chat de Carlos/Cursor.
 
-Fecha: 2026-09-25. Autor del trabajo: Carlos Hugo Escobar Gómez / Cursor.
+Fecha: 2026-10-14 (actualización E1-06). Autor del trabajo: Carlos Hugo Escobar Gómez / Cursor.
 
 ---
 
@@ -55,7 +55,7 @@ No inventes otras formas Graphviz. Copia la tabla del README. Resumen operativo:
 12. `edge [arrowhead=none]`
 13. Cabecera del `.dot` con la sección y remisión al README
 14. Render: `dot -Tpng archivo.dot -o archivo.png` y commit del PNG al lado
-15. Atributos solo de la sección 5 (para E1-05: **sección 5.3**). Nada nuevo. No edites `rel-*.mmd` para “arreglar” `needs-human.md`
+15. Atributos solo de la sección 5 (para E1-05: **sección 5.3**). Nada nuevo. E1-06 ya está locked; no reabras esos huecos en `rel-*.mmd`
 
 Nombres de relación del núcleo (para no desviarte si reusas entidades compartidas): Posee, Declara, Contiene, Se concreta en, Mide, Produce, Origina, Emite, Detalla. En acceso: Cuenta, Asigna, Otorga, Audita, Credencial. En hospitalización (E1-04): Contiene, Aloja, Documenta, Incluye, Clasifica.
 
@@ -100,28 +100,33 @@ Criterios que no puedes omitir (del ticket):
 | --- | --- | --- | --- |
 | E1-02 | Carlos / Cursor | done | Merged PR #3; notación fijada |
 | E1-03 | either | now en cola | No reescribir la clave Graphviz |
-| E1-04 | Carlos / Cursor | in review | Hospitalización 6.4.4 |
+| E1-04 | Carlos / Cursor | done | Merged PR #4; hospitalización 6.4.4 |
 | E1-05 | Jordin / Claude | backlog | **Tu trabajo**; paralelo OK |
-| E1-06 | either | blocked | Solo humanos |
+| E1-06 | Carlos / Cursor | in review | **Cerrado por Carlos (2026-10-14)** — no reabrir |
 | E2-01 | either | future | Fuera de alcance Entrega I |
 
 Cola viva: `poteto-mode/queue/NOW.md` (apunta a E1-03). Mapa: `poteto-mode/feature-map.md`.
 
 ---
 
-## Bloqueado: E1-06 (no elijas lado)
+## E1-06 cerrado (Claude: no reabrir)
 
-Hay cinco conflictos entre sección 5 y sección 7.4. Los agentes **no** deciden. Detalle y guía para humanos:
+Carlos locked the five conflicts on 2026-10-14. Source of truth: `poteto-mode/decisions/locked.md` (E1-06 section). Struck list: `poteto-mode/decisions/needs-human.md`.
 
-- Lista viva: `poteto-mode/decisions/needs-human.md`
-- Brief para decidir: `docs/progress/decision-brief-e1-06.md`
+| # | Choice | Effect for Claude |
+| --- | --- | --- |
+| PROFESIONAL | B | Do not add `id_tipo_personal` / `modalidad_contrato` / `fecha_ingreso` to `rel-*.mmd` |
+| CAMA | A | Relational already gets `tipo_cama` + `codigo_servicio` |
+| MUNICIPIO | A | Entity inventory + model include `MUNICIPIO` |
+| NOTA_EVOLUCION | A | Optional `id_nota_anterior` in relational |
+| `numero_colegiado` | coordinator rec. | Required iff `requiere_colegiado`; else `NULL`; UNIQUE among non-null; DDL Entrega II |
 
-Mientras tanto: diagramas Chen siguen la sección 5 cuando el ticket lo pide; `rel-*.mmd` siguen 7.4/7.5 a propósito.
+For **E1-05** Chen work: still follow sección 5.3 attributes. Do not invent further clinical rules. Do not “fix” E1-06 again.
 
 ---
 
 ## Fuera de alcance
 
 - Andamiaje de aplicación, ORM, entidades de código, Entrega II (E2-01)
-- Resolver E1-06 eligiendo una versión del PDF
-- Implementar E1-04 o E1-05 en nombre del otro
+- Reabrir o reinterpretar E1-06
+- Implementar E1-03 o E1-05 en nombre del otro

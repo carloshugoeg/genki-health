@@ -77,6 +77,6 @@ erDiagram
     ROL ||--o{ ROL_PERMISO : "tiene"
     PERMISO ||--o{ ROL_PERMISO : "otorga"
     USUARIO ||--o{ BITACORA : "audita"
-%% PROFESIONAL en 7.4 no incluye id_tipo_personal, modalidad_contrato ni fecha_ingreso. Esos atributos sí están en la sección 5.1. Ver poteto-mode/decisions/needs-human.md.
+%% PROFESIONAL en 7.4 omite id_tipo_personal, modalidad_contrato y fecha_ingreso (E1-06 / Carlos, elección B). Siguen en sección 5.1 para análisis/Chen.
 %% ROL_PERMISO: clave primaria compuesta (id_rol, id_permiso). Sin columnas propias.
-%% numero_colegiado es UK en 7.4, pero la sección 5.1 lo marca opcional. No se resolvió aquí.
+%% numero_colegiado: UNIQUE entre no nulos; NULL si no requiere_colegiado; nunca "". DDL concreto en Entrega II (E1-06).
