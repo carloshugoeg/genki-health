@@ -1,0 +1,130 @@
+// Chen detallado. Sección 6.4.9. Facturación y cobros (núcleo común).
+// Símbolos: ver clave Graphviz en README.md (sección 6.1).
+// DETALLE_FACTURA y PAGO son entidades débiles de FACTURA. Rombo doble en Linea y en Abona.
+// Linea copia la arista "linea" de rel-facturacion.mmd. Abona copia la arista "abona".
+// Participación de FACTURA parcial en ambos rombos. 6.4.9 no exige línea ni pago.
+// El marcador ||--|{ de rel-facturacion.mmd no cambia esa participación.
+// Clave parcial de DETALLE_FACTURA: linea. Se omite id_factura.
+// serie, numero e id_cargo no se subrayan.
+// PAGO: 5.1 da id_pago como PK y no nombra clave parcial. id_pago va subrayado y sólido.
+// fecha_hora de PAGO no es clave parcial.
+// id_cargo es elipse. Ninguna fuente nombra un rombo hacia CARGO. CARGO se dibuja en 6.4.11.
+// codigo_servicio de la línea está en 5.1. La línea no lleva id_consulta ni id_procedimiento.
+// total, subtotal_linea y saldo_pendiente van punteados porque 6.4.9 los llama derivados.
+// subtotal e impuesto van sólidos. SERVICIO_FACTURABLE se dibuja completo en 6.4.10.
+digraph chen_6_4_9 {
+  rankdir=LR;
+  splines=true;
+  overlap=false;
+  nodesep=0.35;
+  ranksep=0.55;
+  graph [
+    fontname="Helvetica",
+    label="6.4.9 Facturación y cobros (núcleo común)\nEl correlativo (serie, número) de una factura es único y no admite saltos.\nLa suma de los pagos no anulados de una factura nunca puede superar su total.\nUna factura anulada no acepta pagos nuevos y exige motivo de anulación.\nCada línea nace de un cargo. La relación es 1:1, con participación parcial del cargo, porque un cargo puede seguir pendiente de facturar.\nUn cargo se factura una sola vez.",
+    labelloc=t,
+    fontsize=13
+  ];
+  node [fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9, arrowhead=none];
+
+  // Entidades fuertes
+  node [shape=box, style=solid, peripheries=1];
+  FACTURA;
+
+  // Entidades débiles
+  node [shape=box, peripheries=2];
+  DETALLE_FACTURA;
+  PAGO;
+
+  // Relaciones identificadoras
+  node [shape=diamond, peripheries=2, height=0.7, width=1.2];
+  Linea [label="Linea"];
+  Abona [label="Abona"];
+
+  // Atributos
+  node [shape=ellipse, style=solid, peripheries=1, width=0, height=0];
+
+  // FACTURA
+  id_factura [label=<<U>id_factura</U>>];
+  id_institucion_fac [label="id_institucion"];
+  id_paciente;
+  serie;
+  numero;
+  fecha_emision;
+  nombre_receptor;
+  nit_receptor;
+  subtotal;
+  descuento;
+  impuesto;
+  total [label="total", style=dashed];
+  cobertura_seguro;
+  saldo_pendiente [label="saldo_pendiente", style=dashed];
+  estado_fac [label="estado"];
+  motivo_anulacion;
+  id_usuario_emite;
+  autorizacion_fel;
+
+  // DETALLE_FACTURA. Clave parcial linea. Sin id_factura.
+  linea_det [label=<<U>linea</U>>, style=dashed];
+  codigo_servicio_det [label="codigo_servicio"];
+  descripcion_det [label="descripcion"];
+  cantidad_det [label="cantidad"];
+  precio_unitario_det [label="precio_unitario"];
+  subtotal_linea [label="subtotal_linea", style=dashed];
+  id_cargo_det [label="id_cargo"];
+
+  // PAGO. id_pago es la PK sólida. fecha_hora no es clave parcial.
+  id_pago [label=<<U>id_pago</U>>];
+  fecha_hora_pago [label="fecha_hora"];
+  monto;
+  metodo;
+  referencia;
+  id_usuario_recibe;
+  anulado;
+
+  // FACTURA a Linea a DETALLE_FACTURA. Factura parcial. Línea total.
+  FACTURA -> Linea [penwidth=1, headlabel="1"];
+  Linea -> DETALLE_FACTURA [penwidth=3, taillabel="N"];
+
+  // FACTURA a Abona a PAGO. Factura parcial. Pago total.
+  FACTURA -> Abona [penwidth=1, headlabel="1"];
+  Abona -> PAGO [penwidth=3, taillabel="N"];
+
+  // Atributos a FACTURA
+  id_factura -> FACTURA;
+  id_institucion_fac -> FACTURA;
+  id_paciente -> FACTURA;
+  serie -> FACTURA;
+  numero -> FACTURA;
+  fecha_emision -> FACTURA;
+  nombre_receptor -> FACTURA;
+  nit_receptor -> FACTURA;
+  subtotal -> FACTURA;
+  descuento -> FACTURA;
+  impuesto -> FACTURA;
+  total -> FACTURA;
+  cobertura_seguro -> FACTURA;
+  saldo_pendiente -> FACTURA;
+  estado_fac -> FACTURA;
+  motivo_anulacion -> FACTURA;
+  id_usuario_emite -> FACTURA;
+  autorizacion_fel -> FACTURA;
+
+  // Atributos a DETALLE_FACTURA
+  linea_det -> DETALLE_FACTURA;
+  codigo_servicio_det -> DETALLE_FACTURA;
+  descripcion_det -> DETALLE_FACTURA;
+  cantidad_det -> DETALLE_FACTURA;
+  precio_unitario_det -> DETALLE_FACTURA;
+  subtotal_linea -> DETALLE_FACTURA;
+  id_cargo_det -> DETALLE_FACTURA;
+
+  // Atributos a PAGO
+  id_pago -> PAGO;
+  fecha_hora_pago -> PAGO;
+  monto -> PAGO;
+  metodo -> PAGO;
+  referencia -> PAGO;
+  id_usuario_recibe -> PAGO;
+  anulado -> PAGO;
+}
