@@ -1,6 +1,6 @@
 # E1-03 Dibujar diagramas Chen de facturación, personal e insumos
 
-- Status: in progress
+- Status: in review
 - Owner: Carlos Hugo Escobar / Cursor
 - Agent: Cursor
 - Claimed: 2026-10-15 by Carlos Hugo Escobar / Cursor
