@@ -22,3 +22,14 @@ Human-facing decision brief (Spanish, historical): `docs/progress/decision-brief
 **Locked:** required when `TIPO_PERSONAL.requiere_colegiado`; else `NULL` (never empty string); UNIQUE among non-null; nullable UNIQUE on PostgreSQL/MySQL; DDL in Entrega II; no compound unique. See `locked.md`.
 
 No open needs-human items remain for Entrega I attribute conflicts.
+
+## Open for Entrega II (Auth — Carlos)
+
+Agents must not invent these. `AuthPort` / `NeedsHumanAuthAdapter` fail closed until decided.
+
+1. **Login flow** — how credentials are collected and verified against Hospital PostgreSQL (identity system of record).
+2. **JWT claims** — exact claim set beyond the architecture sketch of `institutionId` (roles, professional id, token version, etc.).
+3. **Password policy** — Argon2id parameters, rotation, lockout beyond `intentos_fallidos` already in the model.
+4. **Session handling** — TTL, refresh, logout, and how HTTP middleware binds the token to the adapter registry.
+
+Until Carlos answers, `/api/auth/login` returns HTTP 501 `auth_needs_human`.

@@ -2,34 +2,41 @@
 
 Plataforma compartida de historiales clínicos para cuatro instituciones médicas independientes. Proyecto final de Bases de Datos II, Universidad Rafael Landívar.
 
-El enunciado está en `PROJECT-DESC.md`. La Entrega I ya está analizada. El PDF y la transcripción viven en `docs/entregas/entrega-1/`.
+El enunciado está en `PROJECT-DESC.md`. Entrega I vive en `docs/entregas/entrega-1/`. Entrega II (aplicación) está en scaffold bajo el ticket **E2-01**.
 
-## Qué hay que hacer ahora
+## Arranque local (Phase 0)
 
-Los agentes no eligen el alcance. El siguiente trabajo es un solo ticket.
+```bash
+npm install
+npm run validate          # o: bash scripts/validate.sh
+npm run build -w @genki/shared
+npm run dev -w @genki/server   # API en :3000
+npm run dev -w @genki/web      # SPA en :5173
+```
+
+Motores opcionales:
+
+```bash
+docker compose -f infra/docker-compose.yml up -d
+```
+
+Auth **no** está implementado. `POST /api/auth/login` responde 501 hasta que Carlos decida login, JWT, política de contraseñas y sesión.
+
+## Layout
+
+| Ruta | Rol |
+| --- | --- |
+| `server/` | Fastify + hexagonal (domain / application / ports / adapters / config) |
+| `web/` | React + Vite SPA |
+| `shared/` | DTOs y asignación institución → motor |
+| `infra/` | Docker Compose + emulador Firebase |
+| `scripts/validate.sh` | Compuerta local (= CI) |
+| `poteto-mode/` | Cola de tickets y decisiones |
+
+## Qué hacer ahora
 
 1. Leer `AGENTS.md`.
 2. Leer `poteto-mode/queue/NOW.md`.
 3. Hacer ese ticket y nada más.
 
-El mapa de capacidades está en `poteto-mode/feature-map.md`. No es otro backlog.
-
-Carlos Hugo Escobar y Héctor Jordin Adolfo García Coyoy deciden la arquitectura y el modelo. La implementación se delega. Cursor trabaja los tickets de Carlos. Claude trabaja los de Jordin.
-
-## Entrega I
-
-| Resultado que pide el enunciado | Dónde está |
-| --- | --- |
-| Modelo entidad-relación de las instituciones relacionales | `docs/entregas/entrega-1/diagramas/er-hospital-general.*` y `er-centro-pediatrico.*`. Los diagramas detallados de la sección 6.4 son el ticket en curso. |
-| Modelo relacional | `docs/entregas/entrega-1/diagramas/rel-*.mmd` y la sección 7 de la transcripción |
-| Entidades identificadas | Sección 4 de la transcripción. Son 58. |
-| Atributos por entidad | Sección 5 |
-| Información pública, confidencial y restringida | Sección 9, las cuatro instituciones |
-| Base de datos normalizada | Sección 8. El esquema textual de las secciones 7.4 y 7.5 está en BCNF según el documento. |
-| Operaciones en lenguaje sencillo | Sección 10, de OP-01 a OP-77 |
-
-Hospital general usa PostgreSQL. Centro médico pediátrico usa MySQL. Esas dos instituciones tienen modelo ER y modelo relacional. Laboratorio clínico (MongoDB) y clínica odontológica (Firebase) entran en el análisis de entidades, atributos, clasificación y operaciones. Su modelo documental es de la Entrega II.
-
-## Lo que este repositorio no es todavía
-
-No hay aplicación. La Entrega II pide el cliente-servidor y los cuatro motores. Ese trabajo está en el backlog como ticket futuro y no se empieza hasta cerrar la Entrega I.
+Carlos (Cursor) posee Hospital general (PostgreSQL) y Laboratorio clínico (MongoDB), más CI. Jordin (Claude) posee Centro pediátrico (MySQL) y Clínica odontológica (Firebase), más la suite de contratos.

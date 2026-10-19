@@ -15,10 +15,10 @@ Rows that share a ticket share a status. Owner is `Carlos/Cursor`, `Jordin/Claud
 
 ## Rollup
 
-- **Now:** E1-03 (both, in review — facturación, personal e insumos) and E1-05 (Jordin/Claude, current in `NOW.md` — centro pediátrico). Do not rewrite the Graphviz shape key in the diagram README.
-- **Next:** E2-01 (both) stays next until E1-03 and E1-05 merge. Do not split E2-01 until a human asks.
-- **Blocked:** none for Entrega I attribute conflicts (E1-06 closed by Carlos, 2026-10-14).
-- **Done:** Entrega I analysis already in the tree (no ticket): entities, attributes, classification, normalization, plain-language operations, overview ER, relational model. E1-02 Chen núcleo clínico (merged). E1-04 Chen hospitalización (merged). E1-06 human attribute decisions (merged PR #7).
+- **Now:** E2-01 (Carlos/Cursor) Phase-0 app scaffold in progress. E1-03 is Done (merged PR #8). Do not rewrite the Graphviz shape key.
+- **Next:** E1-05 (Jordin/Claude) pediatric Chen diagrams. Remaining E2-01 capabilities after Auth decisions and engine adapters.
+- **Blocked:** Auth slices of E2-01 (login, JWT claims, password policy, session) wait on Carlos — see `decisions/needs-human.md`.
+- **Done:** Entrega I analysis in tree. E1-02 Chen núcleo. E1-03 Chen facturación/personal/insumos (merged PR #8). E1-04 Chen hospitalización. E1-06 attribute decisions locked and merged.
 
 ## Entrega I
 
@@ -37,28 +37,28 @@ Analysis below is already in `docs/entregas/entrega-1/`. It has no ticket. The o
 | Chen: agenda, consulta, signos vitales | done | both | E1-02 |
 | Chen: diagnóstico, tratamiento, receta | done | both | E1-02 |
 | Chen: acceso, roles, auditoría | done | both | E1-02 |
-| Chen: facturación | now | both | E1-03 |
-| Chen: personal y honorarios | now | both | E1-03 |
-| Chen: insumos y cargos | now | both | E1-03 |
+| Chen: facturación | done | both | E1-03 |
+| Chen: personal y honorarios | done | both | E1-03 |
+| Chen: insumos y cargos | done | both | E1-03 |
 | Chen: hospitalización (Hospital general) | done | Carlos/Cursor | E1-04 |
-| Chen: responsable y antecedente perinatal | now | Jordin/Claude | E1-05 |
-| Chen: crecimiento | now | Jordin/Claude | E1-05 |
-| Chen: vacunación | now | Jordin/Claude | E1-05 |
+| Chen: responsable y antecedente perinatal | next | Jordin/Claude | E1-05 |
+| Chen: crecimiento | next | Jordin/Claude | E1-05 |
+| Chen: vacunación | next | Jordin/Claude | E1-05 |
 | Human decision on conflicting attributes (`PROFESIONAL`, `CAMA`, `MUNICIPIO`, evolution-note self-reference, `numero_colegiado`) | done | Carlos/Cursor | E1-06 |
 
 ## Entrega II
 
-One ticket. These are the brief's expected results, not an implementation split. Laboratorio clínico and Clínica odontológica have no Entrega I ER diagram. Their document model is here.
+One ticket. Phase-0 scaffold started under Carlos’s order (2026-10-19). Laboratorio clínico and Clínica odontológica document models remain later slices.
 
 | Capability | Status | Owner | Ticket |
 | --- | --- | --- | --- |
-| Client-server application | next | both | E2-01 |
+| Client-server application | now | Carlos/Cursor | E2-01 |
 | Database model corrected from Entrega I feedback | next | both | E2-01 |
 | Queries equivalent on all four engines | next | both | E2-01 |
 | Embed versus reference for MongoDB and Firebase | next | both | E2-01 |
-| One interface, unchanged by the active engine | next | both | E2-01 |
-| Create a record for a new patient | next | both | E2-01 |
+| One interface, unchanged by the active engine | now | Carlos/Cursor | E2-01 |
+| Create a record for a new patient | now | Carlos/Cursor | E2-01 |
 | Maintain a record: consultation, diagnosis, treatment, prescription | next | both | E2-01 |
-| Archive a record instead of deleting it | next | both | E2-01 |
-| Route the session to the institution engine at login | next | both | E2-01 |
+| Archive a record instead of deleting it | now | Carlos/Cursor | E2-01 |
+| Route the session to the institution engine at login | blocked | Carlos/Cursor | E2-01 |
 | Comparative note and written engine assignment | next | both | E2-01 |
