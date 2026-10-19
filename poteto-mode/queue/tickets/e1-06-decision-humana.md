@@ -1,10 +1,11 @@
 # E1-06 Decisión humana sobre atributos en conflicto
 
-- Status: in review
+- Status: done
 - Owner: Carlos / Cursor
 - Agent: Cursor
 - Depends on: none
 - Needs human: no (closed 2026-10-14)
+- Merged: https://github.com/carloshugoeg/genki-health/pull/7
 
 ## What to build
 

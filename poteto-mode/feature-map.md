@@ -15,10 +15,10 @@ Rows that share a ticket share a status. Owner is `Carlos/Cursor`, `Jordin/Claud
 
 ## Rollup
 
-- **Now:** E1-03 (both, in review — facturación, personal e insumos), E1-05 (Jordin/Claude, current in `NOW.md` — centro pediátrico), and E1-06 (Carlos/Cursor, in review — human decisions locked). Do not rewrite the Graphviz shape key in the diagram README.
-- **Next:** E2-01 (both) stays next until E1-03, E1-05, and E1-06 merge. Do not split E2-01 until a human asks.
+- **Now:** E1-03 (both, in review — facturación, personal e insumos) and E1-05 (Jordin/Claude, current in `NOW.md` — centro pediátrico). Do not rewrite the Graphviz shape key in the diagram README.
+- **Next:** E2-01 (both) stays next until E1-03 and E1-05 merge. Do not split E2-01 until a human asks.
 - **Blocked:** none for Entrega I attribute conflicts (E1-06 closed by Carlos, 2026-10-14).
-- **Done:** Entrega I analysis already in the tree (no ticket): entities, attributes, classification, normalization, plain-language operations, overview ER, relational model. E1-02 Chen núcleo clínico (merged). E1-04 Chen hospitalización (merged).
+- **Done:** Entrega I analysis already in the tree (no ticket): entities, attributes, classification, normalization, plain-language operations, overview ER, relational model. E1-02 Chen núcleo clínico (merged). E1-04 Chen hospitalización (merged). E1-06 human attribute decisions (merged PR #7).
 
 ## Entrega I
 
@@ -44,7 +44,7 @@ Analysis below is already in `docs/entregas/entrega-1/`. It has no ticket. The o
 | Chen: responsable y antecedente perinatal | now | Jordin/Claude | E1-05 |
 | Chen: crecimiento | now | Jordin/Claude | E1-05 |
 | Chen: vacunación | now | Jordin/Claude | E1-05 |
-| Human decision on conflicting attributes (`PROFESIONAL`, `CAMA`, `MUNICIPIO`, evolution-note self-reference, `numero_colegiado`) | now | Carlos/Cursor | E1-06 |
+| Human decision on conflicting attributes (`PROFESIONAL`, `CAMA`, `MUNICIPIO`, evolution-note self-reference, `numero_colegiado`) | done | Carlos/Cursor | E1-06 |
 
 ## Entrega II
 
