@@ -1,4 +1,4 @@
-/** Domain-local. Must match PACIENTE/EXPEDIENTE.estado in Entrega I (activo | archivado). */
+/** Domain-local. Matches EXPEDIENTE.estado in Entrega I (activo | archivado). Not PACIENTE.estado. */
 export type ExpedienteEstado = 'activo' | 'archivado';
 
 /** Clinical rows are never deleted. Discharge is estado = archivado with a reason. */

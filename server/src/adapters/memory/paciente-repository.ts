@@ -7,7 +7,7 @@ import type {
 } from '@genki/shared';
 import { asExpedienteId, asPacienteId } from '@genki/shared';
 import type { CreatePacienteInput, IdPort, PacienteRepositoryPort } from '../../ports/index.js';
-import { archivedEstado } from '../../domain/expediente-estado.js';
+import { archivedEstado, assertCanArchive } from '../../domain/expediente-estado.js';
 
 export class MemoryPacienteRepository implements PacienteRepositoryPort {
   private readonly pacientes = new Map<PacienteId, PacienteDto>();
@@ -86,6 +86,7 @@ export class MemoryPacienteRepository implements PacienteRepositoryPort {
       if (expediente.id_expediente !== input.id_expediente) {
         continue;
       }
+      assertCanArchive(expediente.estado, input.motivo_archivo);
       const next: ExpedienteDto = {
         ...expediente,
         estado: archivedEstado(),
@@ -94,10 +95,6 @@ export class MemoryPacienteRepository implements PacienteRepositoryPort {
         observacion_archivo: input.observacion_archivo ?? null,
       };
       this.expedientes.set(pacienteId, next);
-      const paciente = this.pacientes.get(pacienteId);
-      if (paciente) {
-        this.pacientes.set(pacienteId, { ...paciente, estado: archivedEstado() });
-      }
       return next;
     }
     throw new Error('Expediente not found');

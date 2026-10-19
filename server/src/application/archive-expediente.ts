@@ -1,10 +1,10 @@
 import type { ArchiveExpedienteInput, ExpedienteDto, PacienteId } from '@genki/shared';
-import { assertCanArchive, archivedEstado } from '../domain/expediente-estado.js';
+import { archivedEstado } from '../domain/expediente-estado.js';
 import type { ClockPort, PacienteRepositoryPort } from '../ports/index.js';
 
 /**
- * Memory-adapter path loads the patient only to confirm the expediente exists.
- * Full expediente fetch belongs on a dedicated port in a later slice.
+ * Archives the expediente only. PACIENTE.estado stays activo|inactivo (sección 5);
+ * do not write archivado onto the patient row.
  */
 export async function archiveExpediente(
   pacientes: PacienteRepositoryPort,
@@ -15,7 +15,6 @@ export async function archiveExpediente(
   if (!paciente) {
     throw new Error('Paciente not found');
   }
-  assertCanArchive(paciente.estado, input.motivo_archivo);
   const archived = await pacientes.archiveExpediente({
     id_expediente: input.id_expediente,
     motivo_archivo: input.motivo_archivo,

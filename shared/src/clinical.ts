@@ -14,8 +14,14 @@ import type {
   TratamientoId,
 } from './ids.js';
 
-/** PACIENTE.estado and EXPEDIENTE.estado — clinical rows are archived, never deleted. */
-export type RegistroEstado = 'activo' | 'archivado';
+/** PACIENTE.estado — sección 5: activo, inactivo (not archivado). */
+export type PacienteEstado = 'activo' | 'inactivo';
+
+/** EXPEDIENTE.estado — sección 5: activo, archivado. Clinical rows are never deleted. */
+export type ExpedienteEstado = 'activo' | 'archivado';
+
+/** EXPEDIENTE.motivo_archivo — sección 5 restricted values. */
+export type MotivoArchivo = 'traslado' | 'fallecimiento' | 'administrativo' | 'inactividad';
 
 export type Sexo = 'M' | 'F' | 'X';
 
@@ -50,7 +56,7 @@ export interface PacienteDto {
   direccion: string | null;
   id_municipio: number | null;
   fecha_registro: string;
-  estado: RegistroEstado;
+  estado: PacienteEstado;
 }
 
 /** EXPEDIENTE from rel-paciente-expediente.mmd */
@@ -59,9 +65,9 @@ export interface ExpedienteDto {
   id_paciente: PacienteId;
   numero_expediente: string;
   fecha_apertura: string;
-  estado: RegistroEstado;
+  estado: ExpedienteEstado;
   fecha_archivo: string | null;
-  motivo_archivo: string | null;
+  motivo_archivo: MotivoArchivo | null;
   observacion_archivo: string | null;
 }
 
@@ -129,7 +135,7 @@ export interface DetalleRecetaDto {
 
 export interface ArchiveExpedienteInput {
   id_expediente: ExpedienteId;
-  motivo_archivo: string;
+  motivo_archivo: MotivoArchivo;
   observacion_archivo?: string;
   fecha_archivo: string;
 }
