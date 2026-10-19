@@ -15,10 +15,10 @@ Rows that share a ticket share a status. Owner is `Carlos/Cursor`, `Jordin/Claud
 
 ## Rollup
 
-- **Now:** E2-01 (Carlos/Cursor) Phase-0 app scaffold in progress. E1-03 is Done (merged PR #8). Do not rewrite the Graphviz shape key.
-- **Next:** E1-05 (Jordin/Claude) pediatric Chen diagrams. Remaining E2-01 capabilities after Auth decisions and engine adapters.
-- **Blocked:** Auth slices of E2-01 (login, JWT claims, password policy, session) wait on Carlos — see `decisions/needs-human.md`.
-- **Done:** Entrega I analysis in tree. E1-02 Chen núcleo. E1-03 Chen facturación/personal/insumos (merged PR #8). E1-04 Chen hospitalización. E1-06 attribute decisions locked and merged.
+- **Now:** E2-01 (Carlos/Cursor) app scaffold + Auth (login/JWT routing) in progress on PR #9. E1-03 is Done (merged PR #8). Do not rewrite the Graphviz shape key.
+- **Next:** E1-05 (Jordin/Claude) pediatric Chen diagrams. Remaining E2-01 capabilities (engine adapters, consultations, comparative note).
+- **Blocked:** none for Auth (Carlos locked 2026-10-19). Multitenant permission *grants* beyond institution routing stay stop-and-ask if raised.
+- **Done:** Entrega I analysis in tree. E1-02 Chen núcleo. E1-03 Chen facturación/personal/insumos (merged PR #8). E1-04 Chen hospitalización. E1-06 attribute decisions locked and merged. Auth decisions locked.
 
 ## Entrega I
 
@@ -60,5 +60,5 @@ One ticket. Phase-0 scaffold started under Carlos’s order (2026-10-19). Labora
 | Create a record for a new patient | now | Carlos/Cursor | E2-01 |
 | Maintain a record: consultation, diagnosis, treatment, prescription | next | both | E2-01 |
 | Archive a record instead of deleting it | now | Carlos/Cursor | E2-01 |
-| Route the session to the institution engine at login | blocked | Carlos/Cursor | E2-01 |
+| Route the session to the institution engine at login | now | Carlos/Cursor | E2-01 |
 | Comparative note and written engine assignment | next | both | E2-01 |

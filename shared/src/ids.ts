@@ -25,3 +25,7 @@ export function asExpedienteId(value: number): ExpedienteId {
 export function asConsultaId(value: number): ConsultaId {
   return value as ConsultaId;
 }
+
+export function asUsuarioId(value: number): UsuarioId {
+  return value as UsuarioId;
+}

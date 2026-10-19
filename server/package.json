@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@genki/shared": "*",
+    "argon2": "^0.45.1",
     "fastify": "^5.0.0",
+    "jose": "^6.2.12",
     "zod": "^3.23.8"
   },
   "devDependencies": {

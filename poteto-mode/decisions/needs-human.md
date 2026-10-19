@@ -23,13 +23,14 @@ Human-facing decision brief (Spanish, historical): `docs/progress/decision-brief
 
 No open needs-human items remain for Entrega I attribute conflicts.
 
-## Open for Entrega II (Auth — Carlos)
+## Closed by Carlos (2026-10-19) — Auth
 
-Agents must not invent these. `AuthPort` / `NeedsHumanAuthAdapter` fail closed until decided.
+~~1. Login flow~~ **Locked:** email + password; institution scoped at login. See `locked.md`.
 
-1. **Login flow** — how credentials are collected and verified against Hospital PostgreSQL (identity system of record).
-2. **JWT claims** — exact claim set beyond the architecture sketch of `institutionId` (roles, professional id, token version, etc.).
-3. **Password policy** — Argon2id parameters, rotation, lockout beyond `intentos_fallidos` already in the model.
-4. **Session handling** — TTL, refresh, logout, and how HTTP middleware binds the token to the adapter registry.
+~~2. JWT claims~~ **Locked:** completo claim set (`sub`, `email`, `institucion_id`, `institucion_kind`, `roles`, `motor`, `iat`, `exp`, `typ`). See `locked.md`.
 
-Until Carlos answers, `/api/auth/login` returns HTTP 501 `auth_needs_human`.
+~~3. Password policy~~ **Locked:** min 8 chars, letter+digit, Argon2id only. See `locked.md`.
+
+~~4. Session handling~~ **Locked:** access JWT (30m) + refresh JWT (14d), refresh rotates on use. See `locked.md`.
+
+No open needs-human Auth items remain. Multitenant permission *grants* beyond institution routing at login stay stop-and-ask if they appear.

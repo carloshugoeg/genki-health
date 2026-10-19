@@ -1,7 +1,6 @@
 import type { DataEngine, InstitutionId, InstitutionKind } from '@genki/shared';
 import { engineForKind } from '@genki/shared';
 import type {
-  AuthPort,
   ClockPort,
   ConsultaRepositoryPort,
   IdPort,
@@ -11,11 +10,10 @@ import type {
 
 /**
  * One adapter set per institution session. Business logic never sees the engine.
- * JWT → institutionId resolution is needs-human; callers pass institution explicitly for now.
+ * JWT middleware resolves kind + institucion_id, then calls resolve().
  */
 export interface AdapterSet {
   readonly engine: DataEngine;
-  readonly auth: AuthPort;
   readonly clock: ClockPort;
   readonly ids: IdPort;
   readonly unitOfWork: UnitOfWorkPort;

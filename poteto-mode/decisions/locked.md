@@ -42,6 +42,28 @@ Carlos Hugo Escobar Gómez closed the five gaps between sección 5 and sección 
 4. **NOTA_EVOLUCION (choice A).** Add an optional foreign key from a note to the previous note in the relational model. A correction is a new note that references the prior one.
 5. **`numero_colegiado` (Carlos accepted the coordinator recommendation).** If `TIPO_PERSONAL.requiere_colegiado` is true, `numero_colegiado` is required. Otherwise it is `NULL` (never an empty string). It is UNIQUE among non-null values; PostgreSQL and MySQL nullable UNIQUE are enough. Concrete DDL waits for Entrega II. Do not invent a compound unique key.
 
+## Auth (Carlos, 2026-10-19)
+
+Carlos Hugo Escobar Gómez locked Entrega II authentication. Agents do not reopen these.
+
+1. **Login flow.** Email + password only. The user selects (and must belong to) one institution at authentication. Identity system of record remains Hospital PostgreSQL via `AuthPort` (architecture §4.2); Phase-0 uses a memory adapter behind the same port.
+2. **JWT access claims (“completo”).** Exact claim set (also encoded in `@genki/shared` / server verify):
+   - `sub` — usuario id (string form of `id_usuario`)
+   - `email` — login email
+   - `institucion_id` — numeric institution id
+   - `institucion_kind` — one of the four locked kinds
+   - `roles` — string array of role names
+   - `motor` — engine for that institution (`postgres` | `mysql` | `mongodb` | `firebase`), from `INSTITUTION_ENGINE_ASSIGNMENTS`
+   - `iat` — issued-at (seconds)
+   - `exp` — expiry (seconds)
+   - `typ` — literal `"access"`
+3. **Password policy (“el estándar”).** Minimum 8 characters; at least one letter and one digit. Hash with **Argon2id** only (already locked above; overrides the architecture note’s “argon2/bcrypt”). No plaintext storage. Spec names no OWASP ASVS level; this baseline is the documented standard.
+4. **Session (persistent).** Access JWT + refresh JWT. Defaults (spec was silent on TTLs):
+   - Access TTL: **30 minutes**
+   - Refresh TTL: **14 days**
+   - Refresh tokens rotate on each successful refresh (`jti` replaced; previous `jti` invalidated).
+   Refresh claims: `sub`, `institucion_id`, `institucion_kind`, `jti`, `iat`, `exp`, `typ: "refresh"`.
+
 ## How the pair works
 
 - Humans own design. Cursor codes for Carlos. Claude codes for Jordin.
