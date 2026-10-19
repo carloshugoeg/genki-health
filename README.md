@@ -20,7 +20,7 @@ Motores opcionales:
 docker compose -f infra/docker-compose.yml up -d
 ```
 
-Auth **no** está implementado. `POST /api/auth/login` responde 501 hasta que Carlos decida login, JWT, política de contraseñas y sesión.
+Auth (Carlos 2026-10-19): `POST /api/auth/login` con email, password e `institution_kind`. Access JWT 30m + refresh 14d. Demo: `hospital@genki.local` / `GenkiDev1`. Requiere `JWT_SECRET` (ver `.env.example`).
 
 ## Layout
 

@@ -1,36 +1,33 @@
-import type { InstitutionId, UsuarioId } from '@genki/shared';
+import type {
+  AuthPrincipalDto,
+  AuthTokensDto,
+  InstitutionKind,
+  LoginRequestDto,
+} from '@genki/shared';
 
-/**
- * needs-human (Carlos): login flow, JWT claims, password policy, session handling.
- * Do not invent Auth. Callers must treat this port as unavailable until decided.
- */
-export class AuthNotConfiguredError extends Error {
-  constructor(message = 'AuthPort is blocked pending Carlos human decision') {
+export class AuthError extends Error {
+  constructor(
+    message: string,
+    readonly code: 'invalid_credentials' | 'invalid_token' | 'password_policy' | 'misconfigured',
+  ) {
     super(message);
-    this.name = 'AuthNotConfiguredError';
+    this.name = 'AuthError';
   }
 }
 
-export interface AuthCredentials {
-  nombre_usuario: string;
-  contrasena: string;
-}
-
-export interface AuthSession {
-  id_usuario: UsuarioId;
-  id_institucion: InstitutionId;
-  /** Opaque until JWT claim shape is decided. */
-  token: string;
-}
+export type { AuthPrincipalDto, AuthTokensDto, LoginRequestDto };
 
 export interface AuthPort {
-  /**
-   * @throws {AuthNotConfiguredError} until Carlos decides Auth.
-   */
-  login(_credentials: AuthCredentials): Promise<AuthSession>;
+  login(input: LoginRequestDto): Promise<AuthTokensDto>;
+  refresh(refreshToken: string): Promise<AuthTokensDto>;
+  verifyAccessToken(accessToken: string): Promise<AuthPrincipalDto>;
+}
 
-  /**
-   * @throws {AuthNotConfiguredError} until Carlos decides Auth.
-   */
-  verifyToken(_token: string): Promise<AuthSession>;
+export function isInstitutionKind(value: string): value is InstitutionKind {
+  return (
+    value === 'hospital_general' ||
+    value === 'centro_pediatrico' ||
+    value === 'laboratorio_clinico' ||
+    value === 'clinica_odontologica'
+  );
 }

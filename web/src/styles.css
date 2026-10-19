@@ -3,6 +3,7 @@
   --paper: #e8f1f0;
   --accent: #0f6b5c;
   --muted: #4a6468;
+  --danger: #8b2e2e;
   --band: linear-gradient(145deg, #d5ebe6 0%, #f3f7f6 45%, #c5ddd8 100%);
   font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', serif;
   color: var(--ink);
@@ -65,13 +66,48 @@ li {
   margin-bottom: 0.35rem;
 }
 
+.login-form {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 22rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+}
+
+input,
+select {
+  font: inherit;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #9bb5b0;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+}
+
 button {
-  margin-top: 0.75rem;
+  margin-top: 0.25rem;
   padding: 0.65rem 1.1rem;
   border: 1px solid var(--accent);
-  background: transparent;
-  color: var(--accent);
+  background: var(--accent);
+  color: #f4fffc;
   font: inherit;
-  cursor: not-allowed;
+  cursor: pointer;
+}
+
+button:disabled {
   opacity: 0.65;
+  cursor: wait;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.error {
+  color: var(--danger);
+  margin: 0;
 }

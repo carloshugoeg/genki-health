@@ -2,9 +2,9 @@
 
 Plataforma compartida de historiales clínicos para cuatro instituciones médicas independientes. Proyecto final de Bases de Datos II, Universidad Rafael Landívar. Integrantes: Carlos Hugo Escobar Gómez y Héctor Jordin Adolfo García Coyoy.
 
-## Estado actual (Entrega II — scaffold E2-01)
+## Estado actual (Entrega II — scaffold E2-01 + Auth)
 
-El repositorio ya tiene el esqueleto cliente-servidor (npm workspaces). La lógica de negocio arranca sobre el adaptador en memoria. Auth queda bloqueado (`needs-human`) hasta decisión de Carlos.
+El repositorio tiene el esqueleto cliente-servidor (npm workspaces). La lógica de negocio arranca sobre el adaptador en memoria. Auth quedó locked por Carlos (2026-10-19): email+password, JWT completo, Argon2id, access+refresh.
 
 | Componente | Estado | Ubicación |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ El repositorio ya tiene el esqueleto cliente-servidor (npm workspaces). La lógi
 | Diagramas Chen detallados (sección 6.4) | Parcial (E1-03/E1-05 pueden seguir abiertos) | `docs/entregas/entrega-1/diagramas/chen-6.4.*` |
 | Monorepo TypeScript (Fastify + React/Vite) | Scaffold E2-01 | `server/`, `web/`, `shared/` |
 | Puertos hexagonales + adaptador memory | Scaffold E2-01 | `server/src/ports`, `server/src/adapters/memory` |
-| Auth / JWT / sesión | Bloqueado (needs-human) | `server/src/ports/auth.ts` |
+| Auth / JWT / sesión | Locked + implementado (memory SoR) | `server/src/ports/auth.ts`, `adapters/memory/auth.ts` |
 | Motores reales (pg/mysql/mongo/firebase) | Pendiente | carpetas vacías bajo `server/src/adapters/` |
 | `scripts/validate.sh` + CI | Scaffold E2-01 | `scripts/validate.sh`, `.github/workflows/ci.yml` |
 
@@ -34,7 +34,7 @@ Cada institución usa un motor distinto. La asignación está fijada en `poteto-
 La especificación completa está en `docs/superpowers/specs/2026-08-27-genki-health-architecture-and-agent-governance-design.md`. Resumen:
 
 1. **Un expediente por paciente por institución.** El historial se acumula; no se borran filas clínicas. La baja es `estado = archivado` con motivo.
-2. **Enrutamiento por institución.** Al autenticarse, el motor de base de datos del usuario determina dónde se persisten todas las operaciones de la sesión. (Auth pendiente de Carlos.)
+2. **Enrutamiento por institución.** Al autenticarse, el JWT lleva `institucion_id`, `institucion_kind` y `motor`; el middleware resuelve el conjunto de adaptadores.
 3. **Arquitectura hexagonal.** La lógica de negocio no depende del motor. Los casos de uso reciben puertos; los adaptadores implementan cada motor.
 4. **Sin ORM.** Drivers directos (`pg`, `mysql2`, `mongodb`, `firebase-admin`) con SQL y migraciones escritas a mano.
 5. **Interfaz idéntica.** El cliente web (React + Vite) consume una API REST; la UI no cambia según el motor activo.
@@ -72,11 +72,11 @@ flowchart TB
         FBDB[("Firestore")]
     end
 
-    WEB -->|"REST (+ JWT cuando Auth exista)"| HTTP
+    WEB -->|"REST + JWT (access + refresh)"| HTTP
     HTTP --> APP
     APP --> DOM
     APP --> PORTS
-    CONFIG -->|"institutionId del token (pendiente)"| HTTP
+    CONFIG -->|"institucion_kind + institucion_id del access token"| HTTP
     PORTS --> MEM
     PORTS --> PG
     PORTS --> MY
@@ -88,18 +88,13 @@ flowchart TB
     FB --> FBDB
 ```
 
-### Flujo de una solicitud (objetivo)
+### Flujo de autenticación (locked 2026-10-19)
 
-1. El usuario inicia sesión → la API valida credenciales → emite un JWT con `institutionId`.
-2. El middleware de cada solicitud resuelve el conjunto de adaptadores desde el registro usando la institución del token.
-3. Los casos de uso reciben puertos; no saben qué motor está detrás.
-4. Agregar o mover el motor de una institución = una entrada en el registro + configuración. La lógica de negocio no cambia.
-
-### Flujo Phase-0 (actual)
-
-1. `/health` y `POST /api/pacientes` usan el registro en memoria con institución por defecto `hospital_general` (sin Auth).
-2. `POST /api/auth/login` responde **501** `auth_needs_human`.
-3. El adaptador memory implementa alta de paciente + expediente; archive está en dominio + puerto.
+1. `POST /api/auth/login` con `email`, `password`, `institution_kind` → Argon2id verify → access JWT (30m) + refresh JWT (14d).
+2. Claims de access: `sub`, `email`, `institucion_id`, `institucion_kind`, `roles`, `motor`, `iat`, `exp`, `typ:"access"`.
+3. Rutas clínicas (p. ej. `POST /api/pacientes`) exigen `Authorization: Bearer <access>`; el middleware resuelve el registro.
+4. `POST /api/auth/refresh` rota el refresh (`jti` anterior invalidado).
+5. Identidad: `AuthPort` de plataforma (memory ahora; Hospital PostgreSQL después). No es por-adaptador clínico.
 
 ## Módulos del dominio clínico
 
