@@ -1,13 +1,13 @@
 # Now
 
-**E1-03 Dibujar diagramas Chen de facturación, personal e insumos**
+**E2-01 Entrega II, aplicación cliente-servidor**
 
-Owner is either partner. Cursor or Claude may claim it. The full ticket is `poteto-mode/queue/tickets/e1-03-chen-economico.md`.
+Owner: Carlos Hugo Escobar / Cursor. The full ticket is `poteto-mode/queue/tickets/e2-01-entrega-ii.md`.
 
-E1-02 is merged (PR #3). E1-04 is merged (PR #4). E1-05 (Jordin/Claude) may run in parallel; copy the Graphviz shape key from `docs/entregas/entrega-1/diagramas/README.md` and do not rewrite it.
+Carlos Hugo Escobar explicitly ordered Entrega II app scaffolding on 2026-10-19. That overrides the AGENTS.md “Entrega I only / do not scaffold until Entrega I tickets are done” scope for this work. Other AGENTS.md hard rules still apply (no inventing clinical entities; stop-and-ask for Auth, Payments, DB migrations, multitenant permissions, deleting data, protocol changes).
 
-E1-03 may run in parallel only if it does not rewrite that shape key.
+## Parallel Entrega I notes
 
-E1-06 is in review (Carlos locked the five decisions on 2026-10-14). Do not reopen them.
-
-E2-01 is Entrega II. It is not current work.
+- E1-03 may still be open as PR #8 — do not rewrite its Chen diagrams; avoid conflicting paths.
+- E1-05 (Jordin/Claude) remains backlog for pediatric Chen diagrams only. Do not implement Jordin’s Chen work here.
+- E1-02, E1-04, E1-06 are merged on `main`.
