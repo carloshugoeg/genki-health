@@ -113,11 +113,7 @@ test('all_live_routes_are_specified', () => {
     'DTO-BASELINE.ts must retain LoginRequestDto',
   );
   assert.match(dto, /export interface PacienteDto/, 'DTO-BASELINE.ts must retain PacienteDto');
-  assert.match(
-    dto,
-    /export interface ExpedienteDto/,
-    'DTO-BASELINE.ts must retain ExpedienteDto',
-  );
+  assert.match(dto, /export interface ExpedienteDto/, 'DTO-BASELINE.ts must retain ExpedienteDto');
 });
 
 test('ports_include_atomic_close_and_logout', () => {
