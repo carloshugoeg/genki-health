@@ -2,9 +2,9 @@
 
 Plataforma compartida de historiales clínicos para cuatro instituciones médicas independientes. Proyecto final de Bases de Datos II, Universidad Rafael Landívar. Integrantes: Carlos Hugo Escobar Gómez y Héctor Jordin Adolfo García Coyoy.
 
-## Estado actual (Entrega II — scaffold E2-01 + Auth)
+## Estado actual (Entrega II — base P0 + Auth)
 
-El repositorio tiene el esqueleto cliente-servidor (npm workspaces). La lógica de negocio arranca sobre el adaptador en memoria. Auth quedó locked por Carlos (2026-10-19): email+password, JWT completo, Argon2id, access+refresh.
+El repositorio tiene el esqueleto cliente-servidor (npm workspaces) traído desde PR #9 rebaseado sobre `main` (con #8 ya fusionado). E2-P0-01 levantó la regla obsoleta “solo Entrega I” en `AGENTS.md`, añadió `docs/gate-checklist.md` (G0–G8), el índice `docs/plan/E2-EXECUTABLE.md` y el contrato congelado `docs/plan/contracts/CORE.md`. Auth quedó locked por Carlos (2026-10-19): email+password, JWT completo, Argon2id, access+refresh. E1-05 sigue en paralelo y no bloquea E2.
 
 | Componente | Estado | Ubicación |
 | --- | --- | --- |

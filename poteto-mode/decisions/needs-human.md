@@ -34,3 +34,9 @@ No open needs-human items remain for Entrega I attribute conflicts.
 ~~4. Session handling~~ **Locked:** access JWT (30m) + refresh JWT (14d), refresh rotates on use. See `locked.md`.
 
 No open needs-human Auth items remain. Multitenant permission *grants* beyond institution routing at login stay stop-and-ask if they appear.
+
+## Execution assumptions (E2 package, not historical human answers)
+
+Appended by E2-P0-01 after Carlos authorized the frozen execution package (2026-11-05/06). These are adopted planning defaults, not fabricated closures of open product questions. Auth locks above stay intact.
+
+- **A5 ASSUMPTION (grant scope).** Adopt C5 minimal runtime app/identity/report-role matrix plus per-institution Firestore deny-by-default rules and Mongo collection roles. No full RBAC admin UI. No encryption-at-rest implementation in this package. Broader multitenant permission grants beyond institution routing at login remain stop-and-ask.

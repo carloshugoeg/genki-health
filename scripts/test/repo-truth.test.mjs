@@ -69,11 +69,7 @@ test('auth_locks_remain_intact', () => {
     /Refresh TTL:\s*\*\*14 days\*\*/,
     'locked.md must keep the 14-day refresh TTL',
   );
-  assert.match(
-    locked,
-    /Argon2id/,
-    'locked.md must keep Argon2id as the password hash',
-  );
+  assert.match(locked, /Argon2id/, 'locked.md must keep Argon2id as the password hash');
   assert.match(
     needsHuman,
     /No open needs-human Auth items remain/,
@@ -86,11 +82,7 @@ test('gate_has_protocol_and_security_items', () => {
   assert.ok(existsSync(path), 'docs/gate-checklist.md must exist');
   const gate = read('docs/gate-checklist.md');
   for (const id of ['G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8']) {
-    assert.match(
-      gate,
-      new RegExp(`\\*\\*${id}\\b`),
-      `docs/gate-checklist.md must include ${id}`,
-    );
+    assert.match(gate, new RegExp(`\\*\\*${id}\\b`), `docs/gate-checklist.md must include ${id}`);
   }
   assert.match(
     gate,
