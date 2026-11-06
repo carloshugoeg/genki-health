@@ -15,10 +15,10 @@ Rows that share a ticket share a status. Owner is `Carlos/Cursor`, `Jordin/Claud
 
 ## Rollup
 
-- **Now:** no active agent claim after E2-P1-03. E2-01 scaffold + Auth are on `main` via merged PR #10. E1-03 is Done (merged PR #8). Do not rewrite the Graphviz shape key.
-- **Next:** E2-P1-04 when an owner claims it. E1-05 (Jordin/Claude) pediatric Chen diagrams (parallel, not an E2 gate). Remaining E2 capabilities stay indexed as later P1–P6 tickets; scaffold landing did not mark them done.
+- **Now:** E2-P1-04 claimed on `docs/T-E2-P1-04-install` (Auto / Hugo Escobar). E2-01 scaffold + Auth are on `main` via merged PR #10. E1-03 is Done (merged PR #8). Do not rewrite the Graphviz shape key.
+- **Next:** E2-P1-04 (claimed in progress). E1-05 (Jordin/Claude) pediatric Chen diagrams (parallel, not an E2 gate). Remaining E2 capabilities stay indexed as later P1–P6 tickets; scaffold landing did not mark them done.
 - **Blocked:** Multitenant permission *grants* beyond institution routing stay stop-and-ask if raised.
-- **Done:** Entrega I analysis in tree. E1-02 Chen núcleo. E1-03 Chen facturación/personal/insumos (merged PR #8). E1-04 Chen hospitalización. E1-06 attribute decisions locked and merged. Auth decisions locked. E2-P0-01 repo truth / E1-only gate lift (merged PR #10). E2-P0-02 tracker and governance sync (PR #11). E2-P0-03 base CI / journal gate (PR #12). E2-P1-01 frozen API/port pack (merged PR #13). E2-P1-02 frozen SQL physical schema pack (merged PR #14). E2-P1-03 document/security/seed contracts and mapping ADRs (this PR).
+- **Done:** Entrega I analysis in tree. E1-02 Chen núcleo. E1-03 Chen facturación/personal/insumos (merged PR #8). E1-04 Chen hospitalización. E1-06 attribute decisions locked and merged. Auth decisions locked. E2-P0-01 repo truth / E1-only gate lift (merged PR #10). E2-P0-02 tracker and governance sync (PR #11). E2-P0-03 base CI / journal gate (PR #12). E2-P1-01 frozen API/port pack (merged PR #13). E2-P1-02 frozen SQL physical schema pack (merged PR #14). E2-P1-03 document/security/seed contracts and mapping ADRs (merged PR #15).
 
 ## Entrega I
 
