@@ -15,9 +15,9 @@ Rows that share a ticket share a status. Owner is `Carlos/Cursor`, `Jordin/Claud
 
 ## Rollup
 
-- **Now:** E2-01 (Carlos/Cursor) app scaffold + Auth (login/JWT routing) in progress on PR #9. E1-03 is Done (merged PR #8). Do not rewrite the Graphviz shape key.
-- **Next:** E1-05 (Jordin/Claude) pediatric Chen diagrams. Remaining E2-01 capabilities (engine adapters, consultations, comparative note).
-- **Blocked:** none for Auth (Carlos locked 2026-10-19). Multitenant permission *grants* beyond institution routing stay stop-and-ask if raised.
+- **Now:** E2-P0-01 (agent / Auto) adopt E2 base and lift E1-only gate on `chore/T-E2-P0-01-repo-truth`. E2-01 scaffold + Auth remain in tree from rebased PR #9. E1-03 is Done (merged PR #8). Do not rewrite the Graphviz shape key.
+- **Next:** E1-05 (Jordin/Claude) pediatric Chen diagrams (parallel, not an E2 gate). Remaining E2-01 capabilities (engine adapters, consultations, comparative note) after P0.
+- **Blocked:** none for Auth (Carlos locked 2026-10-19). Multitenant permission *grants* beyond institution routing stay stop-and-ask if raised. Protocol-change merge of this PR needs both owners.
 - **Done:** Entrega I analysis in tree. E1-02 Chen núcleo. E1-03 Chen facturación/personal/insumos (merged PR #8). E1-04 Chen hospitalización. E1-06 attribute decisions locked and merged. Auth decisions locked.
 
 ## Entrega I
@@ -48,10 +48,11 @@ Analysis below is already in `docs/entregas/entrega-1/`. It has no ticket. The o
 
 ## Entrega II
 
-One ticket. Phase-0 scaffold started under Carlos’s order (2026-10-19). Laboratorio clínico and Clínica odontológica document models remain later slices.
+Phase-0 scaffold from E2-01 (PR #9) plus P0 integration tickets. Laboratorio clínico and Clínica odontológica document models remain later slices.
 
 | Capability | Status | Owner | Ticket |
 | --- | --- | --- | --- |
+| Adopt E2 base; lift stale E1-only gate | now | agent/Auto | E2-P0-01 |
 | Client-server application | now | Carlos/Cursor | E2-01 |
 | Database model corrected from Entrega I feedback | next | both | E2-01 |
 | Queries equivalent on all four engines | next | both | E2-01 |
