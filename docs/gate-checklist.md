@@ -7,6 +7,7 @@ Protocol-change files (`AGENTS.md`, CI workflows, `ports/` interfaces, initial m
 ## Gates
 
 - **G0 repo truth:** #8 content integrated; #9 rebased content integrated; AGENTS E2 override, exact adopted assumptions and tracker rows consistent. E1-05 independent. Neither merge was performed by this planning task.
+  - Index install (E2-P1-04, 2026-11-06 America/Guatemala): executable ticket registry `docs/plan/tickets/index.json` and populated `docs/plan/E2-EXECUTABLE.md` (assumptions A1–A15, schedule windows, dependency table, contract + gate links). Structural `node --test scripts/test/plan-paths.test.mjs` red then green. This does not re-run #8/#9 merges.
   - Evidence (E2-P0-01, 2026-11-06 America/Guatemala): branch `chore/T-E2-P0-01-repo-truth` created from pinned #9 head `6b6a58167d65bbc1f2ca06c88de706efd074da8f`, rebased onto `origin/main` at `0bda4f7` (merged #8). Shared branch `cursor/e2-01-app-scaffold-6295` was not rewritten. `node --test scripts/test/repo-truth.test.mjs` red after the test commit, then green after implementation. `bash scripts/validate.sh` recorded in the journal.
   - Evidence (E2-P0-02, 2026-11-06 America/Guatemala): branch `docs/T-E2-P0-02-synchronize` from `origin/main` at `f019133` (merged #10). Trackers, PROJECT-DESC locked engine table, governance pointers, and incomplete-adapter matrix synchronized. `node --test scripts/test/tracker-sync.test.mjs` red after the test commit (`36398b171414b122abd61683390402f7e911cdf6`), then green after implementation. `bash scripts/validate.sh` recorded in the journal. Shared branch `cursor/e2-01-app-scaffold-6295` was not rewritten.
 - **G1 base CI on main:** journal tests (PR + main push), install/lint/format/strict typecheck/depcruise/unit/API/web build; owner records protection capabilities and required check names. No assumption private repo protection is enabled.
@@ -29,4 +30,5 @@ Protocol-change files (`AGENTS.md`, CI workflows, `ports/` interfaces, initial m
 - **G7 document/export:** ten Spanish note sections, rubric mapping/source/evidence, scoped limitations, readable HTML/PDF,8-minute reproducible demo; all artifacts sanitized.
   - Evidence: pending later ticket.
 - **G8 handoff:** final trackers truthfully state bounded MVP done, deferred list retained, all46 ticket statuses consistent; agents rehearse; Carlos handles final submission as PM/approver. Record actual submission separately, never pre-check it.
+  - Prerequisite index (E2-P1-04, 2026-11-06 America/Guatemala): all 46 E2 ticket ids, deps, owners, files, and `created_by` path origins are frozen in `docs/plan/tickets/index.json`. Final G8 tracker close remains E2-P6-03.
   - Evidence: pending later ticket.

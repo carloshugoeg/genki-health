@@ -33,7 +33,10 @@ function loadIndex() {
   const raw = read(INDEX);
   const parsed = JSON.parse(raw);
   assert.ok(Array.isArray(parsed.tickets), 'index.json tickets must be an array');
-  assert.ok(parsed.created_by && typeof parsed.created_by === 'object', 'index.json created_by must be an object');
+  assert.ok(
+    parsed.created_by && typeof parsed.created_by === 'object',
+    'index.json created_by must be an object',
+  );
   assert.ok(Array.isArray(parsed.existing_on_pr9), 'index.json existing_on_pr9 must be an array');
   return parsed;
 }
