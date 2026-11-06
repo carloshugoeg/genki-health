@@ -1,10 +1,11 @@
 # Now
 
-**No active agent claim.** E2-P0-03 is Done on `docs/T-E2-P0-03-make` (this PR). Do not start the next ticket until an owner opens that claim.
+**Active claim:** E2-P1-01 — Commit the frozen API and port specification pack. Owner: Auto (Cursor) for Carlos / Hugo Escobar. Branch: `docs/T-E2-P1-01-commit`. Claimed 2026-11-06. Do not start a second agent-lane ticket on top of this claim.
 
 ## Agent lane (dependency-ready)
 
-- **Next:** E2-P1-01 — Commit the frozen API and port specification pack (depends on E2-P0-02; ready when claimed).
+- **Now:** E2-P1-01 — Commit the frozen API and port specification pack (depends on E2-P0-02; claimed).
+- **Next:** E2-P1-01 — Commit the frozen API and port specification pack (active claim; do not start E2-P1-02 or E2-P1-03 in this PR).
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
 
 ## Parallel Entrega I notes
