@@ -1,6 +1,6 @@
 # Backlog
 
-**Next:** E2-P1-03 — Commit document/security/seed contracts and mapping ADRs (dependency-ready agent lane after E2-P1-02).
+**Next:** E2-P1-04 — Install executable ticket prompts and gate checklist (dependency-ready agent lane after E2-P1-03).
 
 Order is the order a single agent follows when dependencies are satisfied. E1-05 runs in parallel for Jordin and does not block E2. After E2-P0-01 merged (PR #10), the Entrega II queue is the indexed E2-P* list below, not a single mega-ticket marked done because the scaffold landed.
 
@@ -17,7 +17,7 @@ Order is the order a single agent follows when dependencies are satisfied. E1-05
 | 9 | E2-P0-03 | Make the base CI reliable on main | done | agent | E2-P0-01 |
 | 10 | E2-P1-01 | Commit the frozen API and port specification pack | done | agent | E2-P0-02 |
 | 11 | E2-P1-02 | Commit the frozen SQL physical schema pack | done | agent | E2-P1-01 |
-| 12 | E2-P1-03 | Commit document/security/seed contracts and mapping ADRs | backlog | agent | E2-P1-01 |
+| 12 | E2-P1-03 | Commit document/security/seed contracts and mapping ADRs | done | agent | E2-P1-01 |
 | 13 | E2-P1-04 | Install executable ticket prompts and gate checklist | backlog | agent | E2-P1-02, E2-P1-03 |
 | 14 | E2-P2-01 | Add MVP DTOs, strict HTTP schemas and typed clinical errors | backlog | agent | E2-P1-01, E2-P1-04 |
 | 15 | E2-P2-02 | Freeze one adapter contract suite including native rollback failures | backlog | agent | E2-P2-01 |

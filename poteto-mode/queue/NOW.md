@@ -1,11 +1,10 @@
 # Now
 
-**Active claim:** E2-P1-03 — Commit document/security/seed contracts and mapping ADRs on `docs/T-E2-P1-03-commit` (Auto / Hugo Escobar, 2026-11-06). Do not start another agent-lane ticket until this claim finishes or is released.
+**No active agent claim.** E2-P1-03 is Done on `docs/T-E2-P1-03-commit` (this PR). Do not start the next ticket until an owner opens that claim.
 
 ## Agent lane (dependency-ready)
 
-- **Next:** E2-P1-03 — Commit document/security/seed contracts and mapping ADRs (depends on E2-P1-01; claimed in progress).
-- E2-P1-04 — Install executable ticket prompts and gate checklist (depends on E2-P1-02 and E2-P1-03; not ready until E2-P1-03 lands).
+- **Next:** E2-P1-04 — Install executable ticket prompts and gate checklist (depends on E2-P1-02 and E2-P1-03; ready when claimed).
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
 
 ## Parallel Entrega I notes
