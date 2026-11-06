@@ -1,6 +1,6 @@
 # Backlog
 
-**Next:** E2-P0-03 — Make the base CI reliable on main (dependency-ready agent lane).
+**Next:** E2-P1-01 — Commit the frozen API and port specification pack (dependency-ready agent lane).
 
 Order is the order a single agent follows when dependencies are satisfied. E1-05 runs in parallel for Jordin and does not block E2. After E2-P0-01 merged (PR #10), the Entrega II queue is the indexed E2-P* list below, not a single mega-ticket marked done because the scaffold landed.
 
@@ -14,7 +14,7 @@ Order is the order a single agent follows when dependencies are satisfied. E1-05
 | 6 | E2-01 | Entrega II scaffold (historical mega-ticket; see E2-P* index) | done (scaffold on main via #10) | Carlos / Cursor | E1-02, E1-06 |
 | 7 | E2-P0-01 | Adopt the E2 base and lift the stale E1-only gate | done | agent | none |
 | 8 | E2-P0-02 | Synchronize all baseline trackers and governance pointers | done | agent | E2-P0-01 |
-| 9 | E2-P0-03 | Make the base CI reliable on main | backlog | agent | E2-P0-01 |
+| 9 | E2-P0-03 | Make the base CI reliable on main | done | agent | E2-P0-01 |
 | 10 | E2-P1-01 | Commit the frozen API and port specification pack | backlog | agent | E2-P0-02 |
 | 11 | E2-P1-02 | Commit the frozen SQL physical schema pack | backlog | agent | E2-P1-01 |
 | 12 | E2-P1-03 | Commit document/security/seed contracts and mapping ADRs | backlog | agent | E2-P1-01 |

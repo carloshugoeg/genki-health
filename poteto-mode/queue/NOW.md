@@ -1,11 +1,10 @@
 # Now
 
-**No active agent claim.** E2-P0-02 is Done on `docs/T-E2-P0-02-synchronize` (PR #11). Do not start the next ticket until an owner opens that claim.
+**No active agent claim.** E2-P0-03 is Done on `docs/T-E2-P0-03-make` (this PR). Do not start the next ticket until an owner opens that claim.
 
 ## Agent lane (dependency-ready)
 
-- **Next:** E2-P0-03 — Make the base CI reliable on main (depends on E2-P0-01; ready when claimed).
-- **Next after specs path:** E2-P1-01 — Commit the frozen API and port specification pack (depends on E2-P0-02).
+- **Next:** E2-P1-01 — Commit the frozen API and port specification pack (depends on E2-P0-02; ready when claimed).
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
 
 ## Parallel Entrega I notes
