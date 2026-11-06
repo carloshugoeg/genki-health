@@ -1,11 +1,10 @@
 # Now
 
-**Active claim:** E2-P0-03 — Make the base CI reliable on main. Owner: Auto (Cursor) for Carlos / Hugo Escobar. Branch: `docs/T-E2-P0-03-make`. Claimed 2026-11-06. Do not start a second agent-lane ticket on top of this claim.
+**No active agent claim.** E2-P0-03 is Done on `docs/T-E2-P0-03-make` (this PR). Do not start the next ticket until an owner opens that claim.
 
 ## Agent lane (dependency-ready)
 
-- **Now:** E2-P0-03 — Make the base CI reliable on main (depends on E2-P0-01; claimed).
-- **Next after this claim:** E2-P1-01 — Commit the frozen API and port specification pack (depends on E2-P0-02). Do not start it in this PR.
+- **Next:** E2-P1-01 — Commit the frozen API and port specification pack (depends on E2-P0-02; ready when claimed).
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
 
 ## Parallel Entrega I notes

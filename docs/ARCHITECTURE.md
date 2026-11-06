@@ -16,7 +16,7 @@ El repositorio tiene el esqueleto cliente-servidor (npm workspaces) traído desd
 | Puertos hexagonales + adaptador memory | Live reference base for TDD | `server/src/ports`, `server/src/adapters/memory` |
 | Auth / JWT / sesión | Locked + implementado (memory SoR) | `server/src/ports/auth.ts`, `adapters/memory/auth.ts` |
 | Motores reales (pg/mysql/mongo/firebase) | Pendiente / incomplete | carpetas vacías bajo `server/src/adapters/` |
-| `scripts/validate.sh` + CI | Scaffold on `main` | `scripts/validate.sh`, `.github/workflows/ci.yml` |
+| `scripts/validate.sh` + CI | G1 base gate on `main` (E2-P0-03) | `scripts/validate.sh`, `scripts/journal-gate.mjs`, `.github/workflows/ci.yml` |
 
 ### Matriz de adaptadores (incompleta)
 
@@ -124,8 +124,9 @@ flowchart TB
 | --- | --- |
 | `infra/docker-compose.yml` | PostgreSQL, MySQL, MongoDB en desarrollo y CI |
 | `infra/firebase/` | Configuración del emulador Firebase |
-| `scripts/validate.sh` | Compuerta local que replica CI |
-| `.github/workflows/ci.yml` | Checks requeridos en cada PR |
+| `scripts/validate.sh` | Compuerta local que replica CI (incluye `test:protocol` y journal gate) |
+| `scripts/journal-gate.mjs` | Exige journal *añadido* si el diff toca `server/`/`web/`/`shared/` |
+| `.github/workflows/ci.yml` | Job `validate` (Node 22, `npm ci`); nombre estable; `fetch-depth: 0` |
 | `.env.example` | Variables locales (sin secretos) |
 
 ## Mantenimiento
