@@ -15,6 +15,8 @@ Protocol-change files (`AGENTS.md`, CI workflows, `ports/` interfaces, initial m
   - Prerequisite pack (E2-P1-01, 2026-11-06 America/Guatemala): frozen C2/C3 contracts committed on `docs/T-E2-P1-01-commit` (`API.md`, `PORTS-TESTS.md`, `DTO-BASELINE.ts`, pack `e2-mvp-2026-11-05`). Structural `node --test scripts/test/api-spec.test.mjs` red then green. Runtime memory suite evidence remains pending later tickets. Do not treat this pack commit as G2 green.
   - Evidence: pending later ticket.
 - **G3 SQL:** actual migration metadata matches C4; each runtime app role passes same suite, forced rollback after a real write, FK errors; least-privilege app/report/identity denial tests; no migration owner masquerading as runtime role.
+  - Prerequisite pack (E2-P1-02, 2026-11-06 America/Guatemala): frozen C4a/C4b DDL and `SQL.md` committed on `docs/T-E2-P1-02-commit` (`docs/plan/ddl/postgres.sql`, `docs/plan/ddl/mysql.sql`, `docs/plan/contracts/SQL.md`). Structural `node --test scripts/test/sql-spec.test.mjs` red then green. Specs are not executed against engines in this ticket.
+  - [ ] Engine verification pending later adapter/migration tickets (apply C4a/C4b as runtime migrations; role least-privilege; forced rollback; FK error paths). Do not treat this pack commit as G3 green.
   - Evidence: pending later ticket. Security: least-privilege role denial tests live here.
 - **G4 documents:** authenticated Mongo rs0 validators/indexes+suite+roles; Firestore emulator suite/rules/backend-scoping independently green; no unbounded patient history arrays; Admin bypass limitation recorded.
   - Evidence: pending later ticket. Security: deny-by-default Firestore rules and Mongo collection roles live here.

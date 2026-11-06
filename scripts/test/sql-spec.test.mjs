@@ -158,25 +158,21 @@ test('professional_omits_locked_b_columns', () => {
 test('mysql_uses_real_foreign_key_clauses', () => {
   const mysql = read(MYSQL);
 
-  const required = [
-    ['institucion', 'profesional'],
-    ['especialidad', 'profesional'],
-    ['institucion', 'paciente'],
-    ['municipio', 'paciente'],
-    ['paciente', 'expediente'],
-    ['paciente', 'responsable'],
-    ['expediente', 'consulta'],
-    ['profesional', 'consulta'],
-    ['consulta', 'diagnostico'],
-    ['catalogo_cie10', 'diagnostico'],
-    ['diagnostico', 'tratamiento'],
-    ['consulta', 'receta'],
-    ['profesional', 'receta'],
-    ['receta', 'detalle_receta'],
-    ['medicamento', 'detalle_receta'],
+  const requiredParents = [
+    'institucion',
+    'especialidad',
+    'municipio',
+    'paciente',
+    'expediente',
+    'profesional',
+    'consulta',
+    'catalogo_cie10',
+    'diagnostico',
+    'receta',
+    'medicamento',
   ];
 
-  for (const [parent, _child] of required) {
+  for (const parent of requiredParents) {
     assert.match(
       mysql,
       new RegExp(
