@@ -1,0 +1,129 @@
+// Chen detallado. Sección 6.4.11. Insumos y captura de cargos (núcleo común).
+// Símbolos: ver clave Graphviz en README.md (sección 6.1).
+// Consume copia la arista "consume" de rel-personal-insumos.mmd.
+// INSUMO 1 parcial. CONSUMO_INSUMO N total. Se omite id_insumo.
+// Las cinco FK de origen de CARGO son elipses y nada más:
+// id_consulta, id_procedimiento, id_admision, id_consumo, id_participacion.
+// Las aristas "origina cargo" y "origina honorario" no se dibujan.
+// Partirían el conjunto que 6.4.11 y la regla 6.5.10 tratan como uno.
+// 5.1: un cargo manual no tiene ninguna. No se dibujan cajas de hospitalización ni pediátricas.
+// MEDICAMENTO vive en 6.4.3 y no se redibuja.
+// existencia_actual y CARGO.subtotal van sólidos. 6.4.11 no los llama derivados.
+// 5.1: CONSUMO_INSUMO informa como máximo una de id_admision, id_procedimiento, id_consulta.
+// Esa frase no entra en la etiqueta. codigo de INSUMO no se subraya.
+digraph chen_6_4_11 {
+  rankdir=LR;
+  splines=true;
+  overlap=false;
+  nodesep=0.35;
+  ranksep=0.55;
+  graph [
+    fontname="Helvetica",
+    label="6.4.11 Insumos y captura de cargos (núcleo común)\nINSUMO convive con MEDICAMENTO sin duplicarlo. Uno es lo que el médico prescribe. El otro es lo que el almacén entrega.\nLas cinco claves foráneas de origen son opcionales y como máximo una está informada.\nUn cargo referencia como máximo un origen: consulta, procedimiento, admisión, consumo de insumo o participación, nunca dos a la vez.\nUn insumo marcado como controlado exige lote en cada consumo.\nLa existencia de un insumo nunca puede quedar negativa.",
+    labelloc=t,
+    fontsize=13
+  ];
+  node [fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9, arrowhead=none];
+
+  // Entidades fuertes
+  node [shape=box, style=solid, peripheries=1];
+  INSUMO;
+  CONSUMO_INSUMO;
+  CARGO;
+
+  // Relaciones
+  node [shape=diamond, style=solid, peripheries=1, height=0.7, width=1.1];
+  Consume [label="Consume"];
+
+  // Atributos
+  node [shape=ellipse, style=solid, peripheries=1, width=0, height=0];
+
+  // INSUMO
+  id_insumo [label=<<U>id_insumo</U>>];
+  id_institucion_ins [label="id_institucion"];
+  codigo_ins [label="codigo"];
+  nombre_ins [label="nombre"];
+  tipo_ins [label="tipo"];
+  id_medicamento_ins [label="id_medicamento"];
+  unidad_medida;
+  precio_unitario_ins [label="precio_unitario"];
+  codigo_servicio_ins [label="codigo_servicio"];
+  requiere_lote;
+  controlado;
+  existencia_actual;
+
+  // CONSUMO_INSUMO. Sin id_insumo.
+  id_consumo [label=<<U>id_consumo</U>>];
+  id_admision_con [label="id_admision"];
+  id_procedimiento_con [label="id_procedimiento"];
+  id_consulta_con [label="id_consulta"];
+  cantidad_con [label="cantidad"];
+  precio_unitario_con [label="precio_unitario"];
+  fecha_hora_con [label="fecha_hora"];
+  lote;
+  id_profesional_registra;
+
+  // CARGO. Cinco orígenes opcionales, sin rombo.
+  id_cargo [label=<<U>id_cargo</U>>];
+  id_expediente_car [label="id_expediente"];
+  codigo_servicio_car [label="codigo_servicio"];
+  origen;
+  id_consulta_car [label="id_consulta"];
+  id_procedimiento_car [label="id_procedimiento"];
+  id_admision_car [label="id_admision"];
+  id_consumo_car [label="id_consumo"];
+  id_participacion_car [label="id_participacion"];
+  descripcion_car [label="descripcion"];
+  cantidad_car [label="cantidad"];
+  precio_unitario_car [label="precio_unitario"];
+  subtotal_car [label="subtotal"];
+  fecha_hora_car [label="fecha_hora"];
+  estado_car [label="estado"];
+
+  // INSUMO a Consume a CONSUMO_INSUMO. Insumo parcial. Consumo total.
+  INSUMO -> Consume [penwidth=1, headlabel="1"];
+  Consume -> CONSUMO_INSUMO [penwidth=3, taillabel="N"];
+
+  // Atributos a INSUMO
+  id_insumo -> INSUMO;
+  id_institucion_ins -> INSUMO;
+  codigo_ins -> INSUMO;
+  nombre_ins -> INSUMO;
+  tipo_ins -> INSUMO;
+  id_medicamento_ins -> INSUMO;
+  unidad_medida -> INSUMO;
+  precio_unitario_ins -> INSUMO;
+  codigo_servicio_ins -> INSUMO;
+  requiere_lote -> INSUMO;
+  controlado -> INSUMO;
+  existencia_actual -> INSUMO;
+
+  // Atributos a CONSUMO_INSUMO
+  id_consumo -> CONSUMO_INSUMO;
+  id_admision_con -> CONSUMO_INSUMO;
+  id_procedimiento_con -> CONSUMO_INSUMO;
+  id_consulta_con -> CONSUMO_INSUMO;
+  cantidad_con -> CONSUMO_INSUMO;
+  precio_unitario_con -> CONSUMO_INSUMO;
+  fecha_hora_con -> CONSUMO_INSUMO;
+  lote -> CONSUMO_INSUMO;
+  id_profesional_registra -> CONSUMO_INSUMO;
+
+  // Atributos a CARGO
+  id_cargo -> CARGO;
+  id_expediente_car -> CARGO;
+  codigo_servicio_car -> CARGO;
+  origen -> CARGO;
+  id_consulta_car -> CARGO;
+  id_procedimiento_car -> CARGO;
+  id_admision_car -> CARGO;
+  id_consumo_car -> CARGO;
+  id_participacion_car -> CARGO;
+  descripcion_car -> CARGO;
+  cantidad_car -> CARGO;
+  precio_unitario_car -> CARGO;
+  subtotal_car -> CARGO;
+  fecha_hora_car -> CARGO;
+  estado_car -> CARGO;
+}
