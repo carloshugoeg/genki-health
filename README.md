@@ -2,7 +2,7 @@
 
 Plataforma compartida de historiales clínicos para cuatro instituciones médicas independientes. Proyecto final de Bases de Datos II, Universidad Rafael Landívar.
 
-El enunciado está en `PROJECT-DESC.md`. Entrega I vive en `docs/entregas/entrega-1/`. Entrega II (aplicación) está en scaffold bajo el ticket **E2-01**.
+El enunciado está en `PROJECT-DESC.md`. Entrega I vive en `docs/entregas/entrega-1/`. Entrega II tiene el scaffold en `main` (PR #10); el trabajo restante está indexado como tickets **E2-P***. E1-05 (Chen pediátrico) corre en paralelo y no bloquea E2. Los adaptadores reales siguen incompletos.
 
 ## Arranque local (Phase 0)
 

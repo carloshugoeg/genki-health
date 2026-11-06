@@ -1,11 +1,12 @@
 # Now
 
-**No active agent claim.** E2-P0-01 is Done in `chore/T-E2-P0-01-repo-truth` (awaiting both-owners protocol-change merge). Do not start E2-P0-02 or E2-P0-03 until an owner opens that claim.
+**No active agent claim.** E2-P0-02 is Done on `docs/T-E2-P0-02-synchronize` (PR #11). Do not start the next ticket until an owner opens that claim.
 
-## Agent lane (next ready when claimed)
+## Agent lane (dependency-ready)
 
-- E2-P0-02 — not claimed; blocked on owner release after E2-P0-01 merges.
-- E2-01 scaffold history remains on PR #9 until ship marks it superseded after the P0 integration PR merges.
+- **Next:** E2-P0-03 — Make the base CI reliable on main (depends on E2-P0-01; ready when claimed).
+- **Next after specs path:** E2-P1-01 — Commit the frozen API and port specification pack (depends on E2-P0-02).
+- E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
 
 ## Parallel Entrega I notes
 

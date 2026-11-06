@@ -56,10 +56,10 @@ Dado que hay 4 instituciones y se exigen al menos 4 motores distintos sin repeti
 
 | Institución | Motor elegido |
 | :--- | :--- |
-| **Hospital general** | _(Por definir)_ |
-| **Clínica odontológica** | _(Por definir)_ |
-| **Laboratorio clínico** | _(Por definir)_ |
-| **Centro médico pediátrico** | _(Por definir)_ |
+| **Hospital general** | PostgreSQL |
+| **Clínica odontológica** | Firebase (Firestore) |
+| **Laboratorio clínico** | MongoDB |
+| **Centro médico pediátrico** | MySQL |
 
 **Restricciones de asignación:**
 * Motores disponibles: PostgreSQL, MySQL, MongoDB, Firebase.
