@@ -1,11 +1,14 @@
 # Now
 
-**E1-05 Dibujar los diagramas Chen del centro pediátrico**
+**No active agent claim.** E2-P0-01 is Done in `chore/T-E2-P0-01-repo-truth` (awaiting both-owners protocol-change merge). Do not start E2-P0-02 or E2-P0-03 until an owner opens that claim.
 
-Owner is Jordin. Claude may claim it. Cursor does not claim this ticket. The full ticket is `poteto-mode/queue/tickets/e1-05-chen-pediatrico.md`.
+## Agent lane (next ready when claimed)
 
-E1-02 is merged (PR #3). E1-04 is merged (PR #4). E1-03 is in review. Copy the Graphviz shape key from `docs/entregas/entrega-1/diagramas/README.md` and do not rewrite it.
+- E2-P0-02 — not claimed; blocked on owner release after E2-P0-01 merges.
+- E2-01 scaffold history remains on PR #9 until ship marks it superseded after the P0 integration PR merges.
 
-E1-06 is Done (merged PR #7). Do not reopen the five locks.
+## Parallel Entrega I notes
 
-E2-01 is Entrega II. It is not current work. Cursor does not start it while E1-05 is open.
+- E1-03 is Done (merged PR #8). Do not rewrite its Chen diagrams.
+- E1-05 (Jordin/Claude) remains backlog for pediatric Chen diagrams only. It runs in parallel and does not block E2.
+- E1-02, E1-04, E1-06 are merged on `main`.

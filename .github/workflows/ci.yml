@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Prettier
+        run: npm run format:check
+      - name: ESLint
+        run: npm run lint
+      - name: Build shared
+        run: npm run build -w @genki/shared
+      - name: Typecheck
+        run: npm run typecheck
+      - name: dependency-cruiser
+        run: npm run depcruise
+      - name: Tests
+        run: npm test
+      - name: Build web
+        run: npm run build -w @genki/web
+      - name: Journal gate (server/web/shared)
+        run: |
+          if git diff --name-only origin/main...HEAD | grep -E '^(server|web|shared)/' >/dev/null; then
+            git diff --name-only origin/main...HEAD | grep -E '^docs/progress/journal/' \
+              || (echo 'PRs touching server/, web/, or shared/ must add docs/progress/journal/*' && exit 1)
+          fi

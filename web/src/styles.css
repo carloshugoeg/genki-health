@@ -1,0 +1,113 @@
+:root {
+  --ink: #1a2b2e;
+  --paper: #e8f1f0;
+  --accent: #0f6b5c;
+  --muted: #4a6468;
+  --danger: #8b2e2e;
+  --band: linear-gradient(145deg, #d5ebe6 0%, #f3f7f6 45%, #c5ddd8 100%);
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', serif;
+  color: var(--ink);
+  background: var(--band);
+  line-height: 1.45;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.shell {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 3.5rem 1.5rem 4rem;
+}
+
+.brand h1 {
+  font-size: clamp(2.6rem, 8vw, 4rem);
+  letter-spacing: -0.03em;
+  margin: 0.2rem 0 0.75rem;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+.lede {
+  font-size: 1.1rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.engines,
+.auth-block {
+  margin-top: 2.5rem;
+}
+
+h2 {
+  font-size: 1.15rem;
+  margin: 0 0 0.75rem;
+}
+
+ul {
+  padding-left: 1.1rem;
+  margin: 0;
+}
+
+li {
+  margin-bottom: 0.35rem;
+}
+
+.login-form {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 22rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+}
+
+input,
+select {
+  font: inherit;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #9bb5b0;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+}
+
+button {
+  margin-top: 0.25rem;
+  padding: 0.65rem 1.1rem;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #f4fffc;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.error {
+  color: var(--danger);
+  margin: 0;
+}
