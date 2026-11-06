@@ -38,12 +38,17 @@ test('trackers_name_same_next_ticket', () => {
   const fromMap = nextAgentTicket(map);
   const fromBacklog = nextAgentTicket(backlog);
 
-  assert.equal(fromNow, 'E2-P1-03', 'NOW.md must name E2-P1-03 as the next agent-lane ticket');
-  assert.equal(fromMap, 'E2-P1-03', 'feature-map.md must name E2-P1-03 as next');
-  assert.equal(fromBacklog, 'E2-P1-03', 'backlog.md must name E2-P1-03 as the next indexed ticket');
+  assert.equal(fromNow, 'E2-P1-04', 'NOW.md must name E2-P1-04 as the next agent-lane ticket');
+  assert.equal(fromMap, 'E2-P1-04', 'feature-map.md must name E2-P1-04 as next');
+  assert.equal(fromBacklog, 'E2-P1-04', 'backlog.md must name E2-P1-04 as the next indexed ticket');
   assert.equal(fromNow, fromMap, 'NOW and feature-map must name the same next ticket');
   assert.equal(fromNow, fromBacklog, 'NOW and backlog must name the same next ticket');
 
+  assert.match(
+    tasks,
+    /E2-P1-03/,
+    'TASKS.md must retain the completed E2-P1-03 row so the board matches the queue',
+  );
   assert.match(
     tasks,
     /E2-P1-02/,

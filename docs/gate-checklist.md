@@ -19,6 +19,8 @@ Protocol-change files (`AGENTS.md`, CI workflows, `ports/` interfaces, initial m
   - [ ] Engine verification pending later adapter/migration tickets (apply C4a/C4b as runtime migrations; role least-privilege; forced rollback; FK error paths). Do not treat this pack commit as G3 green.
   - Evidence: pending later ticket. Security: least-privilege role denial tests live here.
 - **G4 documents:** authenticated Mongo rs0 validators/indexes+suite+roles; Firestore emulator suite/rules/backend-scoping independently green; no unbounded patient history arrays; Admin bypass limitation recorded.
+  - Prerequisite pack (E2-P1-03, 2026-11-06 America/Guatemala): frozen C5 document/security/seed contract and mapping ADRs committed on `docs/T-E2-P1-03-commit` (`docs/plan/contracts/DOCUMENTS-SECURITY.md`, `docs/plan/contracts/mongodb-schema.json`, ADR-0003/0004/0005). Structural `node --test scripts/test/document-spec.test.mjs` red then green. Specs are not executed against Mongo/Firestore in this ticket.
+  - [ ] Engine verification pending later adapter tickets (Mongo rs0 validators/roles; Firestore emulator rules/backend scoping; no unbounded patient history arrays; Admin bypass tests). Do not treat this pack commit as G4 green.
   - Evidence: pending later ticket. Security: deny-by-default Firestore rules and Mongo collection roles live here.
 - **G5 integrated demo:** same five screens; Playwright parameterized x4, real native read proves one physical target and zero others, API restart survival, fake seeds repeat idempotently, no hardcoded tracked credentials or memory fallback.
   - Evidence: pending later ticket. Security: no hardcoded credentials or JWT secrets in tracked files.
