@@ -15,10 +15,10 @@ Rows that share a ticket share a status. Owner is `Carlos/Cursor`, `Jordin/Claud
 
 ## Rollup
 
-- **Now:** E2-P0-02 synchronize trackers/governance (claimed on `docs/T-E2-P0-02-synchronize`). E2-01 scaffold + Auth are on `main` via merged PR #10. E1-03 is Done (merged PR #8). Do not rewrite the Graphviz shape key.
-- **Next:** E2-P0-03 after E2-P0-02 lands. E1-05 (Jordin/Claude) pediatric Chen diagrams (parallel, not an E2 gate). Remaining E2 capabilities stay indexed as later P1–P6 tickets, not as one mega-ticket done.
-- **Blocked:** Multitenant permission *grants* beyond institution routing stay stop-and-ask if raised. Do not start E2-P0-03 until this claim finishes.
-- **Done:** Entrega I analysis in tree. E1-02 Chen núcleo. E1-03 Chen facturación/personal/insumos (merged PR #8). E1-04 Chen hospitalización. E1-06 attribute decisions locked and merged. Auth decisions locked. E2-P0-01 repo truth / E1-only gate lift (merged PR #10).
+- **Now:** no active agent claim after E2-P0-02. E2-01 scaffold + Auth are on `main` via merged PR #10. E1-03 is Done (merged PR #8). Do not rewrite the Graphviz shape key.
+- **Next:** E2-P0-03 when an owner claims it. E1-05 (Jordin/Claude) pediatric Chen diagrams (parallel, not an E2 gate). Remaining E2 capabilities stay indexed as later P1–P6 tickets; scaffold landing did not mark them done.
+- **Blocked:** Multitenant permission *grants* beyond institution routing stay stop-and-ask if raised.
+- **Done:** Entrega I analysis in tree. E1-02 Chen núcleo. E1-03 Chen facturación/personal/insumos (merged PR #8). E1-04 Chen hospitalización. E1-06 attribute decisions locked and merged. Auth decisions locked. E2-P0-01 repo truth / E1-only gate lift (merged PR #10). E2-P0-02 tracker and governance sync (PR #11).
 
 ## Entrega I
 
@@ -48,19 +48,20 @@ Analysis below is already in `docs/entregas/entrega-1/`. It has no ticket. The o
 
 ## Entrega II
 
-Phase-0 scaffold from E2-01 (PR #9) plus P0 integration tickets. Laboratorio clínico and Clínica odontológica document models remain later slices.
+Phase-0 scaffold is on `main`. Real engine adapters remain incomplete. Capability rows point at the indexed E2-P* tickets in `queue/backlog.md` and `docs/plan/E2-EXECUTABLE.md`, not at a single mega-ticket marked done.
 
 | Capability | Status | Owner | Ticket |
 | --- | --- | --- | --- |
 | Adopt E2 base; lift stale E1-only gate | done | agent/Auto | E2-P0-01 |
-| Synchronize baseline trackers and governance pointers | now | agent/Auto | E2-P0-02 |
-| Client-server application | now | Carlos/Cursor | E2-01 |
-| Database model corrected from Entrega I feedback | next | both | E2-01 |
-| Queries equivalent on all four engines | next | both | E2-01 |
-| Embed versus reference for MongoDB and Firebase | next | both | E2-01 |
-| One interface, unchanged by the active engine | now | Carlos/Cursor | E2-01 |
-| Create a record for a new patient | now | Carlos/Cursor | E2-01 |
-| Maintain a record: consultation, diagnosis, treatment, prescription | next | both | E2-01 |
-| Archive a record instead of deleting it | now | Carlos/Cursor | E2-01 |
-| Route the session to the institution engine at login | now | Carlos/Cursor | E2-01 |
-| Comparative note and written engine assignment | next | both | E2-01 |
+| Synchronize baseline trackers and governance pointers | done | agent/Auto | E2-P0-02 |
+| Make the base CI reliable on main | next | agent/Auto | E2-P0-03 |
+| Client-server application (scaffold on main; adapters incomplete) | next | Carlos/Cursor | E2-01 / E2-P2+ |
+| Database model corrected from Entrega I feedback | next | both | E2-P1-02 / E2-P1-03 |
+| Queries equivalent on all four engines | next | both | E2-P3A–E2-P4B / E2-P5 |
+| Embed versus reference for MongoDB and Firebase | next | both | E2-P1-03 / E2-P4A / E2-P4B |
+| One interface, unchanged by the active engine | next | Carlos/Cursor | E2-P2 / E2-P5-03 |
+| Create a record for a new patient | next | Carlos/Cursor | E2-P2-04 / E2-P2-07 |
+| Maintain a record: consultation, diagnosis, treatment, prescription | next | both | E2-P2-05 / E2-P2-06 / E2-P2-08 |
+| Archive a record instead of deleting it | next | Carlos/Cursor | E2-P2-04 / E2-P2-07 |
+| Route the session to the institution engine at login | next | Carlos/Cursor | E2-P2-09 / E2-P5-02 |
+| Comparative note and written engine assignment | next | both | E2-P6-01 / E2-P6-02 |

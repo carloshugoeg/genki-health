@@ -10,7 +10,6 @@ function read(rel) {
   return readFileSync(join(root, rel), 'utf8');
 }
 
-/** First E2-P* id named as the agent-lane next ticket after the current claim. */
 function nextAgentTicket(text) {
   const patterns = [
     /Next after E2-P0-02[:\s*]*\**\s*(E2-P[0-9A-Z-]+)/i,
@@ -41,11 +40,7 @@ test('trackers_name_same_next_ticket', () => {
 
   assert.equal(fromNow, 'E2-P0-03', 'NOW.md must name E2-P0-03 as the next agent-lane ticket');
   assert.equal(fromMap, 'E2-P0-03', 'feature-map.md must name E2-P0-03 as next');
-  assert.equal(
-    fromBacklog,
-    'E2-P0-03',
-    'backlog.md must list E2-P0-03 among indexed E2 tickets',
-  );
+  assert.equal(fromBacklog, 'E2-P0-03', 'backlog.md must list E2-P0-03 among indexed E2 tickets');
   assert.equal(fromNow, fromMap, 'NOW and feature-map must name the same next ticket');
   assert.equal(fromNow, fromBacklog, 'NOW and backlog must name the same next ticket');
 
@@ -157,11 +152,7 @@ test('e1_05_is_parallel_not_blocking', () => {
     ['backlog.md', backlog],
     ['ROADMAP.md', roadmap],
   ]) {
-    assert.match(
-      text,
-      /E1-05/i,
-      `${name} must still mention E1-05`,
-    );
+    assert.match(text, /E1-05/i, `${name} must still mention E1-05`);
     assert.match(
       text,
       /E1-05[\s\S]{0,160}(parallel|does not block|no bloquea|not an E2 gate)/i,

@@ -1,49 +1,35 @@
-# E2-01 Entrega II, aplicación cliente-servidor
+# E2-01 Entrega II, aplicación cliente-servidor (historical scaffold)
 
-- Status: in progress
+- Status: done (scaffold on main via PR #10); Estado: hecho (scaffold). Remaining Entrega II work is the indexed E2-P* rollup, not this mega-ticket.
 - Owner: Carlos Hugo Escobar / Cursor
 - Agent: Cursor
-- Depends on: E1-02, E1-06 (merged); E1-03 and E1-05 may remain open for Chen diagrams only
-- Needs human: partial (Auth — see `decisions/needs-human.md`)
+- Depends on: E1-02, E1-06 (merged); E1-03 done (#8); E1-05 parallel Chen only (not an E2 gate)
+- Needs human: Auth locked (Carlos 2026-10-19). See `decisions/locked.md`.
 
-## What to build
+## What this ticket was
 
-Carlos ordered Entrega II scaffolding on 2026-10-19 (overrides the prior “do not build yet” gate). Follow the approved architecture at `docs/superpowers/specs/2026-08-27-genki-health-architecture-and-agent-governance-design.md`. Do not invent clinical entities. Stop Auth / payments / migrations / multitenant permission grants / deletes / protocol changes for human decision.
+Carlos ordered Entrega II scaffolding on 2026-10-19. Phase-0 delivered npm workspaces, hexagonal folders, memory adapter, Auth behind `AuthPort`, validate.sh, and CI. That scaffold is on `main` through E2-P0-01 (PR #10).
 
-## Phase-0 slice (this PR)
+## Acceptance (rollup, not all done)
 
-- npm workspaces: `server/`, `web/`, `shared/`
-- Hexagonal folders + placeholder engine adapter dirs
-- Shared DTO types from Entrega I `rel-*.mmd`
-- Ports including fail-closed `AuthPort`
-- Memory adapter + register-paciente / archive rules
-- Institution → adapter registry (memory for all four)
-- `infra/docker-compose.yml`, Firebase emulator stub, `.env.example`
-- `scripts/validate.sh` + CI workflow
+Do not treat the original Entrega II expected-results checklist as complete because the scaffold landed. Track remaining work through:
 
-## Acceptance criteria (brief — full Entrega II)
+- `docs/plan/E2-EXECUTABLE.md` (index)
+- `docs/plan/contracts/CORE.md` (C1 live scope)
+- `poteto-mode/queue/backlog.md` (E2-P0…E2-P6)
+- `poteto-mode/feature-map.md` (capability → ticket mapping)
 
-These remain the course expected results. Phase-0 does not claim them all done.
-
-- [ ] A working application and a client-server connection.
-- [ ] The database model corrected from Entrega I feedback.
-- [ ] Queries that behave the same on all four engines.
-- [ ] An explicit embed-versus-reference decision for MongoDB and Firebase.
-- [ ] One interface, unchanged by the active engine.
-- [ ] Create a record for a new patient.
-- [ ] Maintain an existing record with new consultations, diagnoses, treatments, and prescriptions.
-- [ ] Archive a record instead of deleting it.
-- [ ] Routing by user. Login selects the institution engine without rewriting business logic.
-- [ ] A short comparative note per engine covering modeling, consistency, and security, plus the written reason for the institution-to-engine assignment.
+Course expected results (still open across later tickets): working app on four engines, corrected model, equivalent queries, embed-vs-reference, engine-agnostic UI, patient create/maintain/archive, institution routing, comparative note.
 
 ## Out of scope (still)
 
 - Hosting, an ORM, GraphQL, or a second product.
-- Inventing Auth policy.
-- Jordin’s pediatric Chen diagrams (E1-05) and MySQL/Firebase adapter implementations.
+- Reopening Auth locks.
+- Jordin’s pediatric Chen diagrams (E1-05) and unfinished MySQL/Firebase physical adapters.
 
 ## Links
 
 - `PROJECT-DESC.md` sección Entrega II
 - `docs/roadmap/ROADMAP.md`
 - Architecture spec (stack locked)
+- Successor index starts at E2-P0-03 / E2-P1-01 after E2-P0-02

@@ -12,11 +12,21 @@ El repositorio tiene el esqueleto cliente-servidor (npm workspaces) traído desd
 | Modelo ER (Hospital general, Centro pediátrico) | Completo | `docs/entregas/entrega-1/diagramas/er-*.mmd` |
 | Modelo relacional (secciones 7.4 y 7.5) | Completo | `docs/entregas/entrega-1/diagramas/rel-*.mmd` |
 | Diagramas Chen detallados (sección 6.4) | Parcial (E1-03/E1-05 pueden seguir abiertos) | `docs/entregas/entrega-1/diagramas/chen-6.4.*` |
-| Monorepo TypeScript (Fastify + React/Vite) | Scaffold E2-01 | `server/`, `web/`, `shared/` |
-| Puertos hexagonales + adaptador memory | Scaffold E2-01 | `server/src/ports`, `server/src/adapters/memory` |
+| Monorepo TypeScript (Fastify + React/Vite) | Scaffold on `main` (E2-01 via PR #10) | `server/`, `web/`, `shared/` |
+| Puertos hexagonales + adaptador memory | Live reference base for TDD | `server/src/ports`, `server/src/adapters/memory` |
 | Auth / JWT / sesión | Locked + implementado (memory SoR) | `server/src/ports/auth.ts`, `adapters/memory/auth.ts` |
-| Motores reales (pg/mysql/mongo/firebase) | Pendiente | carpetas vacías bajo `server/src/adapters/` |
-| `scripts/validate.sh` + CI | Scaffold E2-01 | `scripts/validate.sh`, `.github/workflows/ci.yml` |
+| Motores reales (pg/mysql/mongo/firebase) | Pendiente / incomplete | carpetas vacías bajo `server/src/adapters/` |
+| `scripts/validate.sh` + CI | Scaffold on `main` | `scripts/validate.sh`, `.github/workflows/ci.yml` |
+
+### Matriz de adaptadores (incompleta)
+
+| Path | Institución | Estado |
+| --- | --- | --- |
+| `adapters/memory` | las cuatro (referencia de pruebas) | activo |
+| `adapters/postgres` | Hospital general | pendiente |
+| `adapters/mysql` | Centro médico pediátrico | pendiente |
+| `adapters/mongodb` | Laboratorio clínico | pendiente |
+| `adapters/firebase` | Clínica odontológica | pendiente |
 
 ## Instituciones y motores
 
