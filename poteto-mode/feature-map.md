@@ -15,10 +15,10 @@ Rows that share a ticket share a status. Owner is `Carlos/Cursor`, `Jordin/Claud
 
 ## Rollup
 
-- **Now:** no active agent claim after E2-P0-01. E2-01 scaffold + Auth remain in tree from rebased PR #9 pending supersede. E1-03 is Done (merged PR #8). Do not rewrite the Graphviz shape key.
-- **Next:** E2-P0-02 when owners release it. E1-05 (Jordin/Claude) pediatric Chen diagrams (parallel, not an E2 gate). Remaining E2 capabilities (engine adapters, consultations, comparative note).
-- **Blocked:** E2-P0-02/03 not started from this PR. Multitenant permission *grants* beyond institution routing stay stop-and-ask if raised. Protocol-change merge of E2-P0-01 needs both owners.
-- **Done:** Entrega I analysis in tree. E1-02 Chen núcleo. E1-03 Chen facturación/personal/insumos (merged PR #8). E1-04 Chen hospitalización. E1-06 attribute decisions locked and merged. Auth decisions locked. E2-P0-01 repo truth / E1-only gate lift.
+- **Now:** E2-P0-02 synchronize trackers/governance (claimed on `docs/T-E2-P0-02-synchronize`). E2-01 scaffold + Auth are on `main` via merged PR #10. E1-03 is Done (merged PR #8). Do not rewrite the Graphviz shape key.
+- **Next:** E2-P0-03 after E2-P0-02 lands. E1-05 (Jordin/Claude) pediatric Chen diagrams (parallel, not an E2 gate). Remaining E2 capabilities stay indexed as later P1–P6 tickets, not as one mega-ticket done.
+- **Blocked:** Multitenant permission *grants* beyond institution routing stay stop-and-ask if raised. Do not start E2-P0-03 until this claim finishes.
+- **Done:** Entrega I analysis in tree. E1-02 Chen núcleo. E1-03 Chen facturación/personal/insumos (merged PR #8). E1-04 Chen hospitalización. E1-06 attribute decisions locked and merged. Auth decisions locked. E2-P0-01 repo truth / E1-only gate lift (merged PR #10).
 
 ## Entrega I
 
@@ -53,6 +53,7 @@ Phase-0 scaffold from E2-01 (PR #9) plus P0 integration tickets. Laboratorio cl�
 | Capability | Status | Owner | Ticket |
 | --- | --- | --- | --- |
 | Adopt E2 base; lift stale E1-only gate | done | agent/Auto | E2-P0-01 |
+| Synchronize baseline trackers and governance pointers | now | agent/Auto | E2-P0-02 |
 | Client-server application | now | Carlos/Cursor | E2-01 |
 | Database model corrected from Entrega I feedback | next | both | E2-01 |
 | Queries equivalent on all four engines | next | both | E2-01 |
