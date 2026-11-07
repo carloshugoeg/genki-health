@@ -1,10 +1,12 @@
 # Now
 
-**No active agent claim.** E2-P1-03 is Done on `docs/T-E2-P1-03-commit` (this PR). Do not start the next ticket until an owner opens that claim.
+**No active agent claim.** E2-P1-04 is Done on `docs/T-E2-P1-04-install` (this PR). Do not start the next ticket until an owner opens that claim.
 
 ## Agent lane (dependency-ready)
 
-- **Next:** E2-P1-04 — Install executable ticket prompts and gate checklist (depends on E2-P1-02 and E2-P1-03; ready when claimed).
+- **Next:** E2-P2-01 — Add MVP DTOs, strict HTTP schemas and typed clinical errors (depends on E2-P1-01 and E2-P1-04; ready when claimed).
+- E2-P2-05 — Implement pure consultation bundle invariants (depends on E2-P2-01; not ready until E2-P2-01 lands).
+- E2-P2-09 — Extract storage-neutral JWT service with persistent-session port (depends on E2-P2-01; not ready until E2-P2-01 lands).
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
 
 ## Parallel Entrega I notes
