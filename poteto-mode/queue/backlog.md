@@ -1,6 +1,6 @@
 # Backlog
 
-**Next:** E2-P2-01 — Add MVP DTOs, strict HTTP schemas and typed clinical errors (claimed in progress on `cursor/e2-p2-01-mvp-dtos-7ad4`).
+**Next:** E2-P2-02 — Freeze one adapter contract suite including native rollback failures (dependency-ready after E2-P2-01).
 
 Order is the order a single agent follows when dependencies are satisfied. E1-05 runs in parallel for Jordin and does not block E2. After E2-P0-01 merged (PR #10), the Entrega II queue is the indexed E2-P* list below, not a single mega-ticket marked done because the scaffold landed.
 
@@ -19,7 +19,7 @@ Order is the order a single agent follows when dependencies are satisfied. E1-05
 | 11 | E2-P1-02 | Commit the frozen SQL physical schema pack | done | agent | E2-P1-01 |
 | 12 | E2-P1-03 | Commit document/security/seed contracts and mapping ADRs | done | agent | E2-P1-01 |
 | 13 | E2-P1-04 | Install executable ticket prompts and gate checklist | done | agent | E2-P1-02, E2-P1-03 |
-| 14 | E2-P2-01 | Add MVP DTOs, strict HTTP schemas and typed clinical errors | now | agent | E2-P1-01, E2-P1-04 |
+| 14 | E2-P2-01 | Add MVP DTOs, strict HTTP schemas and typed clinical errors | done | agent | E2-P1-01, E2-P1-04 |
 | 15 | E2-P2-02 | Freeze one adapter contract suite including native rollback failures | backlog | agent | E2-P2-01 |
 | 16 | E2-P2-03 | Give memory real isolated transactions and stable registry instances | backlog | agent | E2-P2-02 |
 | 17 | E2-P2-04 | Complete memory patient registration, guardians, search and archive | backlog | agent | E2-P2-03 |

@@ -43,9 +43,8 @@ const WIRE_CLINICAL_ERROR_CODES = [
   'internal_error',
 ] as const satisfies readonly ClinicalErrorCode[];
 
-type AssertEqual<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
-  ? true
-  : false;
+type AssertEqual<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 
 const validRegister: RegisterPacienteRequest = {
   tipo_documento: 'DPI',
