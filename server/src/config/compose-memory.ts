@@ -1,29 +1,9 @@
-import { asInstitutionId, engineForKind, type InstitutionKind } from '@genki/shared';
-import {
-  MemoryAuthAdapter,
-  MemoryIdPort,
-  MemoryPacienteRepository,
-  MemoryUnitOfWork,
-  SystemClock,
-} from '../adapters/memory/index.js';
+import type { InstitutionKind } from '@genki/shared';
+import { MemoryAuthAdapter } from '../adapters/memory/index.js';
 import type { AuthPort } from '../ports/index.js';
-import { InstitutionAdapterRegistry, type AdapterSet } from './adapter-registry.js';
+import { InstitutionAdapterRegistry } from './adapter-registry.js';
+import { buildMemoryAdapterSet } from './memory-adapter-set.js';
 
-export function createMemoryAdapterSet(kind: InstitutionKind, institutionId = 1): AdapterSet {
-  const clock = new SystemClock();
-  const ids = new MemoryIdPort();
-  return {
-    engine: engineForKind(kind),
-    clock,
-    ids,
-    unitOfWork: new MemoryUnitOfWork(),
-    pacientes: new MemoryPacienteRepository(ids, asInstitutionId(institutionId), () =>
-      clock.nowIso(),
-    ),
-  };
-}
-
-/** Phase-0 composition root: clinical adapters on memory; AuthPort is platform-wide. */
 export function createPhase0Registry(): InstitutionAdapterRegistry {
   const registry = new InstitutionAdapterRegistry();
   const kinds: InstitutionKind[] = [
@@ -33,7 +13,7 @@ export function createPhase0Registry(): InstitutionAdapterRegistry {
     'clinica_odontologica',
   ];
   for (const kind of kinds) {
-    registry.register(kind, (institutionId) => createMemoryAdapterSet(kind, institutionId));
+    registry.register(kind, (institutionId) => buildMemoryAdapterSet(kind, institutionId));
   }
   return registry;
 }

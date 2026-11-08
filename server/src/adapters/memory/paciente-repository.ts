@@ -8,12 +8,16 @@ import type {
 import { asExpedienteId, asPacienteId } from '@genki/shared';
 import type { CreatePacienteInput, IdPort, PacienteRepositoryPort } from '../../ports/index.js';
 import { archivedEstado, assertCanArchive } from '../../domain/expediente-estado.js';
+import type { MemoryInstitutionState } from './state.js';
+import { activeMemoryMaps } from './unit-of-work.js';
+
+function cloneDto<T>(value: T): T {
+  return structuredClone(value);
+}
 
 export class MemoryPacienteRepository implements PacienteRepositoryPort {
-  private readonly pacientes = new Map<PacienteId, PacienteDto>();
-  private readonly expedientes = new Map<PacienteId, ExpedienteDto>();
-
   constructor(
+    private readonly state: MemoryInstitutionState,
     private readonly ids: IdPort,
     private readonly id_institucion: InstitutionId,
     private readonly nowIso: () => string,
@@ -22,6 +26,7 @@ export class MemoryPacienteRepository implements PacienteRepositoryPort {
   async createWithExpediente(
     input: CreatePacienteInput,
   ): Promise<{ paciente: PacienteDto; expediente: ExpedienteDto }> {
+    const maps = activeMemoryMaps(this.state);
     const id_paciente = asPacienteId(await this.ids.nextInt('paciente'));
     const id_expediente = asExpedienteId(await this.ids.nextInt('expediente'));
     const fecha = this.nowIso();
@@ -57,32 +62,34 @@ export class MemoryPacienteRepository implements PacienteRepositoryPort {
       observacion_archivo: null,
     };
 
-    this.pacientes.set(id_paciente, paciente);
-    this.expedientes.set(id_paciente, expediente);
-    return { paciente, expediente };
+    maps.pacientes.set(id_paciente, paciente);
+    maps.expedientes.set(id_paciente, expediente);
+    return { paciente: cloneDto(paciente), expediente: cloneDto(expediente) };
   }
 
   async findById(id: PacienteId): Promise<PacienteDto | null> {
-    return this.pacientes.get(id) ?? null;
+    const found = activeMemoryMaps(this.state).pacientes.get(id);
+    return found ? cloneDto(found) : null;
   }
 
   async findByDocumento(
     tipo_documento: string,
     numero_documento: string,
   ): Promise<PacienteDto | null> {
-    for (const paciente of this.pacientes.values()) {
+    for (const paciente of activeMemoryMaps(this.state).pacientes.values()) {
       if (
         paciente.tipo_documento === tipo_documento &&
         paciente.numero_documento === numero_documento
       ) {
-        return paciente;
+        return cloneDto(paciente);
       }
     }
     return null;
   }
 
   async archiveExpediente(input: ArchiveExpedienteInput): Promise<ExpedienteDto> {
-    for (const [pacienteId, expediente] of this.expedientes.entries()) {
+    const maps = activeMemoryMaps(this.state);
+    for (const [pacienteId, expediente] of maps.expedientes.entries()) {
       if (expediente.id_expediente !== input.id_expediente) {
         continue;
       }
@@ -94,8 +101,8 @@ export class MemoryPacienteRepository implements PacienteRepositoryPort {
         motivo_archivo: input.motivo_archivo,
         observacion_archivo: input.observacion_archivo ?? null,
       };
-      this.expedientes.set(pacienteId, next);
-      return next;
+      maps.expedientes.set(pacienteId, next);
+      return cloneDto(next);
     }
     throw new Error('Expediente not found');
   }
