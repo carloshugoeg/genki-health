@@ -4,6 +4,17 @@ Evidence is filled only when the matching ticket reaches that gate. Do not pre-c
 
 Protocol-change files (`AGENTS.md`, CI workflows, `ports/` interfaces, initial migrations under the frozen contracts) require the `protocol-change` label and both owners' approval before merge.
 
+## Post-test formatting edits (recovery template)
+
+Use this when a gate fails because test files changed after the recorded `test:` commit (Prettier, ESLint `--fix`, import sorting, or other autofix), including whitespace-only edits.
+
+1. List every test path whose blob differs from the `test:` commit (`git diff --name-only <test-sha> HEAD -- <test-globs>`).
+2. Restore each path to exact `test:` bytes: `git checkout <test-sha> -- <path>`. Confirm with `git hash-object` matching `git rev-parse <test-sha>:<path>`.
+3. Re-run the named assertions against the unchanged implementation. Do not edit assertions, fixtures, or test helpers that the `test:` commit owned.
+4. If an assertion is wrong, stop and report the mismatch. Do not "fix" the test to match the implementation.
+5. Do not re-run formatters on those restored paths before push. Format production files only. Format test files before the `test:` commit, never after.
+6. Record the restore commit SHA, the `test:` SHA, and the re-run commands in the PR Verification section.
+
 ## Gates
 
 - **G0 repo truth:** #8 content integrated; #9 rebased content integrated; AGENTS E2 override, exact adopted assumptions and tracker rows consistent. E1-05 independent. Neither merge was performed by this planning task.
@@ -20,6 +31,8 @@ Protocol-change files (`AGENTS.md`, CI workflows, `ports/` interfaces, initial m
   - Prerequisite memory patient registration (E2-P2-04, 2026-11-08 America/Guatemala): memory alta, guardians, search, and archive. Named cases in `register-paciente.test.ts` / `archive-expediente.test.ts` red (11 failed / 2 passed, exit 1) then green (21 passed with the UoW and registry files; the two application files alone are 13 passed). `CONTRACT_RED=1` memory suite stayed red (8 passed / 9 failed). `npm run test:contract-red` exits 0 and prints `expect-contract-red OK`. `npm run validate` ended `validate.sh OK`. Does not green G2.
   - Prerequisite domain invariants (E2-P2-05, 2026-11-08 America/Guatemala): pure `validateConsulta` in `server/src/domain/consulta.ts` (exactly one principal diagnosis; in-range treatment indexes; treatment per diagnosis; distinct medication ids / non-empty recipe details; start ≤ now; treatment end ≥ start; serialized UTF-8 JSON size ≤ 256 KiB inclusive). Named cases in `server/src/domain/consulta.test.ts` red then green. Does not green the 17-case memory suite or wire closeConsulta.
   - Evidence (E2-P2-06, 2026-11-08 America/Guatemala): memory closed consultation aggregate + test-only close bridge (CCR-HARNESS-001). Shared IdPort sequences across institutions in one harness domain; state-scoped ALS; CIE10 string keys. `npm test -w @genki/server -- test/contracts/memory.test.ts` → 17 passed / 0 failed (exit 0) without CONTRACT_RED. Focused id/UoW/close application tests green. `bash scripts/validate.sh` recorded in the journal. CONTRACT_RED opt-in removed; memory suite is default. Does not claim physical-engine G2 coverage beyond memory.
+  - Auth session port (E2-P2-09, 2026-11-08 America/Guatemala): `createAuthService` + `MemoryIdentityStore`, `AuthPort.logout`, C3.5 named cases in `server/src/ports/auth.test.ts` red (`c4f4930`, missing `adapters/auth/service.js`) then green; `POST /api/auth/logout` 204. Gate FAIL at `24e40b9` remediated test-first (`0bf19a3` red / `6f82fca` green): no credential literals, no `DEMO_PASSWORD`, no `MemoryAuthAdapter`, callers use `MemoryIdentityStore`. HTTP logout 204 / refresh 401 kept as waived regression only. Does not green coverage≥80% (E2-P2-10).
+
 - **G3 SQL:** actual migration metadata matches C4; each runtime app role passes same suite, forced rollback after a real write, FK errors; least-privilege app/report/identity denial tests; no migration owner masquerading as runtime role.
   - Prerequisite pack (E2-P1-02, 2026-11-06 America/Guatemala): frozen C4a/C4b DDL and `SQL.md` committed on `docs/T-E2-P1-02-commit` (`docs/plan/ddl/postgres.sql`, `docs/plan/ddl/mysql.sql`, `docs/plan/contracts/SQL.md`). Structural `node --test scripts/test/sql-spec.test.mjs` red then green. Specs are not executed against engines in this ticket.
   - [ ] Engine verification pending later adapter/migration tickets (apply C4a/C4b as runtime migrations; role least-privilege; forced rollback; FK error paths). Do not treat this pack commit as G3 green.

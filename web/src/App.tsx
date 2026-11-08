@@ -15,7 +15,7 @@ interface MeResponse {
 
 export function App() {
   const [email, setEmail] = useState('hospital@genki.local');
-  const [password, setPassword] = useState('GenkiDev1');
+  const [password, setPassword] = useState('');
   const [institutionKind, setInstitutionKind] = useState<InstitutionKind>('hospital_general');
   const [error, setError] = useState<string | null>(null);
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -150,7 +150,8 @@ export function App() {
               {busy ? 'Entrando…' : 'Iniciar sesión'}
             </button>
             <p className="muted">
-              Demo: hospital@genki.local / GenkiDev1 (y análogos por institución).
+              Demo: hospital@genki.local (y análogos por institución). Usa el SEED_PASSWORD de tu
+              .env local.
             </p>
           </form>
         )}
