@@ -8,6 +8,7 @@ const DAY_START_HOUR = 8;
 const DAY_END_HOUR = 17;
 
 export const AGENDA_ALLOWED_ROLES = ['recepcion', 'secretaria', 'caja'] as const;
+export const AGENDA_CLINICAL_VIEW_ROLES = ['medico', 'odontologo', 'enfermeria'] as const;
 
 export type BusyInterval = {
   inicio: string;
@@ -28,6 +29,21 @@ export function assertAgendaRole(roles: readonly string[]): void {
   if (!ok) {
     throw new ClinicalError('forbidden', 'Rol no autorizado para agenda');
   }
+}
+
+export function assertAgendaViewRole(roles: readonly string[]): void {
+  const allowed = new Set<string>([
+    ...(AGENDA_ALLOWED_ROLES as readonly string[]),
+    ...(AGENDA_CLINICAL_VIEW_ROLES as readonly string[]),
+  ]);
+  const ok = roles.some((role) => allowed.has(role));
+  if (!ok) {
+    throw new ClinicalError('forbidden', 'Rol no autorizado para agenda');
+  }
+}
+
+export function canViewAgendaMotivo(roles: readonly string[]): boolean {
+  return roles.some((role) => (AGENDA_CLINICAL_VIEW_ROLES as readonly string[]).includes(role));
 }
 
 export function isBlockingEstado(estado: string): boolean {
@@ -161,6 +177,8 @@ export function parseOp21Body(body: Record<string, unknown>): {
 
 const RESCHEDULABLE = new Set(['programada', 'confirmada']);
 const CANCELLABLE = new Set(['programada', 'confirmada']);
+const ARRIVAL_FROM = new Set(['programada']);
+const ARRIVAL_IDEMPOTENT = new Set(['confirmada']);
 
 export function parseOp22Params(params: Record<string, unknown>): { id: number } {
   assertExactKeys(params, ['id'], 'invalid_body');
@@ -211,6 +229,81 @@ export function assertCancellableEstado(estado: string): void {
   if (!CANCELLABLE.has(estado)) {
     throw new ClinicalError('conflict', 'La cita no admite cancelación');
   }
+}
+
+export function parseOp24Params(params: Record<string, unknown>): { id: number } {
+  assertExactKeys(params, ['id'], 'invalid_body');
+  return { id: assertPositiveInt(params.id, 'invalid_body', 'id') };
+}
+
+export type ArrivalAction = 'confirm' | 'noop';
+
+export function assertArrivalEstado(estado: string): ArrivalAction {
+  if (ARRIVAL_IDEMPOTENT.has(estado)) {
+    return 'noop';
+  }
+  if (ARRIVAL_FROM.has(estado)) {
+    return 'confirm';
+  }
+  throw new ClinicalError('conflict', 'La cita no admite registro de llegada');
+}
+
+function assertCalendarYmd(value: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new ClinicalError('invalid_query', 'fecha debe ser YYYY-MM-DD');
+  }
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(5, 7));
+  const day = Number(value.slice(8, 10));
+  const utc = new Date(Date.UTC(year, month - 1, day));
+  if (
+    utc.getUTCFullYear() !== year ||
+    utc.getUTCMonth() !== month - 1 ||
+    utc.getUTCDate() !== day
+  ) {
+    throw new ClinicalError('invalid_query', 'fecha de calendario inválida');
+  }
+  return value;
+}
+
+export function parseOp25Query(query: Record<string, unknown>): {
+  fecha: string;
+  id_profesional?: number;
+} {
+  assertExactKeys(query, ['fecha', 'id_profesional'], 'invalid_query');
+  if (typeof query.fecha !== 'string') {
+    throw new ClinicalError('invalid_query', 'fecha debe ser YYYY-MM-DD');
+  }
+  const fecha = assertCalendarYmd(query.fecha);
+  if (query.id_profesional === undefined) {
+    return { fecha };
+  }
+  return {
+    fecha,
+    id_profesional: assertPositiveInt(query.id_profesional, 'invalid_query', 'id_profesional'),
+  };
+}
+
+export function guatemalaDayBoundsUtc(fechaYmd: string): { desde: string; hasta: string } {
+  const year = Number(fechaYmd.slice(0, 4));
+  const month = Number(fechaYmd.slice(5, 7));
+  const day = Number(fechaYmd.slice(8, 10));
+  const startMs = utcMsFromGtLocal(year, month - 1, day, 0, 0);
+  const endMs = startMs + DAY_MS;
+  return {
+    desde: new Date(startMs).toISOString(),
+    hasta: new Date(endMs).toISOString(),
+  };
+}
+
+export function projectCitaMotivo<T extends { motivo?: string | null }>(
+  row: T,
+  roles: readonly string[],
+): T {
+  if (canViewAgendaMotivo(roles)) {
+    return row;
+  }
+  return { ...row, motivo: null };
 }
 
 export function assertNotInPast(fecha_hora: string, nowIso: string): void {

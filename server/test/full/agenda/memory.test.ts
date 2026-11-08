@@ -234,7 +234,7 @@ async function makeMemoryAgendaHarness(): Promise<FullHarness> {
   return buildHarness(1);
 }
 
-moduleContract('memory', makeMemoryAgendaHarness, [20, 21, 22, 23]);
+moduleContract('memory', makeMemoryAgendaHarness, [20, 21, 22, 23, 24, 25]);
 
 describe('agenda memory factory smoke', () => {
   it('seeds primary professional id used by fixtures', async () => {
