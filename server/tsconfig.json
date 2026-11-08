@@ -6,7 +6,5 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  // Imports server/test/contracts, which is outside rootDir. Vitest still runs the file.
-  "exclude": ["src/application/register-paciente.test.ts"],
   "references": [{ "path": "../shared" }]
 }

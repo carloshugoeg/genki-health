@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PacienteResumen, RegisterPacienteRequest, ResponsableInput } from '@genki/shared';
 import { createTestMemoryAdapterSet } from '../config/memory-test-factory.js';
-import { makeMemoryClinicalHarness } from '../../test/contracts/memory-harness.js';
+import { makeMemoryClinicalHarness } from '../testing/memory-harness.js';
 import { archiveExpediente } from './archive-expediente.js';
 import { registerPaciente } from './register-paciente.js';
 
