@@ -2,13 +2,19 @@ import type { InstitutionId } from '@genki/shared';
 import type { CITA } from '@genki/shared/full/agenda';
 import { ClinicalError } from '../../../domain/clinical-error.js';
 import {
+  assertCancellableEstado,
   assertNoOverlap,
   assertNotInPast,
+  assertReschedulableEstado,
   generateAvailableSlots,
   intervalEndIso,
   lockKeysForInterval,
   parseOp20Query,
   parseOp21Body,
+  parseOp22Body,
+  parseOp22Params,
+  parseOp23Body,
+  parseOp23Params,
   type BusyInterval,
 } from '../../../domain/full/agenda.js';
 import type {
@@ -16,6 +22,10 @@ import type {
   Op20Response,
   Op21Request,
   Op21Response,
+  Op22Request,
+  Op22Response,
+  Op23Request,
+  Op23Response,
 } from '../../../ports/full/agenda.js';
 import type { OperationContext } from '../../../ports/full/context.js';
 import type { IdPort, UnitOfWorkPort } from '../../../ports/index.js';
@@ -35,6 +45,8 @@ const TABLE_LOCKS = 'agenda_locks';
 export type MemoryAgendaAdapter = {
   op20(input: Op20Request, context: OperationContext): Promise<Op20Response>;
   op21(input: Op21Request, context: OperationContext): Promise<Op21Response>;
+  op22(input: Op22Request, context: OperationContext): Promise<Op22Response>;
+  op23(input: Op23Request, context: OperationContext): Promise<Op23Response>;
   failAfterWrite(n: number): void;
   setStoreUnavailable(value: boolean): void;
   resetTestHooks(): void;
@@ -70,9 +82,13 @@ function listCitas(ns: MemoryExtensionNamespace): CITA[] {
   return [...table.values()].map((row) => structuredClone(row as CITA));
 }
 
-function busyForProfessional(citas: readonly CITA[], id_profesional: number): BusyInterval[] {
+function busyForProfessional(
+  citas: readonly CITA[],
+  id_profesional: number,
+  excludeId?: number,
+): BusyInterval[] {
   return citas
-    .filter((row) => row.id_profesional === id_profesional)
+    .filter((row) => row.id_profesional === id_profesional && row.id_cita !== excludeId)
     .map((row) => ({
       inicio: row.fecha_hora,
       fin: intervalEndIso(row.fecha_hora, row.duracion_minutos),
@@ -82,6 +98,19 @@ function busyForProfessional(citas: readonly CITA[], id_profesional: number): Bu
 
 function lockId(institutionId: number, id_profesional: number, fecha: string): string {
   return `${institutionId}:${id_profesional}:${fecha}`;
+}
+
+function requireCita(ns: MemoryExtensionNamespace, id_cita: number): CITA {
+  const table = ns.get(TABLE_CITAS);
+  const row = table?.get(id_cita) as CITA | undefined;
+  if (!row) {
+    throw new ClinicalError('not_found', 'Cita no encontrada');
+  }
+  return structuredClone(row);
+}
+
+function sortedUnique(keys: readonly string[]): string[] {
+  return [...new Set(keys)].sort((a, b) => a.localeCompare(b));
 }
 
 export function createMemoryAgendaAdapter(deps: MemoryAgendaDeps): MemoryAgendaAdapter {
@@ -118,6 +147,22 @@ export function createMemoryAgendaAdapter(deps: MemoryAgendaDeps): MemoryAgendaA
     }
   }
 
+  function reserveDayLocks(
+    ns: MemoryExtensionNamespace,
+    id_profesional: number,
+    fechas: readonly string[],
+  ): void {
+    for (const fecha of fechas) {
+      const id = lockId(deps.institutionId, id_profesional, fecha);
+      putExtensionRow(ns, TABLE_LOCKS, id, {
+        id_institucion: deps.institutionId,
+        id_profesional,
+        fecha,
+      });
+      noteWrite();
+    }
+  }
+
   return {
     async op20(input, _context): Promise<Op20Response> {
       assertStoreUp();
@@ -141,15 +186,7 @@ export function createMemoryAgendaAdapter(deps: MemoryAgendaDeps): MemoryAgendaA
       const busy = busyForProfessional(listCitas(ns), body.id_profesional);
       assertNoOverlap(inicio, fin, busy);
 
-      for (const fecha of lockKeysForInterval(inicio, fin)) {
-        const id = lockId(deps.institutionId, body.id_profesional, fecha);
-        putExtensionRow(ns, TABLE_LOCKS, id, {
-          id_institucion: deps.institutionId,
-          id_profesional: body.id_profesional,
-          fecha,
-        });
-        noteWrite();
-      }
+      reserveDayLocks(ns, body.id_profesional, lockKeysForInterval(inicio, fin));
 
       const id_cita = await deps.ids.nextInt('cita');
       const row: CITA = {
@@ -167,6 +204,62 @@ export function createMemoryAgendaAdapter(deps: MemoryAgendaDeps): MemoryAgendaA
       putExtensionRow(ns, TABLE_CITAS, id_cita, row);
       noteWrite();
       return structuredClone(row);
+    },
+
+    async op22(input, context): Promise<Op22Response> {
+      assertStoreUp();
+      const params = parseOp22Params(input.params as Record<string, unknown>);
+      const body = parseOp22Body(input.body as Record<string, unknown>);
+      assertNotInPast(body.fecha_hora, context.now);
+
+      const ns = namespaceOf(deps.state);
+      const current = requireCita(ns, params.id);
+      assertReschedulableEstado(current.estado);
+
+      const oldInicio = current.fecha_hora;
+      const oldFin = intervalEndIso(current.fecha_hora, current.duracion_minutos);
+      const newInicio = body.fecha_hora;
+      const newFin = intervalEndIso(body.fecha_hora, body.duracion_minutos);
+      const busy = busyForProfessional(listCitas(ns), current.id_profesional, current.id_cita);
+      assertNoOverlap(newInicio, newFin, busy);
+
+      const fechas = sortedUnique([
+        ...lockKeysForInterval(oldInicio, oldFin),
+        ...lockKeysForInterval(newInicio, newFin),
+      ]);
+      reserveDayLocks(ns, current.id_profesional, fechas);
+
+      const updated: CITA = {
+        ...current,
+        fecha_hora: body.fecha_hora,
+        duracion_minutos: body.duracion_minutos,
+        estado: 'programada',
+      };
+      putExtensionRow(ns, TABLE_CITAS, updated.id_cita, updated);
+      noteWrite();
+      return structuredClone(updated);
+    },
+
+    async op23(input, _context): Promise<Op23Response> {
+      assertStoreUp();
+      const params = parseOp23Params(input.params as Record<string, unknown>);
+      parseOp23Body(input.body as Record<string, unknown>);
+
+      const ns = namespaceOf(deps.state);
+      const current = requireCita(ns, params.id);
+      assertCancellableEstado(current.estado);
+
+      const inicio = current.fecha_hora;
+      const fin = intervalEndIso(current.fecha_hora, current.duracion_minutos);
+      reserveDayLocks(ns, current.id_profesional, lockKeysForInterval(inicio, fin));
+
+      const updated: CITA = {
+        ...current,
+        estado: 'cancelada',
+      };
+      putExtensionRow(ns, TABLE_CITAS, updated.id_cita, updated);
+      noteWrite();
+      return structuredClone(updated);
     },
 
     failAfterWrite(n: number): void {
