@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { DataEngine } from './db-migrate.ts';
@@ -94,12 +95,11 @@ async function bootstrapPostgres(): Promise<void> {
   const client = new pg.default.Client({ connectionString: adminUrl });
   await client.connect();
   try {
-    for (const role of ROLE_ALLOWLIST.postgres) {
-      const found = await client.query('SELECT 1 FROM pg_roles WHERE rolname = $1', [role]);
-      if ((found.rowCount ?? 0) === 0) {
-        await client.query(`CREATE ROLE ${role} NOLOGIN`);
-      }
-    }
+    const securitySql = readFileSync(
+      join(ROOT, 'server', 'src', 'adapters', 'postgres', 'security.sql'),
+      'utf8',
+    );
+    await client.query(securitySql);
     for (const [login, meta] of Object.entries(PG_LOGINS)) {
       const password = requireEnv(meta.passwordEnv);
       const passwordLiteral = client.escapeLiteral(password);
@@ -109,12 +109,12 @@ async function bootstrapPostgres(): Promise<void> {
       } else {
         await client.query(`ALTER ROLE ${login} WITH LOGIN PASSWORD ${passwordLiteral}`);
       }
+      await client.query(`REVOKE ${ROLE_ALLOWLIST.postgres.join(', ')} FROM ${login}`);
       await client.query(`GRANT ${meta.group} TO ${login}`);
     }
   } finally {
     await client.end();
   }
-  void ROOT;
 }
 
 async function bootstrapMysql(): Promise<void> {
