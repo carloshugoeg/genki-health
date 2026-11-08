@@ -141,7 +141,9 @@ function clinicalRegistry(hospital: TestMemoryAdapterSet, pediatric: TestMemoryA
   const registry = new InstitutionAdapterRegistry();
   registry.register('hospital_general', () => hospital);
   registry.register('centro_pediatrico', () => pediatric);
-  registry.register('laboratorio_clinico', () => createTestMemoryAdapterSet('laboratorio_clinico', 3));
+  registry.register('laboratorio_clinico', () =>
+    createTestMemoryAdapterSet('laboratorio_clinico', 3),
+  );
   registry.register('clinica_odontologica', () =>
     createTestMemoryAdapterSet('clinica_odontologica', 4),
   );
