@@ -17,6 +17,8 @@ export const RECORD_CLINICAL_ROLES = ['medico', 'odontologo', 'enfermeria'] as c
 
 export const RECORD_ARCHIVE_ROLES = ['administrador', 'recepcion'] as const;
 
+export const RECORD_REACTIVATE_ROLES = ['administrador'] as const;
+
 export const ARCHIVE_MOTIVOS = [
   'traslado',
   'fallecimiento',

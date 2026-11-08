@@ -5,6 +5,7 @@ import { ClinicalError } from '../../domain/clinical-error.js';
 import {
   assertRecordArchiveRole,
   assertRecordClinicalRole,
+  assertRecordReactivateRole,
   parseAlergiaInput,
   parseAntecedenteInput,
   parseArchiveInput,
@@ -12,6 +13,8 @@ import {
   parseOp15Params,
   parseOp16Params,
   parseOp18Params,
+  parseOp19Params,
+  parseReactivateInput,
   requireIdempotencyKey,
 } from '../../domain/full/record.js';
 import type { FullContext, OperationContext } from '../../ports/full/context.js';
@@ -20,6 +23,7 @@ import type {
   Op15Request,
   Op16Request,
   Op18Request,
+  Op19Request,
 } from '../../ports/full/record.js';
 
 function rethrowRecordFailure(err: unknown): never {
@@ -104,6 +108,25 @@ export async function executeOp18(
   const idempotency_key = requireIdempotencyKey(actor.idempotency_key);
   try {
     return await context.modules.record.op18(
+      { params: { id }, query: {}, body },
+      { ...actor, idempotency_key, now: actor.now },
+    );
+  } catch (err) {
+    rethrowRecordFailure(err);
+  }
+}
+
+export async function executeOp19(
+  context: FullContext,
+  input: Op19Request,
+  actor: OperationContext,
+): Promise<ExpedienteDto> {
+  assertRecordReactivateRole(actor.roles);
+  const id = parseOp19Params(input.params);
+  const body = parseReactivateInput(input.body);
+  const idempotency_key = requireIdempotencyKey(actor.idempotency_key);
+  try {
+    return await context.modules.record.op19(
       { params: { id }, query: {}, body },
       { ...actor, idempotency_key, now: actor.now },
     );
