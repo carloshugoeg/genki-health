@@ -25,7 +25,6 @@ export function createMemoryAdapterSet(kind: InstitutionKind, institutionId = 1)
   };
 }
 
-/** Phase-0 composition root: clinical adapters on memory; AuthPort is platform-wide. */
 export function createPhase0Registry(): InstitutionAdapterRegistry {
   const registry = new InstitutionAdapterRegistry();
   const kinds: InstitutionKind[] = [

@@ -8,16 +8,11 @@ interface MemoryTxStore {
 
 const memoryTx = new AsyncLocalStorage<MemoryTxStore>();
 
-/** Active maps: working snapshot inside a transaction, else published. */
 export function activeMemoryMaps(state: MemoryInstitutionState): MemoryMaps {
   const store = memoryTx.getStore();
   return store ? store.working : state.getPublished();
 }
 
-/**
- * Snapshot UoW for memory (C3.3): outer writers take a promise mutex, clone all
- * maps, nest via ALS, publish on success, discard on failure.
- */
 export class MemoryUnitOfWork implements UnitOfWorkPort {
   private chain: Promise<unknown> = Promise.resolve();
 

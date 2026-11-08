@@ -1,6 +1,5 @@
 import type { ExpedienteDto, PacienteDto, PacienteId } from '@genki/shared';
 
-/** Shared in-memory maps for one institution (C3.3). */
 export interface MemoryMaps {
   pacientes: Map<PacienteId, PacienteDto>;
   expedientes: Map<PacienteId, ExpedienteDto>;
@@ -67,19 +66,13 @@ export function cloneMemoryMaps(source: MemoryMaps): MemoryMaps {
   };
 }
 
-/**
- * One institution's published memory store. Writers publish a cloned snapshot
- * only through MemoryUnitOfWork commit; readers outside a transaction see this.
- */
 export class MemoryInstitutionState {
   private published: MemoryMaps = createEmptyMemoryMaps();
 
-  /** Committed maps visible to non-transactional readers. */
   getPublished(): MemoryMaps {
     return this.published;
   }
 
-  /** Replace published maps after a successful outer transaction. */
   publish(next: MemoryMaps): void {
     this.published = next;
   }
