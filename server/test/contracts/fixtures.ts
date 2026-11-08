@@ -93,7 +93,6 @@ export function guardian(
   };
 }
 
-/** Pediatric guardian cases: 0 / 1 principal / 2 principal / valid pair (exactly one). */
 export function pediatricRegisterInput(
   variant: 'none' | 'one_principal' | 'two_principal' | 'valid_pair',
 ): RegisterPacienteRequest {
@@ -161,7 +160,6 @@ export function threeSearchPatients(): RegisterPacienteRequest[] {
   ];
 }
 
-/** Build close request using the active context catalog (profesional + medications). */
 export function closeBodyFromCatalog(
   catalog: CatalogosDto,
   options: {
@@ -273,7 +271,6 @@ export async function closeBodyFor(
   return closeBodyFromCatalog(catalog, options);
 }
 
-/** Map CloseConsultaRequest + expediente into the repository CloseConsultaBundle. */
 export function closeBundleFromRequest(
   id_expediente: ExpedienteId,
   body: CloseConsultaRequest,

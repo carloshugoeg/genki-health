@@ -6,7 +6,6 @@ import type {
   ConsultaId,
   ExpedienteDto,
   ExpedienteId,
-  HistorialDto,
   InstitutionKind,
   PacienteDto,
   PacienteId,
@@ -20,7 +19,6 @@ import type { CloseConsultaBundle } from '../../src/ports/consulta-repository.js
 import type { IdPort } from '../../src/ports/id.js';
 import type { UnitOfWorkPort } from '../../src/ports/unit-of-work.js';
 
-/** Harness FailurePoint aliases C3.6 PersistenceCheckpoint. */
 export type FailurePoint = PersistenceCheckpoint;
 
 export interface SearchPacientesInput {
@@ -30,10 +28,6 @@ export interface SearchPacientesInput {
   page_size: number;
 }
 
-/**
- * Structural C3.1 target ports for the frozen suite.
- * Production ports may still lag; cast only at the adapter factory boundary.
- */
 export interface ContractPacienteRepository {
   createWithExpediente(input: RegisterPacienteRequest): Promise<PacienteResumen>;
   findById(id: PacienteId): Promise<PacienteDto | null>;
@@ -97,6 +91,3 @@ export function assertCountsEqual(actual: CountSnapshot, expected: CountSnapshot
     }
   }
 }
-
-/** Historial helper shape used by archive/history cases. */
-export type ContractHistorial = HistorialDto;

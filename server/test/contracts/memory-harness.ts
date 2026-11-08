@@ -1,4 +1,4 @@
-import { asInstitutionId, type InstitutionKind } from '@genki/shared';
+import type { InstitutionKind } from '@genki/shared';
 import { createMemoryAdapterSet } from '../../src/config/compose-memory.js';
 import type {
   ClinicalHarness,
@@ -51,30 +51,12 @@ function clearBags(bags: MemoryBags): void {
   }
 }
 
-/**
- * Memory harness for the frozen suite.
- * Casts the current scaffold adapter set through unknown to the structural
- * ContractClinicalContext. Missing methods and absent snapshot rollback fail
- * at runtime under CONTRACT_RED=1 until later memory tickets.
- */
 export async function makeMemoryClinicalHarness(options?: {
   kind?: InstitutionKind;
 }): Promise<ClinicalHarness> {
   const kind = options?.kind ?? defaultKind();
-  const institutionId = 1;
-  const primarySet = createMemoryAdapterSet(kind, institutionId);
+  const primarySet = createMemoryAdapterSet(kind, 1);
   let pendingFailure: FailurePoint | null = null;
-
-  const afterWrite = (point: FailurePoint): void => {
-    if (pendingFailure === point) {
-      pendingFailure = null;
-      throw new Error(`injected failure at ${point}`);
-    }
-  };
-
-  // Existing compose path does not accept afterWrite; keep callback local for
-  // future wiring. failNext still arms so cases exercise the harness API.
-  void afterWrite;
 
   const bags: MemoryBags = {
     pacientes: (primarySet.pacientes as unknown as { pacientes?: Map<unknown, unknown> }).pacientes,
@@ -86,7 +68,6 @@ export async function makeMemoryClinicalHarness(options?: {
 
   const otherInstitution = async (): Promise<ContractClinicalContext> => {
     const other = createMemoryAdapterSet(kind, OTHER_INSTITUTION_ID);
-    void asInstitutionId(OTHER_INSTITUTION_ID);
     return other as unknown as ContractClinicalContext;
   };
 
