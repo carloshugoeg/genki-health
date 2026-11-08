@@ -24,7 +24,7 @@ The live order is `poteto-mode/queue/backlog.md`. This table is the claim surfac
 | E2-P2-05 | Implement pure consultation bundle invariants | Done | Auto (Cursor) / Hugo Escobar | cursor/e2-p2-05-consulta-invariants-3351 | https://github.com/carloshugoeg/genki-health/pull/19 |
 | E2-P2-06 | Implement memory closed consultation aggregate and turn contract suite green | Done | Auto (Cursor) / Hugo Escobar | cursor/e2-p2-06-memory-consulta-13ef | https://github.com/carloshugoeg/genki-health/pull/23 |
 | E2-P2-07 | Expose patient search, detail, catalog and archive HTTP slices | Done | Auto (Cursor) / Hugo Escobar | cursor/e2-p2-07-expose-http-da67 | https://github.com/carloshugoeg/genki-health/pull/24 |
-| E2-P2-08 | Wire atomic consultation use case and HTTP save | Done | Auto (Cursor) / Hugo Escobar | cursor/e2-p2-08-wire-atomic-consultation-230f | |
+| E2-P2-08 | Wire atomic consultation use case and HTTP save | Done | Auto (Cursor) / Hugo Escobar | cursor/e2-p2-08-wire-atomic-consultation-230f | https://github.com/carloshugoeg/genki-health/pull/47 |
 | E2-P2-09 | Extract storage-neutral JWT service with persistent-session port | Done | Auto (Cursor) / Hugo Escobar | cursor/e2-p2-09-jwt-session-port-27b0 | https://github.com/carloshugoeg/genki-health/pull/20 |
 | E2-P3A-01 | Provision deterministic local engines and safe bootstrap commands | Done | Auto (Cursor) / Hugo Escobar | cursor/e2-p3a-01-provision-55f2 | https://github.com/carloshugoeg/genki-health/pull/25 |
 
