@@ -11,6 +11,7 @@ import type {
 /**
  * One adapter set per institution session. Business logic never sees the engine.
  * JWT middleware resolves kind + institucion_id, then calls resolve().
+ * C3.2: cache ONE set per kind+institutionId for the process lifetime.
  */
 export interface AdapterSet {
   readonly engine: DataEngine;
@@ -24,8 +25,13 @@ export interface AdapterSet {
 
 export type AdapterSetFactory = (institutionId: InstitutionId) => AdapterSet;
 
+function cacheKey(kind: InstitutionKind, institutionId: InstitutionId): string {
+  return `${kind}:${institutionId}`;
+}
+
 export class InstitutionAdapterRegistry {
   private readonly byKind = new Map<InstitutionKind, AdapterSetFactory>();
+  private readonly cache = new Map<string, AdapterSet>();
 
   register(kind: InstitutionKind, factory: AdapterSetFactory): void {
     const engine = engineForKind(kind);
@@ -39,11 +45,18 @@ export class InstitutionAdapterRegistry {
   }
 
   resolve(kind: InstitutionKind, institutionId: InstitutionId): AdapterSet {
+    const key = cacheKey(kind, institutionId);
+    const cached = this.cache.get(key);
+    if (cached) {
+      return cached;
+    }
     const factory = this.byKind.get(kind);
     if (!factory) {
       throw new Error(`No adapter set registered for ${kind}`);
     }
-    return factory(institutionId);
+    const set = factory(institutionId);
+    this.cache.set(key, set);
+    return set;
   }
 
   registeredKinds(): InstitutionKind[] {

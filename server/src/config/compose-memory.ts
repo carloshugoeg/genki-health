@@ -6,18 +6,20 @@ import {
   MemoryUnitOfWork,
   SystemClock,
 } from '../adapters/memory/index.js';
+import { createMemoryInstitutionState } from '../adapters/memory/state.js';
 import type { AuthPort } from '../ports/index.js';
 import { InstitutionAdapterRegistry, type AdapterSet } from './adapter-registry.js';
 
 export function createMemoryAdapterSet(kind: InstitutionKind, institutionId = 1): AdapterSet {
   const clock = new SystemClock();
   const ids = new MemoryIdPort();
+  const state = createMemoryInstitutionState();
   return {
     engine: engineForKind(kind),
     clock,
     ids,
-    unitOfWork: new MemoryUnitOfWork(),
-    pacientes: new MemoryPacienteRepository(ids, asInstitutionId(institutionId), () =>
+    unitOfWork: new MemoryUnitOfWork(state),
+    pacientes: new MemoryPacienteRepository(state, ids, asInstitutionId(institutionId), () =>
       clock.nowIso(),
     ),
   };
