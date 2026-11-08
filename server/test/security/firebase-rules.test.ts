@@ -25,10 +25,15 @@ describe('firestore security rules (C5.2)', () => {
   beforeAll(async () => {
     const rules = readFileSync(rulesPath, 'utf8');
     const indexes = JSON.parse(readFileSync(indexesPath, 'utf8')) as {
-      indexes: Array<{ collectionGroup: string; fields: Array<{ fieldPath: string; order: string }> }>;
+      indexes: Array<{
+        collectionGroup: string;
+        fields: Array<{ fieldPath: string; order: string }>;
+      }>;
     };
     const records = indexes.indexes.find((entry) => entry.collectionGroup === 'records');
-    const consultations = indexes.indexes.find((entry) => entry.collectionGroup === 'consultations');
+    const consultations = indexes.indexes.find(
+      (entry) => entry.collectionGroup === 'consultations',
+    );
     if (!records?.fields.some((field) => field.fieldPath === 'estado')) {
       throw new Error('firestore.indexes.json missing records estado/id_paciente composite');
     }
