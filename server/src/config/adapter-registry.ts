@@ -1,6 +1,7 @@
 import type { DataEngine, InstitutionId, InstitutionKind } from '@genki/shared';
 import { engineForKind } from '@genki/shared';
 import type {
+  CatalogoRepositoryPort,
   ClockPort,
   ConsultaRepositoryPort,
   IdPort,
@@ -15,6 +16,7 @@ export interface AdapterSet {
   readonly unitOfWork: UnitOfWorkPort;
   readonly pacientes: PacienteRepositoryPort;
   readonly consultas?: ConsultaRepositoryPort;
+  readonly catalogos?: CatalogoRepositoryPort;
 }
 
 export type AdapterSetFactory = (institutionId: InstitutionId) => AdapterSet;

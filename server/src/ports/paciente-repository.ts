@@ -1,26 +1,29 @@
-import type { ArchiveExpedienteInput, ExpedienteDto, PacienteDto, PacienteId } from '@genki/shared';
+import type {
+  ArchiveExpedienteInput,
+  ExpedienteDto,
+  ExpedienteId,
+  PacienteDto,
+  PacienteId,
+  PacientePage,
+  PacienteResumen,
+  RegisterPacienteRequest,
+} from '@genki/shared';
 
-export interface CreatePacienteInput {
-  tipo_documento: string;
-  numero_documento: string;
-  primer_nombre: string;
-  segundo_nombre?: string | null;
-  primer_apellido: string;
-  segundo_apellido?: string | null;
-  fecha_nacimiento: string;
-  sexo: PacienteDto['sexo'];
-  tipo_sangre?: string | null;
-  telefono?: string | null;
-  correo?: string | null;
-  direccion?: string | null;
-  id_municipio?: number | null;
+export type CreatePacienteInput = RegisterPacienteRequest;
+
+export interface SearchPacientesInput {
+  q: string;
+  estado: 'activo' | 'archivado' | 'todos';
+  page: number;
+  page_size: number;
 }
 
 export interface PacienteRepositoryPort {
-  createWithExpediente(
-    input: CreatePacienteInput,
-  ): Promise<{ paciente: PacienteDto; expediente: ExpedienteDto }>;
+  createWithExpediente(input: CreatePacienteInput): Promise<PacienteResumen>;
   findById(id: PacienteId): Promise<PacienteDto | null>;
   findByDocumento(tipo_documento: string, numero_documento: string): Promise<PacienteDto | null>;
+  findExpedienteByPaciente(id: PacienteId): Promise<ExpedienteDto | null>;
+  findExpedienteById(id: ExpedienteId): Promise<ExpedienteDto | null>;
+  list(input: SearchPacientesInput): Promise<PacientePage>;
   archiveExpediente(input: ArchiveExpedienteInput): Promise<ExpedienteDto>;
 }
