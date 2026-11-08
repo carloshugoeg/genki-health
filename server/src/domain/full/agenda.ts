@@ -159,6 +159,60 @@ export function parseOp21Body(body: Record<string, unknown>): {
   };
 }
 
+const RESCHEDULABLE = new Set(['programada', 'confirmada']);
+const CANCELLABLE = new Set(['programada', 'confirmada']);
+
+export function parseOp22Params(params: Record<string, unknown>): { id: number } {
+  assertExactKeys(params, ['id'], 'invalid_body');
+  return { id: assertPositiveInt(params.id, 'invalid_body', 'id') };
+}
+
+export function parseOp22Body(body: Record<string, unknown>): {
+  fecha_hora: string;
+  duracion_minutos: number;
+} {
+  assertExactKeys(body, ['fecha_hora', 'duracion_minutos'], 'invalid_body');
+  const fecha_hora = assertIsoUtc(body.fecha_hora, 'invalid_body', 'fecha_hora');
+  const duracion_minutos = assertPositiveInt(
+    body.duracion_minutos,
+    'invalid_body',
+    'duracion_minutos',
+  );
+  if (duracion_minutos < 1 || duracion_minutos > 480) {
+    throw new ClinicalError('invalid_body', 'duracion_minutos fuera de rango');
+  }
+  return { fecha_hora, duracion_minutos };
+}
+
+export function parseOp23Params(params: Record<string, unknown>): { id: number } {
+  assertExactKeys(params, ['id'], 'invalid_body');
+  return { id: assertPositiveInt(params.id, 'invalid_body', 'id') };
+}
+
+export function parseOp23Body(body: Record<string, unknown>): { motivo: string } {
+  assertExactKeys(body, ['motivo'], 'invalid_body');
+  if (typeof body.motivo !== 'string') {
+    throw new ClinicalError('invalid_body', 'motivo inválido');
+  }
+  const trimmed = body.motivo.trim();
+  if (trimmed.length === 0 || trimmed.includes('\u0000') || trimmed.length > 200) {
+    throw new ClinicalError('invalid_body', 'motivo inválido');
+  }
+  return { motivo: trimmed };
+}
+
+export function assertReschedulableEstado(estado: string): void {
+  if (!RESCHEDULABLE.has(estado)) {
+    throw new ClinicalError('conflict', 'La cita no admite reprogramación');
+  }
+}
+
+export function assertCancellableEstado(estado: string): void {
+  if (!CANCELLABLE.has(estado)) {
+    throw new ClinicalError('conflict', 'La cita no admite cancelación');
+  }
+}
+
 export function assertNotInPast(fecha_hora: string, nowIso: string): void {
   if (Date.parse(fecha_hora) < Date.parse(nowIso)) {
     throw new ClinicalError('invalid_body', 'No se puede agendar en el pasado');

@@ -1,11 +1,23 @@
 import { ClinicalError } from '../../domain/clinical-error.js';
-import { assertAgendaRole, parseOp20Query, parseOp21Body } from '../../domain/full/agenda.js';
+import {
+  assertAgendaRole,
+  parseOp20Query,
+  parseOp21Body,
+  parseOp22Body,
+  parseOp22Params,
+  parseOp23Body,
+  parseOp23Params,
+} from '../../domain/full/agenda.js';
 import type { FullContext, OperationContext } from '../../ports/full/context.js';
 import type {
   Op20Request,
   Op20Response,
   Op21Request,
   Op21Response,
+  Op22Request,
+  Op22Response,
+  Op23Request,
+  Op23Response,
 } from '../../ports/full/agenda.js';
 
 function assertEmptyRecord(
@@ -39,4 +51,28 @@ export async function executeOp21(
   assertEmptyRecord(input.query as Record<string, unknown>, 'invalid_body');
   parseOp21Body(input.body as Record<string, unknown>);
   return context.unitOfWork.runInTransaction(async () => context.modules.agenda.op21(input, actor));
+}
+
+export async function executeOp22(
+  context: FullContext,
+  input: Op22Request,
+  actor: OperationContext,
+): Promise<Op22Response> {
+  assertAgendaRole(actor.roles);
+  assertEmptyRecord(input.query as Record<string, unknown>, 'invalid_body');
+  parseOp22Params(input.params as Record<string, unknown>);
+  parseOp22Body(input.body as Record<string, unknown>);
+  return context.unitOfWork.runInTransaction(async () => context.modules.agenda.op22(input, actor));
+}
+
+export async function executeOp23(
+  context: FullContext,
+  input: Op23Request,
+  actor: OperationContext,
+): Promise<Op23Response> {
+  assertAgendaRole(actor.roles);
+  assertEmptyRecord(input.query as Record<string, unknown>, 'invalid_body');
+  parseOp23Params(input.params as Record<string, unknown>);
+  parseOp23Body(input.body as Record<string, unknown>);
+  return context.unitOfWork.runInTransaction(async () => context.modules.agenda.op23(input, actor));
 }
