@@ -104,9 +104,9 @@ describe('FS-FOUNDATION', () => {
     expect(empty).toHaveProperty('extensions');
     expect(empty.extensions).toBeInstanceOf(Map);
 
-    const sharedPkg = JSON.parse(
-      readFileSync(join(repoRoot, 'shared/package.json'), 'utf8'),
-    ) as { exports?: Record<string, unknown> };
+    const sharedPkg = JSON.parse(readFileSync(join(repoRoot, 'shared/package.json'), 'utf8')) as {
+      exports?: Record<string, unknown>;
+    };
     expect(sharedPkg.exports).toBeDefined();
     expect(Object.keys(sharedPkg.exports ?? {}).some((k) => k.startsWith('./full'))).toBe(true);
 
