@@ -41,9 +41,11 @@ Use this when a gate fails because test files changed after the recorded `test:`
 - **G3 SQL:** actual migration metadata matches C4; each runtime app role passes same suite, forced rollback after a real write, FK errors; least-privilege app/report/identity denial tests; no migration owner masquerading as runtime role.
   - Prerequisite pack (E2-P1-02, 2026-11-06 America/Guatemala): frozen C4a/C4b DDL and `SQL.md` committed on `docs/T-E2-P1-02-commit` (`docs/plan/ddl/postgres.sql`, `docs/plan/ddl/mysql.sql`, `docs/plan/contracts/SQL.md`). Structural `node --test scripts/test/sql-spec.test.mjs` red then green. Specs are not executed against engines in this ticket.
   - [ ] Engine verification pending later adapter/migration tickets (apply C4a/C4b as runtime migrations; role least-privilege; forced rollback; FK error paths). Do not treat this pack commit as G3 green.
+  - Infra prerequisite (E2-P3A-01, 2026-11-08 America/Guatemala): loopback Compose + env secrets, `demo-env.sh`, `db:migrate`/`db:bootstrap`/`db:reset:test` guard. `node --test scripts/test/infra.test.mjs` red then green. Gate FAIL at `e410f34` remediated: restored `scripts/test/infra.test.mjs` to `test:` SHA `8ccc6e9` (no post-test format/import/regex edits); raw isolated Compose health log attached on the PR with sha256 + tree SHA. Does not green G3 migrations/roles.
   - Evidence: pending later ticket. Security: least-privilege role denial tests live here.
 - **G4 documents:** authenticated Mongo rs0 validators/indexes+suite+roles; Firestore emulator suite/rules/backend-scoping independently green; no unbounded patient history arrays; Admin bypass limitation recorded.
   - Prerequisite pack (E2-P1-03, 2026-11-06 America/Guatemala): frozen C5 document/security/seed contract and mapping ADRs committed on `docs/T-E2-P1-03-commit` (`docs/plan/contracts/DOCUMENTS-SECURITY.md`, `docs/plan/contracts/mongodb-schema.json`, ADR-0003/0004/0005). Structural `node --test scripts/test/document-spec.test.mjs` red then green. Specs are not executed against Mongo/Firestore in this ticket.
+  - Infra prerequisite (E2-P3A-01, 2026-11-08 America/Guatemala): authenticated single-member Mongo rs0 via `infra/mongodb/start-rs.sh` (keyfile 0600 inside container, primary wait). Compose health requires writable primary. Does not green G4 validators/roles/Firestore rules.
   - [ ] Engine verification pending later adapter tickets (Mongo rs0 validators/roles; Firestore emulator rules/backend scoping; no unbounded patient history arrays; Admin bypass tests). Do not treat this pack commit as G4 green.
   - Evidence: pending later ticket. Security: deny-by-default Firestore rules and Mongo collection roles live here.
 - **G5 integrated demo:** same five screens; Playwright parameterized x4, real native read proves one physical target and zero others, API restart survival, fake seeds repeat idempotently, no hardcoded tracked credentials or memory fallback.
@@ -55,3 +57,34 @@ Use this when a gate fails because test files changed after the recorded `test:`
 - **G8 handoff:** final trackers truthfully state bounded MVP done, deferred list retained, all46 ticket statuses consistent; agents rehearse; Carlos handles final submission as PM/approver. Record actual submission separately, never pre-check it.
   - Prerequisite index (E2-P1-04, 2026-11-06 America/Guatemala): all 46 E2 ticket ids, deps, owners, files, and `created_by` path origins are frozen in `docs/plan/tickets/index.json`. Final G8 tracker close remains E2-P6-03.
   - Evidence: pending later ticket.
+
+## Gate FAIL remediation templates
+
+Copy these when a gate FAIL names the matching reason. Keep the owning branch tip; no rebase or force-push when other agents are stacked.
+
+### post-test edits to test files
+
+**Symptom.** After the ticket's `test:` commit, a later commit reformats, re-escapes, or adds imports in the same test files (Prettier wrap, regex unescape, `node:process` import, and similar).
+
+**Fix.**
+
+1. Identify the `test:` commit SHA for the ticket.
+2. Restore every listed test file to that commit's exact bytes: `git checkout <test-sha> -- <path>…`.
+3. Re-run the suite against the current implementation. Keep the impl green on the restored assertions.
+4. If a restored assertion fails, stop and report. Do not weaken, skip, or rewrite the test to match the impl.
+5. If `format:check` or ESLint would rewrite or reject the restored bytes (`no-undef` on Node globals, `no-useless-escape` on intentional regex escapes, Prettier wrap), add only that frozen path to `.prettierignore` and/or `eslint.config.js` `ignores` so tooling cannot mutate the red contract after the fact.
+
+**Not a fix.** Re-running Prettier/ESLint auto-fix on the tests, "equivalent" regex or import edits, or a journal waiver for format-only drift when the gate asked for a restore.
+
+### missing raw runtime health log
+
+**Symptom.** Provision / engine tickets claim Compose (or emulator) Healthy from static protocol tests or a paraphrased journal line, with no raw disposable runtime log on the PR.
+
+**Fix.**
+
+1. On a disposable local VM only, create env once via `bash scripts/demo-env.sh` if `.env` is absent (never commit it).
+2. Run an isolated Compose project: `docker compose --env-file .env -f infra/docker-compose.yml up -d --wait postgres mysql mongodb` (set a unique `COMPOSE_PROJECT_NAME`).
+3. Capture the full raw stdout+stderr of that command into a file. Record `sha256sum` of the file and the git tree SHA (`git rev-parse 'HEAD^{tree}'`) of the tree the command ran on.
+4. Paste the raw log (or an artifact path plus the same bytes) into the PR body with the sha256 and tree SHA. Tear down the Compose project afterward.
+
+**Not enough.** Protocol/`node --test` structural suites alone, paraphrased "Healthy" claims, or a log from a different tree SHA.

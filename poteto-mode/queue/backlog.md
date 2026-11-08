@@ -1,6 +1,6 @@
 # Backlog
 
-**Next:** E2-P2-08 — Wire atomic consultation use case and HTTP save (ready when claimed).
+**Next:** E2-P2-08 — Wire atomic consultation use case and HTTP save (ready when claimed). E2-P3A-02 is also dependency-ready in parallel.
 
 
 
@@ -31,7 +31,7 @@ Order is the order a single agent follows when dependencies are satisfied. E1-05
 | 21 | E2-P2-08 | Wire atomic consultation use case and HTTP save | backlog | agent | E2-P2-06, E2-P2-07 |
 | 22 | E2-P2-09 | Extract storage-neutral JWT service with persistent-session port | done | agent | E2-P2-01 |
 | 23 | E2-P2-10 | Close the core memory gate with coverage and API isolation tests | backlog | agent | E2-P2-09, E2-P2-08 |
-| 24 | E2-P3A-01 | Provision deterministic local engines and safe bootstrap commands | backlog | agent | E2-P1-03, E2-P2-02 |
+| 24 | E2-P3A-01 | Provision deterministic local engines and safe bootstrap commands | done | agent | E2-P1-03, E2-P2-02 |
 | 25 | E2-P3A-02 | Create PostgreSQL migrations, type mapping and scoped transaction wrapper | backlog | agent | E2-P3A-01, E2-P1-02, E2-P2-06 |
 | 26 | E2-P3A-03 | Implement PostgreSQL patient registration, read/search and archive | backlog | agent | E2-P3A-02 |
 | 27 | E2-P3A-04 | Implement PostgreSQL atomic consultation bundle and pass shared suite | backlog | agent | E2-P3A-03 |
