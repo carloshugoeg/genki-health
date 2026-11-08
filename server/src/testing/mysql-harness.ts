@@ -11,6 +11,11 @@ import { asInstitutionId } from '@genki/shared';
 import type { Pool, RowDataPacket } from 'mysql2/promise';
 import mysql from 'mysql2/promise';
 import { createMysqlAdapterSet } from '../adapters/mysql/index.js';
+import {
+  installMysqlSecurity,
+  MYSQL_APP_USER,
+  mysqlAuthenticatedUrl,
+} from '../adapters/mysql/security.js';
 import { closeConsulta } from '../application/close-consulta.js';
 import type { PersistenceCheckpoint } from '../ports/adapter-resource.js';
 import type { ClinicalContext } from '../ports/clinical-context.js';
@@ -46,12 +51,21 @@ function requireAdminUrl(): string {
   return url;
 }
 
-function testDatabaseUrl(): string {
-  const admin = requireAdminUrl();
-  if (admin.endsWith('/')) {
-    return `${admin}${TEST_DB}`;
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`missing required env: ${name} (physical MySQL required)`);
   }
-  return `${admin.replace(/\/?$/, '/')}${TEST_DB}`;
+  return value;
+}
+
+function testDatabaseUrl(): string {
+  return mysqlAuthenticatedUrl({
+    adminUrl: requireAdminUrl(),
+    database: TEST_DB,
+    user: MYSQL_APP_USER,
+    password: requireEnv('APP_DB_PASSWORD'),
+  });
 }
 
 const fixedClock = {
@@ -273,8 +287,14 @@ async function sharedConnection(): Promise<Pool> {
   });
   await migrator.query(`SET time_zone = '+00:00'`);
   await applyMigrations(migrator);
+  await installMysqlSecurity(migrator, {
+    database: TEST_DB,
+    appPassword: requireEnv('APP_DB_PASSWORD'),
+    reportPassword: requireEnv('REPORT_DB_PASSWORD'),
+  });
   await migrator.end();
 
+  // Admin pool for truncate/seed/counts; clinical adapters use app DSN separately.
   const pool = mysql.createPool({
     uri: requireAdminUrl(),
     database: TEST_DB,
