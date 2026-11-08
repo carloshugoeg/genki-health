@@ -1,6 +1,7 @@
 # Now
 
 **No active agent claim.** E2-P3A-03 is Done on `cursor/e2-p3a-03-pg-paciente-a348` (stacked on `cursor/e2-p3a-02-pg-migrations-e038`). Do not start the next ticket until an owner opens that claim.
+**No active agent claim.** E2-P3B-04 is Done on `cursor/e2-p3b-04-mysql-security-4d65` (stacked on `cursor/e2-p3b-03-mysql-consulta-b7cc`). Do not start the next ticket until an owner opens that claim.
 
 ## Agent lane (dependency-ready)
 
