@@ -92,7 +92,7 @@ function stubModules(record: RecordRepositoryPort): FullModulePorts {
       get(_target, prop) {
         if (prop === 'then') return undefined;
         return () => {
-          throw new Error(`module port not wired in FS-04-C01 harness: ${String(prop)}`);
+          throw new Error(`module port not wired in FS-04-C02 harness: ${String(prop)}`);
         };
       },
     },
@@ -284,5 +284,5 @@ recordContract(
     const sequences = new MemoryIdPort();
     return buildHarness(1, sequences);
   },
-  [12, 15],
+  [12, 15, 16, 18],
 );
