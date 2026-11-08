@@ -12,8 +12,6 @@ export default tseslint.config(
       'infra/**',
       'web/vite.config.ts',
       '.dependency-cruiser.cjs',
-      // Frozen E2-P3A-01 red-test bytes; lint must not force post-test edits
-      'scripts/test/infra.test.mjs',
     ],
   },
   eslint.configs.recommended,
