@@ -42,7 +42,6 @@ export interface ValidateConsultaInput {
   receta?: { observaciones?: string | null; detalles: ReadonlyArray<ValidateDetalleInput> } | null;
 }
 
-/** Inclusive UTF-8 byte ceiling for JSON.stringify(input). Ticket '<' clarified to '≤'. */
 const MAX_BUNDLE_UTF8_BYTES = 256 * 1024;
 
 function invalidBundle(message: string): never {

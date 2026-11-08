@@ -3,7 +3,6 @@ import { ClinicalError } from './clinical-error.js';
 import { validateConsulta, type ValidateConsultaInput } from './consulta.js';
 
 const NOW = '2026-11-08T12:00:00.000Z';
-/** Inclusive UTF-8 byte ceiling for JSON.stringify(bundle). Ticket '<' clarified to '≤'. */
 const MAX_BUNDLE_UTF8_BYTES = 256 * 1024;
 
 function validBundle(overrides: Partial<ValidateConsultaInput> = {}): ValidateConsultaInput {
@@ -33,7 +32,6 @@ function utf8JsonSize(bundle: ValidateConsultaInput): number {
   return Buffer.byteLength(JSON.stringify(bundle), 'utf8');
 }
 
-/** Build a structurally valid bundle whose JSON.stringify UTF-8 size equals targetBytes. */
 function bundleWithUtf8JsonSize(targetBytes: number): ValidateConsultaInput {
   const probe = validBundle({
     diagnosticos: [
@@ -62,10 +60,6 @@ function bundleWithUtf8JsonSize(targetBytes: number): ValidateConsultaInput {
   return probe;
 }
 
-/**
- * Bundle whose serialized string.length is ≤ MAX but UTF-8 byteLength is over.
- * Proves the limit uses bytes, not JS string.length.
- */
 function bundleWithMultibyteUtf8OverLimit(): ValidateConsultaInput {
   const asciiBase = bundleWithUtf8JsonSize(MAX_BUNDLE_UTF8_BYTES - 200);
   const descripcion = asciiBase.diagnosticos[0]!.descripcion;
