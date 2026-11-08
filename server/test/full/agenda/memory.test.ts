@@ -243,8 +243,6 @@ describe('agenda memory factory smoke', () => {
     seedCatalog(set.memoryState, 1);
     expect(SEED_PROFESIONAL_ID).toBe(FIXTURE.profesional);
     const catalogs = await set.catalogos.list();
-    expect(catalogs.profesionales.some((p) => p.id_profesional === FIXTURE.profesional)).toBe(
-      true,
-    );
+    expect(catalogs.profesionales.some((p) => p.id_profesional === FIXTURE.profesional)).toBe(true);
   });
 });

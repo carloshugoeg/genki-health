@@ -33,11 +33,7 @@ type AgendaApplication = {
     input: Op20Request,
     actor: OperationContext,
   ) => Promise<Slot[]>;
-  executeOp21: (
-    context: FullContext,
-    input: Op21Request,
-    actor: OperationContext,
-  ) => Promise<CITA>;
+  executeOp21: (context: FullContext, input: Op21Request, actor: OperationContext) => Promise<CITA>;
 };
 
 async function loadApplication(): Promise<AgendaApplication> {
@@ -309,11 +305,7 @@ export function moduleContract(
         const before = await harness.nativeSnapshot();
         const forbidden = actorWith(harness.actor, { roles: ['medico'] });
         await expectCode(
-          executeOp21(
-            harness.context,
-            op21Body({ id_paciente: patient.id_paciente }),
-            forbidden,
-          ),
+          executeOp21(harness.context, op21Body({ id_paciente: patient.id_paciente }), forbidden),
           'forbidden',
         );
         expect(await harness.nativeSnapshot()).toEqual(before);
