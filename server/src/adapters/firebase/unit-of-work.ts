@@ -143,14 +143,29 @@ export class FirebaseUnitOfWork implements UnitOfWorkPort {
   }
 
   /** Merge the complete collection before filtering, so updates can enter/leave a query. */
-  async query(collection: string, matches: (row: Row) => boolean = () => true): Promise<Row[]> {
+  async query(
+    collection: string,
+    matches: (row: Row) => boolean = () => true,
+    historyExpediente?: number,
+  ): Promise<Row[]> {
     if (!this.storage.getStore())
-      return this.runInTransaction(() => this.query(collection, matches));
+      return this.runInTransaction(() => this.query(collection, matches, historyExpediente));
     const context = this.context();
     const parent = this.reference(collection, '_').parent;
-    let query = context.queries.get(parent.path);
+    if (historyExpediente !== undefined && collection !== 'consultations') {
+      throw new Error('Indexed history requires consultations collection');
+    }
+    const nativeQuery =
+      historyExpediente === undefined
+        ? parent
+        : parent
+            .where('id_expediente', '==', historyExpediente)
+            .orderBy('fecha_hora_inicio', 'desc')
+            .orderBy('id_consulta', 'desc');
+    const cacheKey = `${parent.path}:${historyExpediente ?? '*'}`;
+    let query = context.queries.get(cacheKey);
     if (!query) {
-      query = context.transaction.get(parent).then(async (snapshot) => {
+      query = context.transaction.get(nativeQuery).then(async (snapshot) => {
         const rows = new Map<string, Row>();
         for (const doc of snapshot.docs) {
           if (!context.reads.has(doc.ref.path)) {
@@ -161,13 +176,16 @@ export class FirebaseUnitOfWork implements UnitOfWorkPort {
         }
         return rows;
       });
-      context.queries.set(parent.path, query);
+      context.queries.set(cacheKey, query);
     }
     const rows = new Map(await query);
     for (const [path, intent] of context.writes) {
       if (intent.ref.parent.path === parent.path) rows.set(path, intent.data);
     }
-    return [...rows.values()].map((row) => structuredClone(row)).filter(matches);
+    return [...rows.values()]
+      .filter((row) => historyExpediente === undefined || row.id_expediente === historyExpediente)
+      .map((row) => structuredClone(row))
+      .filter(matches);
   }
 
   /** Serialize allocations even when one callback requests the same counter concurrently. */

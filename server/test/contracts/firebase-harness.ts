@@ -2,14 +2,25 @@ import { randomUUID } from 'node:crypto';
 import { deleteApp, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { asInstitutionId, type InstitutionKind } from '@genki/shared';
-import type { ClinicalContext, PersistenceCheckpoint } from '../../src/ports/index.js';
-import { FirebaseUnitOfWork } from '../../src/adapters/firebase/unit-of-work.js';
-import { FirebaseId } from '../../src/adapters/firebase/id.js';
-import { FirebaseCatalogoRepository } from '../../src/adapters/firebase/catalogo-repository.js';
-import { FirebasePacienteRepository } from '../../src/adapters/firebase/paciente-repository.js';
+import type {
+  AdapterResource,
+  ClinicalContext,
+  PersistenceCheckpoint,
+  CloseConsultaBundle,
+} from '../../src/ports/index.js';
+import type { CloseConsultaRequest, PacienteId } from '@genki/shared';
+import type { ClinicalHarness, ContractClinicalContext } from './harness.js';
+import {
+  expectedPrimaryCatalog,
+  expectedInstitution99Catalog,
+} from '../../src/testing/catalog-seeds.js';
+import { closeConsulta } from '../../src/application/close-consulta.js';
+import { createFirebaseAdapterSet } from '../../src/adapters/firebase/index.js';
 
-/** Partial patient harness. No consultation stub or claim of a complete engine adapter. */
-export async function makeFirebasePatientHarness(options: { kind?: InstitutionKind } = {}) {
+/** Disposable emulator harness; owner cleanup remains separate from runtime repositories. */
+export async function makeFirebasePatientHarness(
+  options: { kind?: InstitutionKind; distinctSecondaryIds?: boolean } = {},
+) {
   const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
   if (!emulatorHost || !/^(127\.0\.0\.1|localhost|\[::1\]):[0-9]+$/.test(emulatorHost)) {
     throw new Error('Patient integration tests require loopback FIRESTORE_EMULATOR_HOST');
@@ -19,18 +30,16 @@ export async function makeFirebasePatientHarness(options: { kind?: InstitutionKi
   const owner = initializeApp({ projectId }, `patient-test-owner-${randomUUID()}`);
   const db = getFirestore(owner);
   db.settings({ host: emulatorHost, ssl: false });
-  const resources: FirebaseUnitOfWork[] = [];
+  const resources: AdapterResource[] = [];
   const clock = { nowIso: () => '2026-11-08T18:00:00.000Z' };
   let failure: PersistenceCheckpoint | undefined;
-  function contextFor(
-    id: number,
-  ): Pick<ClinicalContext, 'pacientes' | 'catalogos' | 'unitOfWork' | 'clock' | 'ids'> {
-    const id_institucion = asInstitutionId(id);
-    const unitOfWork = new FirebaseUnitOfWork({
-      id_institucion,
+  async function contextFor(id: number): Promise<ClinicalContext> {
+    const resource = await createFirebaseAdapterSet({
+      id_institucion: asInstitutionId(id),
       kind,
       projectId,
       emulatorHost: emulatorHost!,
+      clock,
       afterWrite: (point) => {
         if (failure === point) {
           failure = undefined;
@@ -38,60 +47,51 @@ export async function makeFirebasePatientHarness(options: { kind?: InstitutionKi
         }
       },
     });
-    resources.push(unitOfWork);
-    const ids = new FirebaseId(unitOfWork);
-    return {
-      unitOfWork,
-      ids,
-      clock,
-      pacientes: new FirebasePacienteRepository(
-        unitOfWork,
-        ids,
-        id_institucion,
-        kind,
-        clock.nowIso,
-      ),
-      catalogos: new FirebaseCatalogoRepository(unitOfWork),
-    };
+    resources.push(resource);
+    return resource.set;
   }
-  const context = contextFor(4);
+  const context = await contextFor(4);
   async function seed(id: number) {
     const root = db.doc(`institutions/${id}`);
-    await root
-      .collection('municipios')
-      .doc('1')
-      .set({ id_municipio: 1, nombre: 'Municipio de prueba' });
-    await root
-      .collection('professionals')
-      .doc('1')
-      .set({
-        id_profesional: 1,
-        nombres: 'Profesional',
-        apellidos: 'Simulado',
-        numero_colegiado: 'DEMO-1',
-        activo: true,
-      });
+    const catalog = id === 99 ? expectedInstitution99Catalog() : expectedPrimaryCatalog();
+    for (const row of catalog.municipios)
+      await root.collection('municipios').doc(String(row.id_municipio)).set(row);
+    for (const row of catalog.profesionales)
+      await root
+        .collection('professionals')
+        .doc(String(row.id_profesional))
+        .set({ ...row, activo: true, numero_colegiado: 'DEMO-1' });
+    for (const row of catalog.medicamentos)
+      await root
+        .collection('medications')
+        .doc(String(row.id_medicamento))
+        .set({ ...row, activo: true });
     await root
       .collection('cie10')
       .doc('Z00.0')
       .set({ codigo_cie10: 'Z00.0', descripcion: 'Examen general' });
-    for (const id_medicamento of [1, 2]) {
-      await root
-        .collection('medications')
-        .doc(String(id_medicamento))
-        .set({
-          id_medicamento,
-          nombre_generico: `Medicamento didáctico ${id_medicamento}`,
-          activo: true,
-        });
-    }
   }
+
   async function reset() {
     if (!projectId.startsWith('demo-test-genki-')) throw new Error('Unsafe test reset project');
     failure = undefined;
     for (const id of [4, 99]) {
       await db.recursiveDelete(db.doc(`institutions/${id}`));
       await seed(id);
+    }
+    // Shared suite passes foreign numeric IDs into primary lookups; keep those fixture IDs disjoint.
+    if (options.distinctSecondaryIds) {
+      for (const sequence of [
+        'paciente',
+        'expediente',
+        'responsable',
+        'consulta',
+        'diagnostico',
+        'tratamiento',
+        'receta',
+      ]) {
+        await db.doc(`institutions/99/counters/${sequence}`).set({ next: 10001 });
+      }
     }
     // Deliberately different sequences prove patient id is not record id.
     await db.doc('institutions/4/counters/expediente').set({ next: 101 });
@@ -111,6 +111,25 @@ export async function makeFirebasePatientHarness(options: { kind?: InstitutionKi
       );
       return Object.fromEntries(entries) as Record<string, number>;
     },
+    async clinicalCounts() {
+      const root = db.doc('institutions/4');
+      const [patients, records, responsibles, consultations] = await Promise.all(
+        ['patients', 'records', 'responsibles', 'consultations'].map((name) =>
+          root.collection(name).get(),
+        ),
+      );
+      const bundles = consultations!.docs.map((doc) => doc.data());
+      return {
+        pacientes: patients!.size,
+        expedientes: records!.size,
+        responsables: responsibles!.size,
+        consultas: consultations!.size,
+        diagnosticos: bundles.reduce((n, row) => n + row.diagnosticos.length, 0),
+        tratamientos: bundles.reduce((n, row) => n + row.tratamientos.length, 0),
+        recetas: bundles.filter((row) => row.receta != null).length,
+        detalles: bundles.reduce((n, row) => n + row.detalles.length, 0),
+      };
+    },
     async otherInstitution() {
       return contextFor(99);
     },
@@ -124,5 +143,36 @@ export async function makeFirebasePatientHarness(options: { kind?: InstitutionKi
         await deleteApp(owner);
       }
     },
+  };
+}
+
+function facade(context: ClinicalContext): ContractClinicalContext {
+  return {
+    ...context,
+    consultas: {
+      closeConsulta(
+        input: CloseConsultaBundle | { id_paciente: PacienteId; body: CloseConsultaRequest },
+      ) {
+        return 'consulta' in input
+          ? context.consultas.closeConsulta(input)
+          : closeConsulta(context, input);
+      },
+      findById: (id) => context.consultas.findById(id),
+      listByExpediente: (id) => context.consultas.listByExpediente(id),
+    },
+  };
+}
+
+export async function makeFirebaseClinicalHarness(options?: {
+  kind?: InstitutionKind;
+}): Promise<ClinicalHarness> {
+  const patient = await makeFirebasePatientHarness({ ...options, distinctSecondaryIds: true });
+  return {
+    context: facade(patient.context),
+    reset: patient.reset,
+    failNext: patient.failNext,
+    counts: patient.clinicalCounts,
+    close: patient.close,
+    otherInstitution: async () => facade(await patient.otherInstitution()),
   };
 }
