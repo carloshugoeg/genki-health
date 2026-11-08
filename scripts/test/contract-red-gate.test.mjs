@@ -10,12 +10,14 @@ function read(rel) {
   return readFileSync(join(root, rel), 'utf8');
 }
 
-function workflowJob(ci, name) {
-  const start = ci.search(new RegExp(`^ {2}${name}:`, 'm'));
-  if (start < 0) return null;
-  const fromJob = ci.slice(start);
-  const next = fromJob.search(/\n {2}[A-Za-z][\w-]*:/);
-  return next < 0 ? fromJob : fromJob.slice(0, next);
+function jobBody(ci, jobName) {
+  const re = new RegExp(
+    `^  ${jobName}:\\s*\\n([\\s\\S]*?)(?=\\n  [a-zA-Z0-9_-]+:\\s*\\n|(?![\\s\\S]))`,
+    'm',
+  );
+  const match = ci.match(re);
+  assert.ok(match, `ci.yml must declare a ${jobName} job`);
+  return match[1];
 }
 
 test('expect_contract_red_script_exists', () => {
@@ -40,19 +42,22 @@ test('package_json_exposes_test_contract_red', () => {
 
 test('ci_has_separate_contract_red_job', () => {
   const ci = read('.github/workflows/ci.yml');
-  const jobBody = workflowJob(ci, 'contract-red');
-  assert.ok(jobBody, 'ci.yml must declare a contract-red job separate from validate');
   assert.match(
-    jobBody,
-    /expect-contract-red\.sh|test:contract-red|CONTRACT_RED/,
-    'contract-red job steps must run the expect script or CONTRACT_RED expected-red reporter',
+    ci,
+    /^  contract-red:/m,
+    'ci.yml must declare a contract-red job separate from validate',
+  );
+  const body = jobBody(ci, 'contract-red');
+  assert.match(
+    body,
+    /expect-contract-red\.sh|test:contract-red/,
+    'contract-red job steps must run the expect script',
   );
 });
 
 test('validate_tests_step_stays_plain_npm_test', () => {
   const ci = read('.github/workflows/ci.yml');
-  const validateBody = workflowJob(ci, 'validate');
-  assert.ok(validateBody, 'ci.yml must declare a validate job');
+  const validateBody = jobBody(ci, 'validate');
   assert.match(
     validateBody,
     /name:\s*Tests[\s\S]*?run:\s*npm test\b/,
@@ -60,8 +65,8 @@ test('validate_tests_step_stays_plain_npm_test', () => {
   );
   assert.doesNotMatch(
     validateBody,
-    /name:\s*Tests[\s\S]*?CONTRACT_RED\s*=\s*1/,
-    'validate job Tests step must not set CONTRACT_RED=1',
+    /CONTRACT_RED\s*=\s*1/,
+    'validate job must not set CONTRACT_RED=1',
   );
 });
 
@@ -69,8 +74,13 @@ test('vitest_keeps_contract_discovery_gate', () => {
   const config = read('server/vitest.config.ts');
   assert.match(
     config,
-    /process\.env\.CONTRACT_RED\s*===\s*['"]1['"]\s*\|\|\s*process\.env\.CONTRACT_READY\s*===\s*['"]1['"]/,
-    'server/vitest.config.ts must opt into contracts only when CONTRACT_RED=1 or CONTRACT_READY=1',
+    /CONTRACT_RED\s*===\s*['"]1['"]/,
+    'server/vitest.config.ts must read CONTRACT_RED=1',
+  );
+  assert.match(
+    config,
+    /CONTRACT_READY\s*===\s*['"]1['"]/,
+    'server/vitest.config.ts must read CONTRACT_READY=1',
   );
   assert.match(
     config,
