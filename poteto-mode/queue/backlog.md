@@ -1,6 +1,6 @@
 # Backlog
 
-**Next:** E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (ready, not claimed). E2-P3A-02 is also dependency-ready in parallel.
+**Next:** E2-P2-08 — Wire atomic consultation use case and HTTP save (ready when claimed). E2-P3A-02 is also dependency-ready in parallel.
 
 
 
@@ -27,7 +27,7 @@ Order is the order a single agent follows when dependencies are satisfied. E1-05
 | 17 | E2-P2-04 | Complete memory patient registration, guardians, search and archive | done | agent | E2-P2-03 |
 | 18 | E2-P2-05 | Implement pure consultation bundle invariants | done | agent | E2-P2-01 |
 | 19 | E2-P2-06 | Implement memory closed consultation aggregate and turn contract suite green | done | agent | E2-P2-04, E2-P2-05 |
-| 20 | E2-P2-07 | Expose patient search, detail, catalog and archive HTTP slices | backlog | agent | E2-P2-06, E2-P2-01 |
+| 20 | E2-P2-07 | Expose patient search, detail, catalog and archive HTTP slices | done | agent | E2-P2-06, E2-P2-01 |
 | 21 | E2-P2-08 | Wire atomic consultation use case and HTTP save | backlog | agent | E2-P2-06, E2-P2-07 |
 | 22 | E2-P2-09 | Extract storage-neutral JWT service with persistent-session port | done | agent | E2-P2-01 |
 | 23 | E2-P2-10 | Close the core memory gate with coverage and API isolation tests | backlog | agent | E2-P2-09, E2-P2-08 |
