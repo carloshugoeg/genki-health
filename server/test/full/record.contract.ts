@@ -141,11 +141,7 @@ export function recordContract(
           { ...actor, idempotency_key: 'seed-ant-1' },
         );
         const before = await harness.nativeSnapshot();
-        const ficha = (await executeOp12(
-          harness.context,
-          op12(seeded.id_paciente),
-          actor,
-        )) as {
+        const ficha = (await executeOp12(harness.context, op12(seeded.id_paciente), actor)) as {
           paciente: { id_paciente: number };
           expediente: { id_expediente: number; estado: string };
           antecedentes: unknown[];
@@ -169,11 +165,7 @@ export function recordContract(
         const actor = clinicalActor(harness.actor);
         const seeded = await harness.seedArchivedPatient('FICHA-ARCH-1');
         const before = await harness.nativeSnapshot();
-        const ficha = (await executeOp12(
-          harness.context,
-          op12(seeded.id_paciente),
-          actor,
-        )) as {
+        const ficha = (await executeOp12(harness.context, op12(seeded.id_paciente), actor)) as {
           paciente: { id_paciente: number };
           expediente: { estado: string };
         };
@@ -310,9 +302,9 @@ export function recordContract(
           op12(seeded.id_paciente),
           clinicalActor(harness.actor),
         )) as { antecedentes: Array<{ id_antecedente: number }> };
-        expect(ficha.antecedentes.some((row) => row.id_antecedente === created.id_antecedente)).toBe(
-          true,
-        );
+        expect(
+          ficha.antecedentes.some((row) => row.id_antecedente === created.id_antecedente),
+        ).toBe(true);
         const replay = await executeOp15(
           harness.context,
           op15(seeded.id_paciente, validAntecedente()),
@@ -330,11 +322,10 @@ export function recordContract(
         const seeded = await harness.seedArchivedPatient('ANT-ARCH-1');
         const before = await harness.nativeSnapshot();
         await expectCode(
-          executeOp15(
-            harness.context,
-            op15(seeded.id_paciente, validAntecedente()),
-            { ...clinicalActor(harness.actor), idempotency_key: 'ant-arch-1' },
-          ),
+          executeOp15(harness.context, op15(seeded.id_paciente, validAntecedente()), {
+            ...clinicalActor(harness.actor),
+            idempotency_key: 'ant-arch-1',
+          }),
           'expediente_archived',
         );
         expect(await harness.nativeSnapshot()).toEqual(before);
@@ -390,11 +381,10 @@ export function recordContract(
         const before = await harness.nativeSnapshot();
         harness.setStoreUnavailable(true);
         await expectCode(
-          executeOp15(
-            harness.context,
-            op15(seeded.id_paciente, validAntecedente()),
-            { ...clinicalActor(harness.actor), idempotency_key: 'ant-store-1' },
-          ),
+          executeOp15(harness.context, op15(seeded.id_paciente, validAntecedente()), {
+            ...clinicalActor(harness.actor),
+            idempotency_key: 'ant-store-1',
+          }),
           'store_unavailable',
         );
         harness.setStoreUnavailable(false);
@@ -409,25 +399,17 @@ export function recordContract(
         const seeded = await harness.seedActivePatient('ANT-ROLE-1');
         const before = await harness.nativeSnapshot();
         await expectCode(
-          executeOp15(
-            harness.context,
-            op15(seeded.id_paciente, validAntecedente()),
-            {
-              ...forbiddenActor(harness.actor),
-              idempotency_key: 'ant-role-1',
-            },
-          ),
+          executeOp15(harness.context, op15(seeded.id_paciente, validAntecedente()), {
+            ...forbiddenActor(harness.actor),
+            idempotency_key: 'ant-role-1',
+          }),
           'forbidden',
         );
         await expectCode(
-          executeOp15(
-            harness.context,
-            op15(seeded.id_paciente, validAntecedente()),
-            {
-              ...receptionActor(harness.actor),
-              idempotency_key: 'ant-role-2',
-            },
-          ),
+          executeOp15(harness.context, op15(seeded.id_paciente, validAntecedente()), {
+            ...receptionActor(harness.actor),
+            idempotency_key: 'ant-role-2',
+          }),
           'forbidden',
         );
         expect(await harness.nativeSnapshot()).toEqual(before);
@@ -444,11 +426,10 @@ export function recordContract(
         const foreign = await other.seedActivePatient('ANT-FOREIGN-1');
         const before = await harness.nativeSnapshot();
         await expectCode(
-          executeOp15(
-            harness.context,
-            op15(foreign.id_paciente, validAntecedente()),
-            { ...clinicalActor(harness.actor), idempotency_key: 'ant-foreign-1' },
-          ),
+          executeOp15(harness.context, op15(foreign.id_paciente, validAntecedente()), {
+            ...clinicalActor(harness.actor),
+            idempotency_key: 'ant-foreign-1',
+          }),
           'not_found',
         );
         expect(await harness.nativeSnapshot()).toEqual(before);

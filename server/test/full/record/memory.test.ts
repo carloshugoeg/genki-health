@@ -9,7 +9,11 @@ import { MemoryIdPort } from '../../../src/adapters/memory/id.js';
 import { activeMemoryMaps } from '../../../src/adapters/memory/unit-of-work.js';
 import type { MemoryInstitutionState } from '../../../src/adapters/memory/state.js';
 import { archiveExpediente } from '../../../src/application/archive-expediente.js';
-import type { FullContext, FullModulePorts, OperationContext } from '../../../src/ports/full/context.js';
+import type {
+  FullContext,
+  FullModulePorts,
+  OperationContext,
+} from '../../../src/ports/full/context.js';
 import type { RecordRepositoryPort } from '../../../src/ports/full/record.js';
 import { FULL_MODULE_SLUGS } from '../../../src/ports/full/context.js';
 import {
@@ -254,7 +258,9 @@ async function buildHarness(institutionId: number, sequences: MemoryIdPort): Pro
         id_expediente: resumen.expediente.id_expediente,
       };
     },
-    async seedArchivedPatient(doc: string): Promise<{ id_paciente: number; id_expediente: number }> {
+    async seedArchivedPatient(
+      doc: string,
+    ): Promise<{ id_paciente: number; id_expediente: number }> {
       const seeded = await harness.seedActivePatient(doc);
       await archiveExpediente(primary.pacientes, primary.clock, {
         id_paciente: seeded.id_paciente as never,
