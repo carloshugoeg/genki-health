@@ -4,7 +4,7 @@ module.exports = {
     {
       name: 'domain-no-outbound',
       severity: 'error',
-      comment: 'domain/ imports nothing outside itself or Node builtins (tests excluded).',
+      comment: 'domain/ imports nothing outside itself or Node builtins.',
       from: { path: '^server/src/domain', pathNot: '\\.test\\.ts$' },
       to: {
         pathNot: '^server/src/domain',
@@ -21,7 +21,7 @@ module.exports = {
     {
       name: 'adapters-no-cross-import',
       severity: 'error',
-      comment: 'Engine adapters must not import each other (tests excluded).',
+      comment: 'Engine adapters must not import each other.',
       from: { path: '^server/src/adapters/([^/]+)', pathNot: '\\.test\\.ts$' },
       to: {
         path: '^server/src/adapters/([^/]+)',
@@ -31,7 +31,5 @@ module.exports = {
   ],
   options: {
     doNotFollow: { path: 'node_modules' },
-    // Avoid depcruise's broken relative `extends` resolution against tsconfig.base.json.
-    tsPreCompilationDeps: false,
   },
 };
