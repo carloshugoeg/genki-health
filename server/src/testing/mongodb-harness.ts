@@ -7,13 +7,15 @@ import type {
 import { asInstitutionId } from '@genki/shared';
 import { MongoClient, type Db } from 'mongodb';
 import { MongoCatalogoRepository } from '../adapters/mongodb/catalogo-repository.js';
+import { MongoConsultaRepository } from '../adapters/mongodb/consulta-repository.js';
 import { MongoIdPort } from '../adapters/mongodb/id.js';
 import { makeDocumentId, toBsonInt, type MongoStringIdDoc } from '../adapters/mongodb/mapper.js';
 import { MongoPacienteRepository } from '../adapters/mongodb/paciente-repository.js';
 import { assertMongoPrimaryReady, installMongoSchema } from '../adapters/mongodb/schema.js';
 import { MongoUnitOfWork } from '../adapters/mongodb/unit-of-work.js';
-import { ClinicalError } from '../domain/clinical-error.js';
+import { closeConsulta } from '../application/close-consulta.js';
 import type { PersistenceCheckpoint } from '../ports/adapter-resource.js';
+import type { ClinicalContext } from '../ports/clinical-context.js';
 import type { ClockPort } from '../ports/clock.js';
 import type { CloseConsultaBundle } from '../ports/consulta-repository.js';
 import {
@@ -42,21 +44,31 @@ function requireAdminUri(): string {
   return uri;
 }
 
+/** At/after fixture `fecha_hora_inicio` (2026-11-07T15:00Z) so validateConsulta accepts. */
 const fixedClock: ClockPort = {
   nowIso(): string {
-    return '2026-11-01T14:00:00.000Z';
+    return '2026-11-07T15:30:00.000Z';
   },
 };
 
-function stubConsultas(): ContractConsultaRepository {
+function isCloseBundle(
+  input: CloseConsultaBundle | { id_paciente: PacienteId; body: CloseConsultaRequest },
+): input is CloseConsultaBundle {
+  return 'consulta' in input && 'diagnosticos' in input && 'tratamientos' in input;
+}
+
+function facadeConsultas(context: ClinicalContext): ContractConsultaRepository {
   return {
     closeConsulta(
-      _input: CloseConsultaBundle | { id_paciente: PacienteId; body: CloseConsultaRequest },
+      input: CloseConsultaBundle | { id_paciente: PacienteId; body: CloseConsultaRequest },
     ): Promise<ConsultaCompleta> {
-      return Promise.reject(new ClinicalError('not_found', 'Consulta Mongo pendiente E2-P4A-03'));
+      if (isCloseBundle(input)) {
+        return context.consultas.closeConsulta(input);
+      }
+      return closeConsulta(context, input);
     },
-    findById: async () => null,
-    listByExpediente: async () => [],
+    findById: (id) => context.consultas.findById(id),
+    listByExpediente: (id) => context.consultas.listByExpediente(id),
   };
 }
 
@@ -192,10 +204,25 @@ function buildContext(
     () => fixedClock.nowIso(),
     afterWrite,
   );
+  const consultas = new MongoConsultaRepository(
+    db,
+    asInstitutionId(institutionId),
+    ids,
+    unitOfWork,
+    afterWrite,
+  );
+  const context: ClinicalContext = {
+    pacientes,
+    consultas,
+    catalogos: new MongoCatalogoRepository(db, institutionId),
+    unitOfWork,
+    clock: fixedClock,
+    ids,
+  };
   return {
     pacientes,
-    consultas: stubConsultas(),
-    catalogos: new MongoCatalogoRepository(db, institutionId),
+    consultas: facadeConsultas(context),
+    catalogos: context.catalogos,
     unitOfWork,
     clock: fixedClock,
     ids,
