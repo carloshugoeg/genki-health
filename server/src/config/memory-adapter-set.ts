@@ -1,6 +1,7 @@
 import { asInstitutionId, engineForKind, type InstitutionKind } from '@genki/shared';
 import {
   MemoryCatalogoRepository,
+  MemoryConsultaRepository,
   MemoryIdPort,
   MemoryPacienteRepository,
   MemoryUnitOfWork,
@@ -27,9 +28,10 @@ export function openMemoryAdapterSet(
   options?: MemoryAdapterOptions,
 ): { set: AdapterSet; state: MemoryInstitutionState } {
   const clock = new SystemClock();
-  const ids = new MemoryIdPort();
+  const ids = options?.ids ?? new MemoryIdPort();
   const state = createMemoryInstitutionState();
   const unitOfWork = new MemoryUnitOfWork(state);
+  const afterWrite = options?.afterWrite;
   const set: AdapterSet = {
     engine: engineForKind(kind),
     clock,
@@ -42,7 +44,15 @@ export function openMemoryAdapterSet(
       asInstitutionId(institutionId),
       kind,
       () => clock.nowIso(),
-      options?.afterWrite,
+      afterWrite,
+    ),
+    consultas: new MemoryConsultaRepository(
+      state,
+      ids,
+      unitOfWork,
+      afterWrite,
+      options?.afterConsulta,
+      options?.afterDiagnostico,
     ),
     catalogos: new MemoryCatalogoRepository(state),
   };

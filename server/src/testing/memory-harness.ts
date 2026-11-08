@@ -1,10 +1,20 @@
-import type { InstitutionKind } from '@genki/shared';
+import type {
+  CloseConsultaRequest,
+  ConsultaCompleta,
+  InstitutionKind,
+  PacienteId,
+} from '@genki/shared';
 import type { MemoryInstitutionState } from '../adapters/memory/state.js';
+import { MemoryIdPort } from '../adapters/memory/id.js';
+import { closeConsulta } from '../application/close-consulta.js';
 import { createTestMemoryAdapterSet } from '../config/memory-test-factory.js';
 import type { PersistenceCheckpoint } from '../ports/adapter-resource.js';
+import type { CloseConsultaBundle } from '../ports/consulta-repository.js';
+import type { ClinicalContext } from '../ports/clinical-context.js';
 import type {
   ClinicalHarness,
   ContractClinicalContext,
+  ContractConsultaRepository,
   CountSnapshot,
   FailurePoint,
 } from './harness.js';
@@ -62,7 +72,39 @@ function seedCatalogs(state: MemoryInstitutionState, institutionId: number): voi
   for (const row of catalog.medicamentos) {
     catalogs.medicamentos.set(row.id_medicamento, { ...row, activo: true });
   }
-  catalogs.cie10.set(1, { codigo_cie10: SEED_CIE10, descripcion: 'Examen general' });
+  catalogs.cie10.set(SEED_CIE10, { codigo_cie10: SEED_CIE10, descripcion: 'Examen general' });
+}
+
+function isCloseBundle(
+  input: CloseConsultaBundle | { id_paciente: PacienteId; body: CloseConsultaRequest },
+): input is CloseConsultaBundle {
+  return 'consulta' in input && 'diagnosticos' in input && 'tratamientos' in input;
+}
+
+function facadeConsultas(context: ClinicalContext): ContractConsultaRepository {
+  return {
+    closeConsulta(
+      input: CloseConsultaBundle | { id_paciente: PacienteId; body: CloseConsultaRequest },
+    ): Promise<ConsultaCompleta> {
+      if (isCloseBundle(input)) {
+        return context.consultas.closeConsulta(input);
+      }
+      return closeConsulta(context, input);
+    },
+    findById: (id) => context.consultas.findById(id),
+    listByExpediente: (id) => context.consultas.listByExpediente(id),
+  };
+}
+
+function asContractContext(context: ClinicalContext): ContractClinicalContext {
+  return {
+    pacientes: context.pacientes,
+    consultas: facadeConsultas(context),
+    catalogos: context.catalogos,
+    unitOfWork: context.unitOfWork,
+    clock: context.clock,
+    ids: context.ids,
+  };
 }
 
 export async function makeMemoryClinicalHarness(options?: {
@@ -76,11 +118,12 @@ export async function makeMemoryClinicalHarness(options?: {
       throw new Error(`checkpoint ${point}`);
     }
   };
-  const primary = createTestMemoryAdapterSet(kind, 1, { afterWrite });
+  const sequences = new MemoryIdPort();
+  const primary = createTestMemoryAdapterSet(kind, 1, { ids: sequences, afterWrite });
   seedCatalogs(primary.memoryState, 1);
 
   return {
-    context: primary as unknown as ContractClinicalContext,
+    context: asContractContext(primary),
     async reset(): Promise<void> {
       clearClinical(primary.memoryState);
       seedCatalogs(primary.memoryState, 1);
@@ -92,9 +135,12 @@ export async function makeMemoryClinicalHarness(options?: {
       return countsOf(primary.memoryState);
     },
     async otherInstitution(): Promise<ContractClinicalContext> {
-      const other = createTestMemoryAdapterSet(kind, OTHER_INSTITUTION_ID, { afterWrite });
+      const other = createTestMemoryAdapterSet(kind, OTHER_INSTITUTION_ID, {
+        ids: sequences,
+        afterWrite,
+      });
       seedCatalogs(other.memoryState, OTHER_INSTITUTION_ID);
-      return other as unknown as ContractClinicalContext;
+      return asContractContext(other);
     },
     async close(): Promise<void> {},
   };

@@ -1,20 +1,13 @@
 import { defineConfig } from 'vitest/config';
 
-const contractOptIn = process.env.CONTRACT_RED === '1' || process.env.CONTRACT_READY === '1';
 const testEngines = process.env.TEST_ENGINES === '1';
 
-const exclude: string[] = [];
-
-if (!contractOptIn) {
-  exclude.push('test/contracts/**');
-} else if (!testEngines) {
-  exclude.push(
-    'test/contracts/postgres.test.ts',
-    'test/contracts/mysql.test.ts',
-    'test/contracts/mongodb.test.ts',
-    'test/contracts/firebase.test.ts',
-  );
-}
+const exclude: string[] = [
+  'test/contracts/postgres.test.ts',
+  'test/contracts/mysql.test.ts',
+  'test/contracts/mongodb.test.ts',
+  'test/contracts/firebase.test.ts',
+];
 
 if (!testEngines) {
   exclude.push(

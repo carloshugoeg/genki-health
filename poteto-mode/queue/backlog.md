@@ -1,6 +1,7 @@
 # Backlog
 
-**Next:** E2-P2-06 — Implement memory closed consultation aggregate and turn contract suite green (claimed on `cursor/e2-p2-06-memory-consulta-13ef`). E2-P2-09 is also dependency-ready in parallel.
+**Next:** E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (ready, not claimed). E2-P2-09 is also dependency-ready in parallel.
+
 
 
 Order is the order a single agent follows when dependencies are satisfied. E1-05 runs in parallel for Jordin and does not block E2. After E2-P0-01 merged (PR #10), the Entrega II queue is the indexed E2-P* list below, not a single mega-ticket marked done because the scaffold landed.
@@ -25,7 +26,7 @@ Order is the order a single agent follows when dependencies are satisfied. E1-05
 | 16 | E2-P2-03 | Give memory real isolated transactions and stable registry instances | done | agent | E2-P2-02 |
 | 17 | E2-P2-04 | Complete memory patient registration, guardians, search and archive | done | agent | E2-P2-03 |
 | 18 | E2-P2-05 | Implement pure consultation bundle invariants | done | agent | E2-P2-01 |
-| 19 | E2-P2-06 | Implement memory closed consultation aggregate and turn contract suite green | in progress | agent | E2-P2-04, E2-P2-05 |
+| 19 | E2-P2-06 | Implement memory closed consultation aggregate and turn contract suite green | done | agent | E2-P2-04, E2-P2-05 |
 | 20 | E2-P2-07 | Expose patient search, detail, catalog and archive HTTP slices | backlog | agent | E2-P2-06, E2-P2-01 |
 | 21 | E2-P2-08 | Wire atomic consultation use case and HTTP save | backlog | agent | E2-P2-06, E2-P2-07 |
 | 22 | E2-P2-09 | Extract storage-neutral JWT service with persistent-session port | backlog | agent | E2-P2-01 |

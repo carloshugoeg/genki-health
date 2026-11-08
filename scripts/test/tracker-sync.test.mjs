@@ -38,9 +38,9 @@ test('trackers_name_same_next_ticket', () => {
   const fromMap = nextAgentTicket(map);
   const fromBacklog = nextAgentTicket(backlog);
 
-  assert.equal(fromNow, 'E2-P2-05', 'NOW.md must name E2-P2-05 as the next agent-lane ticket');
-  assert.equal(fromMap, 'E2-P2-05', 'feature-map.md must name E2-P2-05 as next');
-  assert.equal(fromBacklog, 'E2-P2-05', 'backlog.md must name E2-P2-05 as the next indexed ticket');
+  assert.equal(fromNow, 'E2-P2-07', 'NOW.md must name E2-P2-07 as the next agent-lane ticket');
+  assert.equal(fromMap, 'E2-P2-07', 'feature-map.md must name E2-P2-07 as next');
+  assert.equal(fromBacklog, 'E2-P2-07', 'backlog.md must name E2-P2-07 as the next indexed ticket');
   assert.equal(fromNow, fromMap, 'NOW and feature-map must name the same next ticket');
   assert.equal(fromNow, fromBacklog, 'NOW and backlog must name the same next ticket');
 
