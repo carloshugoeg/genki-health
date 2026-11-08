@@ -1,12 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import type {
+  AuthPrincipalDto,
   AuthTokensDto,
   CloseConsultaRequest,
   ErrorDto,
   HistorialDto,
+  InstitutionKind,
   PacientePage,
   PacienteResumen,
   RegisterPacienteRequest,
+} from '@genki/shared';
+import {
+  ACCESS_TOKEN_TTL_SECONDS,
+  asInstitutionId,
+  asUsuarioId,
+  engineForKind,
 } from '@genki/shared';
 import { closeConsulta } from '../../application/close-consulta.js';
 import { InstitutionAdapterRegistry } from '../../config/adapter-registry.js';
@@ -15,16 +23,73 @@ import {
   createTestMemoryAdapterSet,
   type TestMemoryAdapterSet,
 } from '../../config/memory-test-factory.js';
+import { AuthError, type AuthPort } from '../../ports/auth.js';
 import {
   SEED_CIE10,
   SEED_MEDICAMENTO_1,
   SEED_PROFESIONAL_ID,
   expectedPrimaryCatalog,
 } from '../../testing/catalog-seeds.js';
-import { MemoryAuthAdapter, buildDemoUsers, type MemoryAuthOptions } from '../memory/auth.js';
 import { buildHttpApp } from './app.js';
 
 const JWT_SECRET = 'test-secret-at-least-16';
+
+interface TestAuthUser {
+  id_usuario: number;
+  email: string;
+  password: string;
+  id_institucion: number;
+  institution_kind: InstitutionKind;
+  roles: string[];
+}
+
+/** Test-only AuthPort. Keeps http tests off memory adapters (depcruise). */
+class TestAuthPort implements AuthPort {
+  constructor(private readonly users: TestAuthUser[]) {}
+
+  async login(input: {
+    email: string;
+    password: string;
+    institution_kind: InstitutionKind;
+  }): Promise<AuthTokensDto> {
+    const user = this.users.find(
+      (row) =>
+        row.email === input.email &&
+        row.password === input.password &&
+        row.institution_kind === input.institution_kind,
+    );
+    if (!user) {
+      throw new AuthError('Invalid email, password, or institution', 'invalid_credentials');
+    }
+    const principal: AuthPrincipalDto = {
+      id_usuario: asUsuarioId(user.id_usuario),
+      email: user.email,
+      id_institucion: asInstitutionId(user.id_institucion),
+      institution_kind: user.institution_kind,
+      roles: [...user.roles],
+      motor: engineForKind(user.institution_kind),
+    };
+    return {
+      access_token: Buffer.from(JSON.stringify(principal), 'utf8').toString('base64url'),
+      refresh_token: 'test-refresh',
+      token_type: 'Bearer',
+      expires_in: ACCESS_TOKEN_TTL_SECONDS,
+    };
+  }
+
+  async refresh(_refreshToken: string): Promise<AuthTokensDto> {
+    throw new AuthError('Invalid refresh token', 'invalid_token');
+  }
+
+  async verifyAccessToken(accessToken: string): Promise<AuthPrincipalDto> {
+    try {
+      const raw = Buffer.from(accessToken, 'base64url').toString('utf8');
+      return JSON.parse(raw) as AuthPrincipalDto;
+    } catch {
+      throw new AuthError('Invalid access token', 'invalid_token');
+    }
+  }
+}
 
 function adult(numero_documento: string, name = 'Ana'): RegisterPacienteRequest {
   return {
@@ -101,47 +166,58 @@ function closeBody(): CloseConsultaRequest {
   };
 }
 
-async function authWithHospitalRoles() {
-  const demos = await buildDemoUsers();
-  const hash = demos[0]!.hash_contrasena;
-  const users: NonNullable<MemoryAuthOptions['users']> = [
-    ...demos,
+function authWithHospitalRoles(): AuthPort {
+  return new TestAuthPort([
+    {
+      id_usuario: 1,
+      email: 'hospital@genki.local',
+      password: 'GenkiDev1',
+      id_institucion: 1,
+      institution_kind: 'hospital_general',
+      roles: ['administrador'],
+    },
+    {
+      id_usuario: 2,
+      email: 'pediatrico@genki.local',
+      password: 'GenkiDev1',
+      id_institucion: 2,
+      institution_kind: 'centro_pediatrico',
+      roles: ['medico'],
+    },
     {
       id_usuario: 10,
       email: 'auditor@genki.local',
-      hash_contrasena: hash,
+      password: 'GenkiDev1',
       id_institucion: 1,
       institution_kind: 'hospital_general',
       roles: ['auditor'],
-      estado: 'activo',
     },
     {
       id_usuario: 11,
       email: 'recepcion@genki.local',
-      hash_contrasena: hash,
+      password: 'GenkiDev1',
       id_institucion: 1,
       institution_kind: 'hospital_general',
       roles: ['recepcion'],
-      estado: 'activo',
     },
     {
       id_usuario: 12,
       email: 'medico-h@genki.local',
-      hash_contrasena: hash,
+      password: 'GenkiDev1',
       id_institucion: 1,
       institution_kind: 'hospital_general',
       roles: ['medico'],
-      estado: 'activo',
     },
-  ];
-  return MemoryAuthAdapter.create({ jwtSecret: JWT_SECRET, users });
+  ]);
 }
 
 function clinicalRegistry(hospital: TestMemoryAdapterSet, pediatric: TestMemoryAdapterSet) {
   const registry = new InstitutionAdapterRegistry();
   registry.register('hospital_general', () => hospital);
   registry.register('centro_pediatrico', () => pediatric);
-  registry.register('laboratorio_clinico', () => createTestMemoryAdapterSet('laboratorio_clinico', 3));
+  registry.register('laboratorio_clinico', () =>
+    createTestMemoryAdapterSet('laboratorio_clinico', 3),
+  );
   registry.register('clinica_odontologica', () =>
     createTestMemoryAdapterSet('clinica_odontologica', 4),
   );
@@ -221,7 +297,7 @@ describe('HTTP patient search detail catalog archive', () => {
     const hospital = createTestMemoryAdapterSet('hospital_general', 1);
     const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
     seedHospitalCatalogs(hospital);
-    const auth = await authWithHospitalRoles();
+    const auth = authWithHospitalRoles();
     const app = buildHttpApp({ registry: clinicalRegistry(hospital, pediatric), auth });
     const token = await loginAs(app, 'hospital@genki.local');
 
@@ -274,7 +350,7 @@ describe('HTTP patient search detail catalog archive', () => {
     const hospital = createTestMemoryAdapterSet('hospital_general', 1);
     const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
     seedHospitalCatalogs(hospital);
-    const auth = await authWithHospitalRoles();
+    const auth = authWithHospitalRoles();
     const app = buildHttpApp({ registry: clinicalRegistry(hospital, pediatric), auth });
     const token = await loginAs(app, 'hospital@genki.local');
 
@@ -324,7 +400,7 @@ describe('HTTP patient search detail catalog archive', () => {
   it('archive_endpoint_uses_patient_owned_record', async () => {
     const hospital = createTestMemoryAdapterSet('hospital_general', 1);
     const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
-    const auth = await authWithHospitalRoles();
+    const auth = authWithHospitalRoles();
     const app = buildHttpApp({ registry: clinicalRegistry(hospital, pediatric), auth });
     const token = await loginAs(app, 'recepcion@genki.local');
 
@@ -376,7 +452,7 @@ describe('HTTP patient search detail catalog archive', () => {
   it('foreign_patient_returns_404', async () => {
     const hospital = createTestMemoryAdapterSet('hospital_general', 1);
     const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
-    const auth = await authWithHospitalRoles();
+    const auth = authWithHospitalRoles();
     const app = buildHttpApp({ registry: clinicalRegistry(hospital, pediatric), auth });
 
     const pedToken = await loginAs(app, 'pediatrico@genki.local', 'centro_pediatrico');
@@ -422,7 +498,7 @@ describe('HTTP patient search detail catalog archive', () => {
   it('reactivate_route_absent', async () => {
     const hospital = createTestMemoryAdapterSet('hospital_general', 1);
     const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
-    const auth = await authWithHospitalRoles();
+    const auth = authWithHospitalRoles();
     const app = buildHttpApp({ registry: clinicalRegistry(hospital, pediatric), auth });
     const token = await loginAs(app, 'hospital@genki.local');
 
@@ -458,7 +534,7 @@ describe('HTTP patient search detail catalog archive', () => {
   it('invalid_query_returns_safe_error', async () => {
     const hospital = createTestMemoryAdapterSet('hospital_general', 1);
     const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
-    const auth = await authWithHospitalRoles();
+    const auth = authWithHospitalRoles();
     const app = buildHttpApp({ registry: clinicalRegistry(hospital, pediatric), auth });
     const token = await loginAs(app, 'hospital@genki.local');
 
@@ -493,7 +569,7 @@ describe('HTTP patient search detail catalog archive', () => {
   it('auditor_write_and_medico_archive_are_forbidden', async () => {
     const hospital = createTestMemoryAdapterSet('hospital_general', 1);
     const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
-    const auth = await authWithHospitalRoles();
+    const auth = authWithHospitalRoles();
     const app = buildHttpApp({ registry: clinicalRegistry(hospital, pediatric), auth });
 
     const adminToken = await loginAs(app, 'hospital@genki.local');
