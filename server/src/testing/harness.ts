@@ -1,6 +1,7 @@
 import type {
   ArchiveExpedienteInput,
   CatalogosDto,
+  CloseConsultaRequest,
   ConsultaCompleta,
   ConsultaDto,
   ConsultaId,
@@ -39,7 +40,13 @@ export interface ContractPacienteRepository {
 }
 
 export interface ContractConsultaRepository {
+  /** Production bundle shape. */
   closeConsulta(bundle: CloseConsultaBundle): Promise<ConsultaCompleta>;
+  /** TEST-ONLY application shape (CCR-HARNESS-001). */
+  closeConsulta(input: {
+    id_paciente: PacienteId;
+    body: CloseConsultaRequest;
+  }): Promise<ConsultaCompleta>;
   findById(id: ConsultaId): Promise<ConsultaDto | null>;
   listByExpediente(id: ExpedienteId): Promise<ConsultaCompleta[]>;
 }

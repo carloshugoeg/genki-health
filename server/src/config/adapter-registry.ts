@@ -15,8 +15,8 @@ export interface AdapterSet {
   readonly ids: IdPort;
   readonly unitOfWork: UnitOfWorkPort;
   readonly pacientes: PacienteRepositoryPort;
-  readonly consultas?: ConsultaRepositoryPort;
-  readonly catalogos?: CatalogoRepositoryPort;
+  readonly consultas: ConsultaRepositoryPort;
+  readonly catalogos: CatalogoRepositoryPort;
 }
 
 export type AdapterSetFactory = (institutionId: InstitutionId) => AdapterSet;

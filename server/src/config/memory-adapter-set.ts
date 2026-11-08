@@ -1,6 +1,7 @@
 import { asInstitutionId, engineForKind, type InstitutionKind } from '@genki/shared';
 import {
   MemoryCatalogoRepository,
+  MemoryConsultaRepository,
   MemoryIdPort,
   MemoryPacienteRepository,
   MemoryUnitOfWork,
@@ -10,11 +11,15 @@ import {
   createMemoryInstitutionState,
   type MemoryInstitutionState,
 } from '../adapters/memory/state.js';
-import type { PersistenceCheckpoint } from '../ports/index.js';
+import type { IdPort, PersistenceCheckpoint } from '../ports/index.js';
 import type { AdapterSet } from './adapter-registry.js';
 
 export interface MemoryAdapterOptions {
+  /** Inject a shared sequence domain for institutions in one simulated physical store. */
+  ids?: IdPort;
   afterWrite?: (point: PersistenceCheckpoint) => void;
+  afterConsulta?: () => void;
+  afterDiagnostico?: () => void;
 }
 
 export function openMemoryAdapterSet(
@@ -23,9 +28,10 @@ export function openMemoryAdapterSet(
   options?: MemoryAdapterOptions,
 ): { set: AdapterSet; state: MemoryInstitutionState } {
   const clock = new SystemClock();
-  const ids = new MemoryIdPort();
+  const ids = options?.ids ?? new MemoryIdPort();
   const state = createMemoryInstitutionState();
   const unitOfWork = new MemoryUnitOfWork(state);
+  const afterWrite = options?.afterWrite;
   const set: AdapterSet = {
     engine: engineForKind(kind),
     clock,
@@ -38,7 +44,15 @@ export function openMemoryAdapterSet(
       asInstitutionId(institutionId),
       kind,
       () => clock.nowIso(),
-      options?.afterWrite,
+      afterWrite,
+    ),
+    consultas: new MemoryConsultaRepository(
+      state,
+      ids,
+      unitOfWork,
+      afterWrite,
+      options?.afterConsulta,
+      options?.afterDiagnostico,
     ),
     catalogos: new MemoryCatalogoRepository(state),
   };

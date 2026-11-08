@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { PacienteId } from '@genki/shared';
 import { createTestMemoryAdapterSet } from '../../config/memory-test-factory.js';
 import type { CreatePacienteInput } from '../../ports/index.js';
+import { MemoryIdPort } from './id.js';
 
 function sampleInput(doc: string, name: string): CreatePacienteInput {
   return {
@@ -108,5 +109,51 @@ describe('MemoryUnitOfWork', () => {
     paciente.primer_nombre = 'MUTATED';
     const again = await set.pacientes.findById(paciente.id_paciente);
     expect(again?.primer_nombre).toBe('Clara');
+  });
+
+  it('different_institution_uow_does_not_join_foreign_working_maps', async () => {
+    const sequences = new MemoryIdPort();
+    const primary = createTestMemoryAdapterSet('hospital_general', 1, { ids: sequences });
+    const other = createTestMemoryAdapterSet('hospital_general', 99, { ids: sequences });
+
+    await primary.unitOfWork.runInTransaction(async () => {
+      await primary.pacientes.createWithExpediente(sampleInput('ALS-LOCAL', 'Local'));
+      await other.pacientes.createWithExpediente(sampleInput('ALS-FOREIGN', 'Foreign'));
+    });
+
+    expect(await primary.pacientes.findByDocumento('DPI', 'ALS-FOREIGN')).toBeNull();
+    expect(await other.pacientes.findByDocumento('DPI', 'ALS-FOREIGN')).not.toBeNull();
+    expect(await primary.pacientes.findByDocumento('DPI', 'ALS-LOCAL')).not.toBeNull();
+    expect(await other.pacientes.findByDocumento('DPI', 'ALS-LOCAL')).toBeNull();
+  });
+
+  it('same_institution_nested_transaction_joins', async () => {
+    const set = createTestMemoryAdapterSet('hospital_general', 1);
+    await set.unitOfWork.runInTransaction(async () => {
+      await set.unitOfWork.runInTransaction(async () => {
+        await set.pacientes.createWithExpediente(sampleInput('ALS-NEST', 'Nested'));
+      });
+    });
+    expect(await set.pacientes.findByDocumento('DPI', 'ALS-NEST')).not.toBeNull();
+  });
+
+  it('failed_foreign_uow_does_not_publish_primary_working_maps', async () => {
+    const sequences = new MemoryIdPort();
+    const primary = createTestMemoryAdapterSet('hospital_general', 1, { ids: sequences });
+    const other = createTestMemoryAdapterSet('hospital_general', 99, { ids: sequences });
+
+    await primary.unitOfWork.runInTransaction(async () => {
+      await primary.pacientes.createWithExpediente(sampleInput('ALS-KEEP', 'Keep'));
+      await expect(
+        other.unitOfWork.runInTransaction(async () => {
+          await other.pacientes.createWithExpediente(sampleInput('ALS-DROP', 'Drop'));
+          throw new Error('foreign boom');
+        }),
+      ).rejects.toThrow(/foreign boom/);
+    });
+
+    expect(await primary.pacientes.findByDocumento('DPI', 'ALS-KEEP')).not.toBeNull();
+    expect(await primary.pacientes.findByDocumento('DPI', 'ALS-DROP')).toBeNull();
+    expect(await other.pacientes.findByDocumento('DPI', 'ALS-DROP')).toBeNull();
   });
 });

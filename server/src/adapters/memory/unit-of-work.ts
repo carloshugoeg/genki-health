@@ -3,6 +3,7 @@ import type { UnitOfWorkPort } from '../../ports/index.js';
 import { cloneMemoryMaps, type MemoryInstitutionState, type MemoryMaps } from './state.js';
 
 interface MemoryTxStore {
+  state: MemoryInstitutionState;
   working: MemoryMaps;
 }
 
@@ -10,7 +11,10 @@ const memoryTx = new AsyncLocalStorage<MemoryTxStore>();
 
 export function activeMemoryMaps(state: MemoryInstitutionState): MemoryMaps {
   const store = memoryTx.getStore();
-  return store ? store.working : state.getPublished();
+  if (store && store.state === state) {
+    return store.working;
+  }
+  return state.getPublished();
 }
 
 export class MemoryUnitOfWork implements UnitOfWorkPort {
@@ -19,7 +23,8 @@ export class MemoryUnitOfWork implements UnitOfWorkPort {
   constructor(private readonly state: MemoryInstitutionState) {}
 
   async runInTransaction<T>(work: () => Promise<T>): Promise<T> {
-    if (memoryTx.getStore()) {
+    const store = memoryTx.getStore();
+    if (store && store.state === this.state) {
       return work();
     }
 
@@ -33,7 +38,7 @@ export class MemoryUnitOfWork implements UnitOfWorkPort {
 
   private async runOuter<T>(work: () => Promise<T>): Promise<T> {
     const working = cloneMemoryMaps(this.state.getPublished());
-    const result = await memoryTx.run({ working }, work);
+    const result = await memoryTx.run({ state: this.state, working }, work);
     this.state.publish(working);
     return result;
   }

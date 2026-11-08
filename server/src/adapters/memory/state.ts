@@ -8,12 +8,12 @@ export interface MemoryMaps {
   diagnosticos: Map<number, unknown>;
   tratamientos: Map<number, unknown>;
   recetas: Map<number, unknown>;
-  detalles: Map<number, unknown>;
+  detalles: Map<string, unknown>;
   counters: Map<string, number>;
   catalogs: {
     municipios: Map<number, unknown>;
     profesionales: Map<number, unknown>;
-    cie10: Map<number, unknown>;
+    cie10: Map<string, unknown>;
     medicamentos: Map<number, unknown>;
   };
 }
@@ -32,7 +32,7 @@ export function createEmptyMemoryMaps(): MemoryMaps {
     catalogs: {
       municipios: new Map(),
       profesionales: new Map(),
-      cie10: new Map(),
+      cie10: new Map<string, unknown>(),
       medicamentos: new Map(),
     },
   };

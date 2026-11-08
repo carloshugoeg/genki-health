@@ -1,8 +1,10 @@
 import type {
+  ConsultaCompleta,
   ConsultaDto,
   ConsultaId,
   DetalleRecetaDto,
   DiagnosticoDto,
+  ExpedienteId,
   RecetaDto,
   TratamientoDto,
 } from '@genki/shared';
@@ -21,11 +23,7 @@ export interface CloseConsultaBundle {
 }
 
 export interface ConsultaRepositoryPort {
-  closeConsulta(bundle: CloseConsultaBundle): Promise<{
-    consulta: ConsultaDto;
-    diagnosticos: DiagnosticoDto[];
-    tratamientos: TratamientoDto[];
-    receta: RecetaDto | null;
-  }>;
+  closeConsulta(bundle: CloseConsultaBundle): Promise<ConsultaCompleta>;
   findById(id: ConsultaId): Promise<ConsultaDto | null>;
+  listByExpediente(id: ExpedienteId): Promise<ConsultaCompleta[]>;
 }

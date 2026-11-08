@@ -1,12 +1,11 @@
 # Now
 
-**No active agent claim.** E2-P2-04 is Done on `cursor/e2-p2-04-memory-patient-e362` (stacked on PR #21 at `1d26ccad`). Do not start the next ticket until an owner opens that claim.
+**No active agent claim.** E2-P2-06 is Done on `cursor/e2-p2-06-memory-consulta-13ef` (stacked on PR #22 + merged PR #19). Do not start the next ticket until an owner opens that claim.
 
 ## Agent lane (dependency-ready)
 
-- **Next:** E2-P2-05 — Implement pure consultation bundle invariants (depends on E2-P2-01; ready when claimed).
+- **Next:** E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (depends on E2-P2-06 + E2-P2-01; ready when claimed).
 - E2-P2-09 — Extract storage-neutral JWT service with persistent-session port (depends on E2-P2-01; ready when claimed).
-- E2-P2-06 waits on E2-P2-05 as well as the completed E2-P2-04.
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
 
 ## Parallel Entrega I notes
