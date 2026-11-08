@@ -1,4 +1,10 @@
+import dotenv from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
+
+const rootEnv = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../.env');
+dotenv.config({ path: rootEnv, override: false });
 
 const testEngines = process.env.TEST_ENGINES === '1';
 

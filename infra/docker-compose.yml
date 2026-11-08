@@ -1,4 +1,4 @@
-# Local engines for Entrega II. Carlos owns this file + CI wiring.
+# Local engines for Entrega II. Loopback binds + env-expanded secrets only (C5.4).
 # Firebase uses the emulator under infra/firebase/ (not Compose).
 
 services:
@@ -7,9 +7,9 @@ services:
     environment:
       POSTGRES_DB: genki_hospital
       POSTGRES_USER: genki
-      POSTGRES_PASSWORD: genki_dev_only
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U genki -d genki_hospital']
       interval: 5s
@@ -21,22 +21,32 @@ services:
     environment:
       MYSQL_DATABASE: genki_pediatrico
       MYSQL_USER: genki
-      MYSQL_PASSWORD: genki_dev_only
-      MYSQL_ROOT_PASSWORD: genki_root_dev_only
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
-      - '3306:3306'
+      - '127.0.0.1:3306:3306'
     healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-ugenki', '-pgenki_dev_only']
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -ugenki -p$$MYSQL_PASSWORD || exit 1']
       interval: 5s
       timeout: 5s
       retries: 15
 
   mongodb:
     image: mongo:7
+    environment:
+      MONGO_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     ports:
-      - '27017:27017'
+      - '127.0.0.1:27017:27017'
+    volumes:
+      - ./mongodb/start-rs.sh:/start-rs.sh:ro
+    entrypoint: ['bash', '/start-rs.sh']
     healthcheck:
-      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
+      test:
+        [
+          'CMD-SHELL',
+          'mongosh -u root -p "$$MONGO_ROOT_PASSWORD" --authenticationDatabase admin --quiet --eval "db.hello().isWritablePrimary === true"',
+        ]
       interval: 5s
-      timeout: 5s
-      retries: 10
+      timeout: 10s
+      retries: 30
+      start_period: 40s

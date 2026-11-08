@@ -11,6 +11,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { test } from 'node:test';
 
@@ -82,11 +83,7 @@ test('mongo_is_authenticated_rs0', () => {
   const compose = read('infra/docker-compose.yml');
   const startRs = read('infra/mongodb/start-rs.sh');
 
-  assert.match(
-    compose,
-    /start-rs\.sh/,
-    'mongodb service must run infra/mongodb/start-rs.sh',
-  );
+  assert.match(compose, /start-rs\.sh/, 'mongodb service must run infra/mongodb/start-rs.sh');
   assert.match(
     compose,
     /replSet|rs0|keyFile|keyfile|MONGO_ROOT_PASSWORD/i,
@@ -98,16 +95,8 @@ test('mongo_is_authenticated_rs0', () => {
     /key[Ff]ile|KEYFILE/,
     'start-rs.sh must generate or use a keyfile inside the container',
   );
-  assert.match(
-    startRs,
-    /chmod\s+0?600|chmod\s+600/,
-    'start-rs.sh must set keyfile mode 0600',
-  );
-  assert.match(
-    startRs,
-    /rs\.initiate|replSet/,
-    'start-rs.sh must initialize the replica set',
-  );
+  assert.match(startRs, /chmod\s+0?600|chmod\s+600/, 'start-rs.sh must set keyfile mode 0600');
+  assert.match(startRs, /rs\.initiate|replSet/, 'start-rs.sh must initialize the replica set');
   assert.match(
     startRs,
     /isMaster|hello|primary|ismaster/i,
@@ -193,14 +182,10 @@ test('env_bootstrap_never_overwrites_existing', () => {
       assert.equal(mode, 0o600, 'created .env must be mode 0600');
       const created = readFileSync(createPath, 'utf8');
       assert.match(created, /^JWT_SECRET=/m, 'created .env must include JWT_SECRET');
-      assert.match(
-        created,
-        /^POSTGRES_PASSWORD=/m,
-        'created .env must include POSTGRES_PASSWORD',
-      );
+      assert.match(created, /^POSTGRES_PASSWORD=/m, 'created .env must include POSTGRES_PASSWORD');
       assert.doesNotMatch(
         `${runCreate.stdout}\n${runCreate.stderr}`,
-        /=[A-Za-z0-9_+\/\-]{16,}/,
+        /=[A-Za-z0-9_+/-]{16,}/,
         'demo-env.sh must print names, not secret values',
       );
     } finally {
