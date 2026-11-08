@@ -1,12 +1,12 @@
 # Now
 
-**No active agent claim.** E2-P2-01 is Done on `cursor/e2-p2-01-mvp-dtos-7ad4` (this PR). Do not start the next ticket until an owner opens that claim.
+**Active claim:** E2-P2-09 — Extract storage-neutral JWT service with persistent-session port.
+Owner: Auto (Cursor) for Carlos / Hugo Escobar. Branch: `cursor/e2-p2-09-jwt-session-port-27b0` (stacked on PR #17 `cursor/e2-p2-01-mvp-dtos-7ad4`). Claimed 2026-11-08. Isolated lane: auth/JWT/session only.
 
-## Agent lane (dependency-ready)
+## Agent lane (dependency-ready / parallel)
 
-- **Next:** E2-P2-02 — Freeze one adapter contract suite including native rollback failures (depends on E2-P2-01; ready when claimed).
-- E2-P2-05 — Implement pure consultation bundle invariants (depends on E2-P2-01; ready when claimed).
-- E2-P2-09 — Extract storage-neutral JWT service with persistent-session port (depends on E2-P2-01; ready when claimed).
+- E2-P2-02 — Freeze one adapter contract suite including native rollback failures (depends on E2-P2-01; ready when claimed).
+- E2-P2-05 — Implement pure consultation bundle invariants (depends on E2-P2-01; parallel isolated lane — do not touch from E2-P2-09).
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
 
 ## Parallel Entrega I notes
