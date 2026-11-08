@@ -16,6 +16,7 @@
     "format:check": "prettier --check .",
     "test": "npm run test -w @genki/shared && npm run test -w @genki/server",
     "test:protocol": "node --test scripts/test/*.test.mjs",
+    "test:contract-red": "bash scripts/expect-contract-red.sh",
     "depcruise": "dependency-cruiser --config .dependency-cruiser.cjs server/src",
     "validate": "bash scripts/validate.sh"
   },
