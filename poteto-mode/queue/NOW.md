@@ -20,3 +20,7 @@
 - E1-03 is Done (merged PR #8). Do not rewrite its Chen diagrams.
 - E1-05 (Jordin/Claude) remains backlog for pediatric Chen diagrams only. It runs in parallel and does not block E2.
 - E1-02, E1-04, E1-06 are merged on `main`.
+
+## Authorized private seed lane
+
+E2-P5-01 in progress by Codex on `codex/e2-p5-01-seeds-private-20261108-01`; dependencies integrated privately. Existing lanes above are historical dependency notes. Do not start P5-02.
