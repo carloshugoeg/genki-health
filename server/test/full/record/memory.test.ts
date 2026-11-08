@@ -92,7 +92,7 @@ function stubModules(record: RecordRepositoryPort): FullModulePorts {
       get(_target, prop) {
         if (prop === 'then') return undefined;
         return () => {
-          throw new Error(`module port not wired in FS-04-C02 harness: ${String(prop)}`);
+          throw new Error(`module port not wired in FS-04-C03 harness: ${String(prop)}`);
         };
       },
     },
@@ -207,6 +207,7 @@ async function buildHarness(institutionId: number, sequences: MemoryIdPort): Pro
         expedientes: maps.expedientes.size,
         antecedentes: ns.get('antecedentes')?.size ?? 0,
         alergias: ns.get('alergias')?.size ?? 0,
+        reactivacion_audit: ns.get('reactivacion_audit')?.size ?? 0,
       };
     },
     async nativeSnapshot(): Promise<Record<string, string>> {
@@ -217,11 +218,18 @@ async function buildHarness(institutionId: number, sequences: MemoryIdPort): Pro
         expedientes: hashRows(maps.expedientes as Map<string | number, unknown>),
         antecedentes: hashRows(ns.get('antecedentes')),
         alergias: hashRows(ns.get('alergias')),
+        reactivacion_audit: hashRows(ns.get('reactivacion_audit')),
         expediente_estados: createHash('sha256')
           .update(
             JSON.stringify(
               [...maps.expedientes.values()]
-                .map((row) => ({ id: row.id_expediente, estado: row.estado }))
+                .map((row) => ({
+                  id: row.id_expediente,
+                  estado: row.estado,
+                  motivo_archivo: row.motivo_archivo,
+                  fecha_archivo: row.fecha_archivo,
+                  observacion_archivo: row.observacion_archivo,
+                }))
                 .sort((a, b) => a.id - b.id),
             ),
           )
@@ -284,5 +292,5 @@ recordContract(
     const sequences = new MemoryIdPort();
     return buildHarness(1, sequences);
   },
-  [12, 15, 16, 18],
+  [12, 15, 16, 18, 19],
 );
