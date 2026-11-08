@@ -16,3 +16,5 @@ firestore-debug.log
 ui-debug.log
 *.tsbuildinfo
 .audit/
+infra/mongodb/mongo-keyfile
+infra/mongodb/keyfile
