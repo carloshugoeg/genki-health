@@ -1,6 +1,8 @@
 # Backlog
 
-**Next:** E2-P2-02 — Freeze one adapter contract suite including native rollback failures (dependency-ready after E2-P2-01).
+**Next:** E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (ready, not claimed).
+
+
 
 Order is the order a single agent follows when dependencies are satisfied. E1-05 runs in parallel for Jordin and does not block E2. After E2-P0-01 merged (PR #10), the Entrega II queue is the indexed E2-P* list below, not a single mega-ticket marked done because the scaffold landed.
 
@@ -20,11 +22,11 @@ Order is the order a single agent follows when dependencies are satisfied. E1-05
 | 12 | E2-P1-03 | Commit document/security/seed contracts and mapping ADRs | done | agent | E2-P1-01 |
 | 13 | E2-P1-04 | Install executable ticket prompts and gate checklist | done | agent | E2-P1-02, E2-P1-03 |
 | 14 | E2-P2-01 | Add MVP DTOs, strict HTTP schemas and typed clinical errors | done | agent | E2-P1-01, E2-P1-04 |
-| 15 | E2-P2-02 | Freeze one adapter contract suite including native rollback failures | backlog | agent | E2-P2-01 |
-| 16 | E2-P2-03 | Give memory real isolated transactions and stable registry instances | backlog | agent | E2-P2-02 |
-| 17 | E2-P2-04 | Complete memory patient registration, guardians, search and archive | backlog | agent | E2-P2-03 |
-| 18 | E2-P2-05 | Implement pure consultation bundle invariants | backlog | agent | E2-P2-01 |
-| 19 | E2-P2-06 | Implement memory closed consultation aggregate and turn contract suite green | backlog | agent | E2-P2-04, E2-P2-05 |
+| 15 | E2-P2-02 | Freeze one adapter contract suite including native rollback failures | done | agent | E2-P2-01 |
+| 16 | E2-P2-03 | Give memory real isolated transactions and stable registry instances | done | agent | E2-P2-02 |
+| 17 | E2-P2-04 | Complete memory patient registration, guardians, search and archive | done | agent | E2-P2-03 |
+| 18 | E2-P2-05 | Implement pure consultation bundle invariants | done | agent | E2-P2-01 |
+| 19 | E2-P2-06 | Implement memory closed consultation aggregate and turn contract suite green | done | agent | E2-P2-04, E2-P2-05 |
 | 20 | E2-P2-07 | Expose patient search, detail, catalog and archive HTTP slices | backlog | agent | E2-P2-06, E2-P2-01 |
 | 21 | E2-P2-08 | Wire atomic consultation use case and HTTP save | backlog | agent | E2-P2-06, E2-P2-07 |
 | 22 | E2-P2-09 | Extract storage-neutral JWT service with persistent-session port | done | agent | E2-P2-01 |

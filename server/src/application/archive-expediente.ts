@@ -1,6 +1,18 @@
-import type { ArchiveExpedienteInput, ExpedienteDto, PacienteId } from '@genki/shared';
-import { archivedEstado } from '../domain/expediente-estado.js';
+import type {
+  ArchiveExpedienteInput,
+  ExpedienteDto,
+  MotivoArchivo,
+  PacienteId,
+} from '@genki/shared';
+import { ClinicalError } from '../domain/clinical-error.js';
 import type { ClockPort, PacienteRepositoryPort } from '../ports/index.js';
+
+const MOTIVOS: ReadonlySet<string> = new Set<MotivoArchivo>([
+  'traslado',
+  'fallecimiento',
+  'administrativo',
+  'inactividad',
+]);
 
 /**
  * Archives the expediente only. PACIENTE.estado stays activo|inactivo (sección 5);
@@ -11,20 +23,23 @@ export async function archiveExpediente(
   clock: ClockPort,
   input: Omit<ArchiveExpedienteInput, 'fecha_archivo'> & { id_paciente: PacienteId },
 ): Promise<ExpedienteDto> {
+  if (!MOTIVOS.has(input.motivo_archivo)) {
+    throw new ClinicalError('invalid_body', 'Solicitud inválida');
+  }
   const paciente = await pacientes.findById(input.id_paciente);
   if (!paciente) {
-    throw new Error('Paciente not found');
+    throw new ClinicalError('not_found', 'Recurso no encontrado');
   }
-  const archived = await pacientes.archiveExpediente({
-    id_expediente: input.id_expediente,
+  const expediente = await pacientes.findExpedienteByPaciente(input.id_paciente);
+  if (!expediente || expediente.id_expediente !== input.id_expediente) {
+    throw new ClinicalError('not_found', 'Recurso no encontrado');
+  }
+  return pacientes.archiveExpediente({
+    id_expediente: expediente.id_expediente,
     motivo_archivo: input.motivo_archivo,
     fecha_archivo: clock.nowIso(),
     ...(input.observacion_archivo !== undefined
       ? { observacion_archivo: input.observacion_archivo }
       : {}),
   });
-  if (archived.estado !== archivedEstado()) {
-    throw new Error('Archive did not set estado=archivado');
-  }
-  return archived;
 }
