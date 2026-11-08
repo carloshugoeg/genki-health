@@ -4,9 +4,7 @@ import { validateConsulta, type ValidateConsultaInput } from './consulta.js';
 
 const NOW = '2026-11-08T12:00:00.000Z';
 
-function validBundle(
-  overrides: Partial<ValidateConsultaInput> = {},
-): ValidateConsultaInput {
+function validBundle(overrides: Partial<ValidateConsultaInput> = {}): ValidateConsultaInput {
   return {
     fecha_hora_inicio: '2026-11-08T11:00:00.000Z',
     diagnosticos: [
@@ -221,10 +219,7 @@ describe('E2-P2-05 validateConsulta bundle invariants', () => {
       validateConsulta(
         validBundle({
           receta: {
-            detalles: [
-              { id_medicamento: 1 },
-              { id_medicamento: 2 },
-            ],
+            detalles: [{ id_medicamento: 1 }, { id_medicamento: 2 }],
           },
         }),
         NOW,
@@ -235,10 +230,7 @@ describe('E2-P2-05 validateConsulta bundle invariants', () => {
       validateConsulta(
         validBundle({
           receta: {
-            detalles: [
-              { id_medicamento: 1 },
-              { id_medicamento: 1 },
-            ],
+            detalles: [{ id_medicamento: 1 }, { id_medicamento: 1 }],
           },
         }),
         NOW,

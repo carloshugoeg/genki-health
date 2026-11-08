@@ -23,7 +23,7 @@ Order is the order a single agent follows when dependencies are satisfied. E1-05
 | 15 | E2-P2-02 | Freeze one adapter contract suite including native rollback failures | backlog | agent | E2-P2-01 |
 | 16 | E2-P2-03 | Give memory real isolated transactions and stable registry instances | backlog | agent | E2-P2-02 |
 | 17 | E2-P2-04 | Complete memory patient registration, guardians, search and archive | backlog | agent | E2-P2-03 |
-| 18 | E2-P2-05 | Implement pure consultation bundle invariants | in progress | agent | E2-P2-01 |
+| 18 | E2-P2-05 | Implement pure consultation bundle invariants | done | agent | E2-P2-01 |
 | 19 | E2-P2-06 | Implement memory closed consultation aggregate and turn contract suite green | backlog | agent | E2-P2-04, E2-P2-05 |
 | 20 | E2-P2-07 | Expose patient search, detail, catalog and archive HTTP slices | backlog | agent | E2-P2-06, E2-P2-01 |
 | 21 | E2-P2-08 | Wire atomic consultation use case and HTTP save | backlog | agent | E2-P2-06, E2-P2-07 |
