@@ -159,6 +159,20 @@ export class MemoryAuthAdapter implements AuthPort {
     return this.issueTokens(user);
   }
 
+  async logout(refreshToken: string): Promise<void> {
+    let payload: Record<string, unknown>;
+    try {
+      const verified = await jwtVerify(refreshToken, this.secret);
+      payload = verified.payload as Record<string, unknown>;
+    } catch {
+      throw new AuthError('Invalid refresh token', 'invalid_token');
+    }
+    if (payload.typ !== REFRESH_TOKEN_TYP || typeof payload.jti !== 'string') {
+      throw new AuthError('Invalid refresh token', 'invalid_token');
+    }
+    this.refreshJtis.delete(payload.jti);
+  }
+
   async verifyAccessToken(accessToken: string): Promise<AuthPrincipalDto> {
     let payload: Record<string, unknown>;
     try {
