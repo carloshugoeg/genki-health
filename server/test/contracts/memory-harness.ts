@@ -56,7 +56,6 @@ export async function makeMemoryClinicalHarness(options?: {
 }): Promise<ClinicalHarness> {
   const kind = options?.kind ?? defaultKind();
   const primarySet = createMemoryAdapterSet(kind, 1);
-  let pendingFailure: FailurePoint | null = null;
 
   const bags: MemoryBags = {
     pacientes: (primarySet.pacientes as unknown as { pacientes?: Map<unknown, unknown> }).pacientes,
@@ -75,11 +74,8 @@ export async function makeMemoryClinicalHarness(options?: {
     context,
     async reset(): Promise<void> {
       clearBags(bags);
-      pendingFailure = null;
     },
-    failNext(point: FailurePoint): void {
-      pendingFailure = point;
-    },
+    failNext(_point: FailurePoint): void {},
     async counts(): Promise<CountSnapshot> {
       if (!bags.pacientes && !bags.expedientes) {
         return emptyCounts();
@@ -87,8 +83,6 @@ export async function makeMemoryClinicalHarness(options?: {
       return readCounts(bags);
     },
     otherInstitution,
-    async close(): Promise<void> {
-      pendingFailure = null;
-    },
+    async close(): Promise<void> {},
   };
 }

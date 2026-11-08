@@ -12,7 +12,7 @@ function read(rel) {
 
 function jobBody(ci, jobName) {
   const re = new RegExp(
-    `^  ${jobName}:\\s*\\n([\\s\\S]*?)(?=\\n  [a-zA-Z0-9_-]+:\\s*\\n|(?![\\s\\S]))`,
+    `^ {2}${jobName}:\\s*\\n([\\s\\S]*?)(?=\\n {2}[a-zA-Z0-9_-]+:\\s*\\n|(?![\\s\\S]))`,
     'm',
   );
   const match = ci.match(re);
@@ -44,7 +44,7 @@ test('ci_has_separate_contract_red_job', () => {
   const ci = read('.github/workflows/ci.yml');
   assert.match(
     ci,
-    /^  contract-red:/m,
+    /^ {2}contract-red:/m,
     'ci.yml must declare a contract-red job separate from validate',
   );
   const body = jobBody(ci, 'contract-red');
