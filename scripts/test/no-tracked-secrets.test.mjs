@@ -8,7 +8,7 @@ import { test } from 'node:test';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const selfRel = relative(root, fileURLToPath(import.meta.url)).replaceAll('\\', '/');
 
-const FORBIDDEN_SUBSTRINGS = [
+const FORBIDDEN_FINGERPRINTS = [
   'GenkiDev1',
   'test-secret-at-least-16',
   'genki-dev-jwt-secret-change-me',
@@ -42,11 +42,33 @@ function trackedFiles() {
     });
 }
 
+test('retired_credential_needles_are_sha256_fingerprints', () => {
+  assert.equal(FORBIDDEN_FINGERPRINTS.length, 4, 'must retain coverage for all 4 retired credentials');
+  for (const fp of FORBIDDEN_FINGERPRINTS) {
+    assert.match(
+      fp,
+      /^[a-f0-9]{64}$/,
+      'retired credential needles must be sha256 hex fingerprints, not plaintext',
+    );
+  }
+});
+
+test('schema_sample_password_uses_node_crypto', () => {
+  const src = read('server/src/adapters/http/schemas.test.ts');
+  assert.match(src, /from ['"]node:crypto['"]/, 'schemas.test.ts must import node:crypto');
+  assert.match(src, /randomBytes/, 'schemas.test.ts must generate sample password with randomBytes');
+  assert.doesNotMatch(
+    src,
+    /sampleLoginPassword\s*=\s*'[^']*'/,
+    'sampleLoginPassword must not be a fixed string literal',
+  );
+});
+
 test('no_tracked_credential_literals', () => {
   const hits = [];
   for (const rel of trackedFiles()) {
     const text = read(rel);
-    for (const needle of FORBIDDEN_SUBSTRINGS) {
+    for (const needle of FORBIDDEN_FINGERPRINTS) {
       if (text.includes(needle)) {
         hits.push(`${rel}: forbidden substring ${needle}`);
       }
