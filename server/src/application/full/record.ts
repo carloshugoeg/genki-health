@@ -1,15 +1,26 @@
+import type { ExpedienteDto } from '@genki/shared';
 import type { FichaCompleta } from '@genki/shared/full/patient';
-import type { ANTECEDENTE } from '@genki/shared/full/record';
+import type { ALERGIA, ANTECEDENTE } from '@genki/shared/full/record';
 import { ClinicalError } from '../../domain/clinical-error.js';
 import {
+  assertRecordArchiveRole,
   assertRecordClinicalRole,
+  parseAlergiaInput,
   parseAntecedenteInput,
+  parseArchiveInput,
   parseOp12Params,
   parseOp15Params,
+  parseOp16Params,
+  parseOp18Params,
   requireIdempotencyKey,
 } from '../../domain/full/record.js';
 import type { FullContext, OperationContext } from '../../ports/full/context.js';
-import type { Op12Request, Op15Request } from '../../ports/full/record.js';
+import type {
+  Op12Request,
+  Op15Request,
+  Op16Request,
+  Op18Request,
+} from '../../ports/full/record.js';
 
 function rethrowRecordFailure(err: unknown): never {
   if (err instanceof ClinicalError) {
@@ -55,6 +66,44 @@ export async function executeOp15(
   const idempotency_key = requireIdempotencyKey(actor.idempotency_key);
   try {
     return await context.modules.record.op15(
+      { params: { id }, query: {}, body },
+      { ...actor, idempotency_key, now: actor.now },
+    );
+  } catch (err) {
+    rethrowRecordFailure(err);
+  }
+}
+
+export async function executeOp16(
+  context: FullContext,
+  input: Op16Request,
+  actor: OperationContext,
+): Promise<ALERGIA> {
+  assertRecordClinicalRole(actor.roles);
+  const id = parseOp16Params(input.params);
+  const body = parseAlergiaInput(input.body, actor.now);
+  const idempotency_key = requireIdempotencyKey(actor.idempotency_key);
+  try {
+    return await context.modules.record.op16(
+      { params: { id }, query: {}, body },
+      { ...actor, idempotency_key, now: actor.now },
+    );
+  } catch (err) {
+    rethrowRecordFailure(err);
+  }
+}
+
+export async function executeOp18(
+  context: FullContext,
+  input: Op18Request,
+  actor: OperationContext,
+): Promise<ExpedienteDto> {
+  assertRecordArchiveRole(actor.roles);
+  const id = parseOp18Params(input.params);
+  const body = parseArchiveInput(input.body);
+  const idempotency_key = requireIdempotencyKey(actor.idempotency_key);
+  try {
+    return await context.modules.record.op18(
       { params: { id }, query: {}, body },
       { ...actor, idempotency_key, now: actor.now },
     );
