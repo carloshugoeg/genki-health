@@ -9,6 +9,7 @@ import type {
   Op15Request,
   Op16Request,
   Op18Request,
+  Op19Request,
 } from '../../src/ports/full/record.js';
 
 export type FullHarness = {
@@ -49,6 +50,11 @@ type RecordApplication = {
     input: Op18Request,
     actor: OperationContext,
   ) => Promise<unknown>;
+  executeOp19: (
+    context: FullContext,
+    input: Op19Request,
+    actor: OperationContext,
+  ) => Promise<unknown>;
 };
 
 async function loadRecordApplication(): Promise<RecordApplication> {
@@ -57,7 +63,8 @@ async function loadRecordApplication(): Promise<RecordApplication> {
     typeof mod.executeOp12 !== 'function' ||
     typeof mod.executeOp15 !== 'function' ||
     typeof mod.executeOp16 !== 'function' ||
-    typeof mod.executeOp18 !== 'function'
+    typeof mod.executeOp18 !== 'function' ||
+    typeof mod.executeOp19 !== 'function'
   ) {
     throw new ClinicalError('internal_error', 'record application exports missing');
   }
@@ -66,6 +73,7 @@ async function loadRecordApplication(): Promise<RecordApplication> {
     executeOp15: mod.executeOp15,
     executeOp16: mod.executeOp16,
     executeOp18: mod.executeOp18,
+    executeOp19: mod.executeOp19,
   };
 }
 
@@ -103,6 +111,15 @@ function archiveActor(base: OperationContext): OperationContext {
     ...base,
     roles: ['administrador'],
     permissions: ['expediente.archivar'],
+    id_profesional: null,
+  };
+}
+
+function reactivateActor(base: OperationContext): OperationContext {
+  return {
+    ...base,
+    roles: ['administrador'],
+    permissions: ['expediente.reactivar'],
     id_profesional: null,
   };
 }
@@ -163,6 +180,12 @@ function validArchive(overrides: Partial<ArchiveRequest> = {}): ArchiveRequest {
   };
 }
 
+function validReactivate(overrides: Partial<{ motivo: string }> = {}): { motivo: string } {
+  return {
+    motivo: overrides.motivo ?? 'regreso del paciente',
+  };
+}
+
 function op12(id: number, query: Record<string, unknown> = {}): Op12Request {
   return {
     params: { id },
@@ -195,6 +218,14 @@ function op18(id: number, body: ArchiveRequest | Record<string, unknown>): Op18R
   };
 }
 
+function op19(id: number, body: { motivo: string } | Record<string, unknown>): Op19Request {
+  return {
+    params: { id },
+    query: {},
+    body: body as Op19Request['body'],
+  };
+}
+
 function fingerprint(value: unknown): string {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex');
 }
@@ -209,6 +240,7 @@ export function recordContract(
     const want15 = ops.includes(15);
     const want16 = ops.includes(16);
     const want18 = ops.includes(18);
+    const want19 = ops.includes(19);
 
     if (want12) {
       it('op12_transition_1_persists', async () => {
@@ -919,6 +951,200 @@ export function recordContract(
           executeOp18(harness.context, op18(seeded.id_paciente, validArchive()), {
             ...archiveActor(harness.actor),
             idempotency_key: 'arch-mid-1',
+          }),
+          'internal_error',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        expect(await harness.counts()).toEqual(beforeCounts);
+        await harness.close();
+      });
+    }
+
+    if (want19) {
+      it('op19_transition_1_persists', async () => {
+        const { executeOp12, executeOp19 } = await loadRecordApplication();
+        const harness = await make();
+        await harness.reset();
+        const actor = {
+          ...reactivateActor(harness.actor),
+          idempotency_key: 'react-create-1',
+        };
+        const seeded = await harness.seedArchivedPatient('REACT-ARCH-1');
+        const beforeCounts = await harness.counts();
+        const reactivated = (await executeOp19(
+          harness.context,
+          op19(seeded.id_paciente, validReactivate()),
+          actor,
+        )) as {
+          id_expediente: number;
+          id_paciente: number;
+          estado: string;
+          motivo_archivo: string | null;
+          observacion_archivo: string | null;
+          fecha_archivo: string | null;
+        };
+        expect(reactivated.id_expediente).toBe(seeded.id_expediente);
+        expect(reactivated.id_paciente).toBe(seeded.id_paciente);
+        expect(reactivated.estado).toBe('activo');
+        expect(reactivated.motivo_archivo).toBeNull();
+        expect(reactivated.observacion_archivo).toBeNull();
+        expect(reactivated.fecha_archivo).toBeNull();
+        const afterCounts = await harness.counts();
+        expect(afterCounts.reactivacion_audit ?? 0).toBe(
+          (beforeCounts.reactivacion_audit ?? 0) + 1,
+        );
+        const ficha = (await executeOp12(
+          harness.context,
+          op12(seeded.id_paciente),
+          clinicalActor(harness.actor),
+        )) as {
+          expediente: {
+            estado: string;
+            motivo_archivo: string | null;
+            fecha_archivo: string | null;
+            observacion_archivo: string | null;
+          };
+        };
+        expect(ficha.expediente.estado).toBe('activo');
+        expect(ficha.expediente.motivo_archivo).toBeNull();
+        expect(ficha.expediente.fecha_archivo).toBeNull();
+        expect(ficha.expediente.observacion_archivo).toBeNull();
+        const replay = await executeOp19(
+          harness.context,
+          op19(seeded.id_paciente, validReactivate()),
+          actor,
+        );
+        expect(replay).toEqual(reactivated);
+        expect((await harness.counts()).reactivacion_audit).toBe(afterCounts.reactivacion_audit);
+        await harness.close();
+      });
+
+      it('op19_error_domain_unchanged', async () => {
+        const { executeOp19 } = await loadRecordApplication();
+        const harness = await make();
+        await harness.reset();
+        const seeded = await harness.seedActivePatient('REACT-DOM-1');
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp19(harness.context, op19(seeded.id_paciente, validReactivate()), {
+            ...reactivateActor(harness.actor),
+            idempotency_key: 'react-dom-1',
+          }),
+          'conflict',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op19_error_schema_unchanged', async () => {
+        const { executeOp19 } = await loadRecordApplication();
+        const harness = await make();
+        await harness.reset();
+        const seeded = await harness.seedArchivedPatient('REACT-SCH-1');
+        const before = await harness.nativeSnapshot();
+        const actor = { ...reactivateActor(harness.actor), idempotency_key: 'react-sch-1' };
+        await expectCode(
+          executeOp19(harness.context, op19(seeded.id_paciente, { motivo: '' }), actor),
+          'invalid_body',
+        );
+        await expectCode(
+          executeOp19(
+            harness.context,
+            op19(seeded.id_paciente, {
+              ...validReactivate(),
+              extra: true,
+            }),
+            { ...actor, idempotency_key: 'react-sch-2' },
+          ),
+          'invalid_body',
+        );
+        await expectCode(
+          executeOp19(harness.context, op19(seeded.id_paciente, { motivo: 'x'.repeat(201) }), {
+            ...actor,
+            idempotency_key: 'react-sch-3',
+          }),
+          'invalid_body',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op19_error_store_unchanged', async () => {
+        const { executeOp19 } = await loadRecordApplication();
+        const harness = await make();
+        await harness.reset();
+        const seeded = await harness.seedArchivedPatient('REACT-STORE-1');
+        const before = await harness.nativeSnapshot();
+        harness.setStoreUnavailable(true);
+        await expectCode(
+          executeOp19(harness.context, op19(seeded.id_paciente, validReactivate()), {
+            ...reactivateActor(harness.actor),
+            idempotency_key: 'react-store-1',
+          }),
+          'store_unavailable',
+        );
+        harness.setStoreUnavailable(false);
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op19_error_role_unchanged', async () => {
+        const { executeOp19 } = await loadRecordApplication();
+        const harness = await make();
+        await harness.reset();
+        const seeded = await harness.seedArchivedPatient('REACT-ROLE-1');
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp19(harness.context, op19(seeded.id_paciente, validReactivate()), {
+            ...clinicalActor(harness.actor),
+            idempotency_key: 'react-role-1',
+          }),
+          'forbidden',
+        );
+        await expectCode(
+          executeOp19(harness.context, op19(seeded.id_paciente, validReactivate()), {
+            ...receptionActor(harness.actor),
+            idempotency_key: 'react-role-2',
+          }),
+          'forbidden',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op19_error_foreign_unchanged', async () => {
+        const { executeOp19 } = await loadRecordApplication();
+        const harness = await make();
+        await harness.reset();
+        await harness.seedArchivedPatient('REACT-HOME-1');
+        const other = await harness.otherInstitution();
+        await other.reset();
+        const foreign = await other.seedArchivedPatient('REACT-FOREIGN-1');
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp19(harness.context, op19(foreign.id_paciente, validReactivate()), {
+            ...reactivateActor(harness.actor),
+            idempotency_key: 'react-foreign-1',
+          }),
+          'not_found',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await other.close();
+        await harness.close();
+      });
+
+      it('op19_midwrite_rolls_back', async () => {
+        const { executeOp19 } = await loadRecordApplication();
+        const harness = await make();
+        await harness.reset();
+        const seeded = await harness.seedArchivedPatient('REACT-MID-1');
+        const before = await harness.nativeSnapshot();
+        const beforeCounts = await harness.counts();
+        harness.failAfterWrite(1);
+        await expectCode(
+          executeOp19(harness.context, op19(seeded.id_paciente, validReactivate()), {
+            ...reactivateActor(harness.actor),
+            idempotency_key: 'react-mid-1',
           }),
           'internal_error',
         );

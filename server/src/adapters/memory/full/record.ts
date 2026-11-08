@@ -329,8 +329,47 @@ export function createMemoryRecordRepository(deps: MemoryRecordDeps): RecordRepo
       });
     },
 
-    async op19(_input: Op19Request, _context: OperationContext): Promise<Op19Response> {
-      throw new ClinicalError('misconfigured', 'OP19 belongs to a later record chunk');
+    async op19(input: Op19Request, context: OperationContext): Promise<Op19Response> {
+      assertStore(deps.isStoreUnavailable);
+      return replayOrStart(context, input.body, async () => {
+        const idPaciente = asPacienteId(input.params.id);
+        const paciente = await deps.pacientes.findById(idPaciente);
+        if (!paciente) {
+          throw new ClinicalError('not_found', NOT_FOUND);
+        }
+        const expediente = await deps.pacientes.findExpedienteByPaciente(idPaciente);
+        if (!expediente) {
+          throw new ClinicalError('not_found', NOT_FOUND);
+        }
+        if (expediente.estado !== 'archivado') {
+          throw new ClinicalError('conflict', CONFLICT);
+        }
+
+        const id_reactivacion_audit = await deps.ids.nextInt('reactivacion_audit');
+        const audit = {
+          id_reactivacion_audit,
+          id_expediente: expediente.id_expediente,
+          id_usuario: context.id_usuario,
+          motivo: input.body.motivo,
+          previous_estado: expediente.estado,
+          previous_motivo_archivo: expediente.motivo_archivo,
+          previous_fecha_archivo: expediente.fecha_archivo,
+          previous_observacion_archivo: expediente.observacion_archivo,
+          fecha_reactivacion: context.now || deps.clock.nowIso(),
+        };
+        putExtensionRow(namespace(), 'reactivacion_audit', id_reactivacion_audit, audit);
+
+        const maps = activeMemoryMaps(deps.state);
+        const next: ExpedienteDto = {
+          ...expediente,
+          estado: 'activo',
+          fecha_archivo: null,
+          motivo_archivo: null,
+          observacion_archivo: null,
+        };
+        maps.expedientes.set(idPaciente, next);
+        return next;
+      });
     },
   };
 
