@@ -20,7 +20,7 @@ Motores opcionales:
 docker compose -f infra/docker-compose.yml up -d
 ```
 
-Auth (Carlos 2026-10-19): `POST /api/auth/login` con email, password e `institution_kind`. Access JWT 30m + refresh 14d. Demo: `hospital@genki.local` / `GenkiDev1`. Requiere `JWT_SECRET` (ver `.env.example`).
+Auth (Carlos 2026-10-19): `POST /api/auth/login` con email, password e `institution_kind`. Access JWT 30m + refresh 14d. Demo email `hospital@genki.local` (análogos por institución). Requiere `JWT_SECRET` y `SEED_PASSWORD` en `.env` (ver `.env.example`; sin valores de ejemplo en el repo).
 
 ## Layout
 

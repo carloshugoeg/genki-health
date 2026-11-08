@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import type {
   ArchiveRequest,
@@ -23,6 +24,8 @@ import {
 type AssertEqual<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 
+const sampleLoginPassword = `Aa1${randomBytes(8).toString('hex')}`;
+
 const validRegister: RegisterPacienteRequest = {
   tipo_documento: 'DPI',
   numero_documento: '1234567890101',
@@ -36,21 +39,21 @@ describe('E2-P2-01 HTTP schemas and clinical errors', () => {
   it('schemas_reject_unknown_institution', () => {
     const ok = loginSchema.safeParse({
       email: 'hospital@genki.local',
-      password: 'GenkiDev1',
+      password: sampleLoginPassword,
       institution_kind: 'hospital_general',
     });
     expect(ok.success).toBe(true);
 
     const unknownKind = loginSchema.safeParse({
       email: 'hospital@genki.local',
-      password: 'GenkiDev1',
+      password: sampleLoginPassword,
       institution_kind: 'clinica_inventada',
     });
     expect(unknownKind.success).toBe(false);
 
     const unknownKey = loginSchema.safeParse({
       email: 'hospital@genki.local',
-      password: 'GenkiDev1',
+      password: sampleLoginPassword,
       institution_kind: 'hospital_general',
       motor: 'postgres',
     });

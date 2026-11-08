@@ -10,9 +10,7 @@ export interface MemoryIdentityStoreOptions {
   users?: IdentityUser[];
 }
 
-const DEMO_PASSWORD = 'GenkiDev1';
-
-/** Demo accounts for memory SoR (tests + local). Password: GenkiDev1 */
+/** Demo accounts for memory SoR (tests + local). Password from SEED_PASSWORD or tests. */
 export const DEMO_AUTH_USERS: ReadonlyArray<{
   email: string;
   institution_kind: InstitutionKind;
@@ -45,12 +43,17 @@ export const DEMO_AUTH_USERS: ReadonlyArray<{
   },
 ];
 
-export async function buildDemoUsers(): Promise<IdentityUser[]> {
-  const policy = validatePasswordPolicy(DEMO_PASSWORD);
+export async function buildDemoUsers(
+  password = process.env.SEED_PASSWORD,
+): Promise<IdentityUser[]> {
+  if (!password || password.trim().length === 0) {
+    throw new Error('SEED_PASSWORD must be set to build demo users');
+  }
+  const policy = validatePasswordPolicy(password);
   if (policy) {
     throw new Error(`Demo password violates policy: ${policy}`);
   }
-  const hash = await argon2.hash(DEMO_PASSWORD, { type: argon2.argon2id });
+  const hash = await argon2.hash(password, { type: argon2.argon2id });
   return DEMO_AUTH_USERS.map((row, index) => ({
     id_usuario: index + 1,
     email: row.email,
@@ -155,6 +158,3 @@ export class MemoryIdentityStore implements IdentityStorePort {
     });
   }
 }
-
-/** @deprecated Prefer MemoryIdentityStore + createAuthService; kept name for import churn. */
-export { MemoryIdentityStore as MemoryAuthAdapter };

@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { createPhase0Auth, createPhase0Registry } from '../../config/compose-memory.js';
+import { ensureTestCredentials } from '../../test/credentials.js';
 import { buildHttpApp } from './app.js';
 
 describe('HTTP auth routing', () => {
   it('returns tokens from login and routes pacientes via JWT institution', async () => {
-    const auth = await createPhase0Auth('test-secret-at-least-16');
+    const { password, jwtSecret } = ensureTestCredentials();
+    const auth = await createPhase0Auth(jwtSecret);
     const app = buildHttpApp({ registry: createPhase0Registry(), auth });
 
     const login = await app.inject({
@@ -12,12 +14,12 @@ describe('HTTP auth routing', () => {
       url: '/api/auth/login',
       payload: {
         email: 'hospital@genki.local',
-        password: 'GenkiDev1',
+        password,
         institution_kind: 'hospital_general',
       },
     });
     expect(login.statusCode).toBe(200);
-    const tokens = login.json() as { access_token: string };
+    const tokens = login.json() as { access_token: string; refresh_token: string };
 
     const unauthorized = await app.inject({
       method: 'POST',
@@ -53,14 +55,14 @@ describe('HTTP auth routing', () => {
     const logout = await app.inject({
       method: 'POST',
       url: '/api/auth/logout',
-      payload: { refresh_token: (login.json() as { refresh_token: string }).refresh_token },
+      payload: { refresh_token: tokens.refresh_token },
     });
     expect(logout.statusCode).toBe(204);
 
     const replay = await app.inject({
       method: 'POST',
       url: '/api/auth/refresh',
-      payload: { refresh_token: (login.json() as { refresh_token: string }).refresh_token },
+      payload: { refresh_token: tokens.refresh_token },
     });
     expect(replay.statusCode).toBe(401);
   });

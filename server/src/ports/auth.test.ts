@@ -10,6 +10,7 @@ import { createAuthService } from '../adapters/auth/service.js';
 import { MemoryIdentityStore, buildDemoUsers } from '../adapters/memory/auth.js';
 import { buildHttpApp } from '../adapters/http/app.js';
 import { createPhase0Auth, createPhase0Registry } from '../config/compose-memory.js';
+import { ensureTestCredentials } from '../test/credentials.js';
 import { AuthError, type AuthPort } from './auth.js';
 import type { IdentityUser } from './identity-store.js';
 
@@ -17,16 +18,23 @@ async function makeAuth(options?: {
   nowMs?: () => number;
   users?: IdentityUser[];
   jwtSecret?: string;
-}): Promise<{ auth: AuthPort; store: MemoryIdentityStore; secret: string }> {
-  const secret = options?.jwtSecret ?? 'test-secret-at-least-16';
-  const users = options?.users ?? (await buildDemoUsers());
+}): Promise<{
+  auth: AuthPort;
+  store: MemoryIdentityStore;
+  secret: string;
+  password: string;
+}> {
+  const creds = ensureTestCredentials();
+  const secret = options?.jwtSecret ?? creds.jwtSecret;
+  const password = creds.password;
+  const users = options?.users ?? (await buildDemoUsers(password));
   const store = new MemoryIdentityStore(users);
   const auth = createAuthService({
     jwtSecret: secret,
     identities: store,
     ...(options?.nowMs ? { clock: { nowMs: options.nowMs } } : {}),
   });
-  return { auth, store, secret };
+  return { auth, store, secret, password };
 }
 
 describe('AuthPort C3.5 session transitions', () => {
@@ -35,10 +43,10 @@ describe('AuthPort C3.5 session transitions', () => {
   });
 
   it('auth_login_enters_session', async () => {
-    const { auth, store } = await makeAuth();
+    const { auth, store, password } = await makeAuth();
     const tokens = await auth.login({
       email: 'hospital@genki.local',
-      password: 'GenkiDev1',
+      password,
       institution_kind: 'hospital_general',
     });
 
@@ -60,12 +68,12 @@ describe('AuthPort C3.5 session transitions', () => {
   });
 
   it('auth_bad_login_stays_anonymous', async () => {
-    const { auth, store } = await makeAuth();
+    const { auth, store, password } = await makeAuth();
 
     await expect(
       auth.login({
         email: 'hospital@genki.local',
-        password: 'GenkiDev1-wrong',
+        password: `${password}-wrong`,
         institution_kind: 'hospital_general',
       }),
     ).rejects.toMatchObject({ code: 'invalid_credentials' } satisfies Partial<AuthError>);
@@ -73,7 +81,7 @@ describe('AuthPort C3.5 session transitions', () => {
     await expect(
       auth.login({
         email: 'hospital@genki.local',
-        password: 'GenkiDev1',
+        password,
         institution_kind: 'centro_pediatrico',
       }),
     ).rejects.toMatchObject({ code: 'invalid_credentials' } satisfies Partial<AuthError>);
@@ -84,7 +92,7 @@ describe('AuthPort C3.5 session transitions', () => {
     await expect(
       blocked.auth.login({
         email: 'hospital@genki.local',
-        password: 'GenkiDev1',
+        password: blocked.password,
         institution_kind: 'hospital_general',
       }),
     ).rejects.toMatchObject({ code: 'invalid_credentials' } satisfies Partial<AuthError>);
@@ -94,10 +102,10 @@ describe('AuthPort C3.5 session transitions', () => {
   });
 
   it('auth_me_valid_session', async () => {
-    const { auth } = await makeAuth();
+    const { auth, password } = await makeAuth();
     const tokens = await auth.login({
       email: 'dental@genki.local',
-      password: 'GenkiDev1',
+      password,
       institution_kind: 'clinica_odontologica',
     });
     const principal = await auth.verifyAccessToken(tokens.access_token);
@@ -109,10 +117,10 @@ describe('AuthPort C3.5 session transitions', () => {
 
   it('auth_bad_access_requires_refresh', async () => {
     let now = 1_700_000_000_000;
-    const { auth } = await makeAuth({ nowMs: () => now });
+    const { auth, password } = await makeAuth({ nowMs: () => now });
     const tokens = await auth.login({
       email: 'hospital@genki.local',
-      password: 'GenkiDev1',
+      password,
       institution_kind: 'hospital_general',
     });
 
@@ -131,10 +139,10 @@ describe('AuthPort C3.5 session transitions', () => {
   });
 
   it('auth_refresh_rotates_once', async () => {
-    const { auth, store } = await makeAuth();
+    const { auth, store, password } = await makeAuth();
     const first = await auth.login({
       email: 'laboratorio@genki.local',
-      password: 'GenkiDev1',
+      password,
       institution_kind: 'laboratorio_clinico',
     });
     expect(store.activeSessionCount()).toBe(1);
@@ -152,10 +160,10 @@ describe('AuthPort C3.5 session transitions', () => {
   });
 
   it('auth_refresh_replay_rejected', async () => {
-    const { auth } = await makeAuth();
+    const { auth, password } = await makeAuth();
     const first = await auth.login({
       email: 'pediatrico@genki.local',
-      password: 'GenkiDev1',
+      password,
       institution_kind: 'centro_pediatrico',
     });
 
@@ -174,10 +182,10 @@ describe('AuthPort C3.5 session transitions', () => {
 
   it('auth_refresh_expired_rejected', async () => {
     let now = 1_700_000_000_000;
-    const { auth } = await makeAuth({ nowMs: () => now });
+    const { auth, password } = await makeAuth({ nowMs: () => now });
     const tokens = await auth.login({
       email: 'hospital@genki.local',
-      password: 'GenkiDev1',
+      password,
       institution_kind: 'hospital_general',
     });
 
@@ -190,7 +198,7 @@ describe('AuthPort C3.5 session transitions', () => {
     const disabled = await makeAuth({ users, nowMs: () => Date.now() });
     const live = await disabled.auth.login({
       email: 'hospital@genki.local',
-      password: 'GenkiDev1',
+      password: disabled.password,
       institution_kind: 'hospital_general',
     });
     users[0]!.estado = 'inactivo';
@@ -200,10 +208,10 @@ describe('AuthPort C3.5 session transitions', () => {
   });
 
   it('auth_logout_revokes_refresh', async () => {
-    const { auth } = await makeAuth();
+    const { auth, password } = await makeAuth();
     const tokens = await auth.login({
       email: 'hospital@genki.local',
-      password: 'GenkiDev1',
+      password,
       institution_kind: 'hospital_general',
     });
 
@@ -217,14 +225,14 @@ describe('AuthPort C3.5 session transitions', () => {
 
     const app = buildHttpApp({
       registry: createPhase0Registry(),
-      auth: await createPhase0Auth('test-secret-at-least-16'),
+      auth: await createPhase0Auth(ensureTestCredentials().jwtSecret),
     });
     const login = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
       payload: {
         email: 'hospital@genki.local',
-        password: 'GenkiDev1',
+        password: ensureTestCredentials().password,
         institution_kind: 'hospital_general',
       },
     });
@@ -239,10 +247,10 @@ describe('AuthPort C3.5 session transitions', () => {
   });
 
   it('auth_logout_idempotent', async () => {
-    const { auth } = await makeAuth();
+    const { auth, password } = await makeAuth();
     const tokens = await auth.login({
       email: 'hospital@genki.local',
-      password: 'GenkiDev1',
+      password,
       institution_kind: 'hospital_general',
     });
     await auth.logout(tokens.refresh_token);
@@ -250,10 +258,10 @@ describe('AuthPort C3.5 session transitions', () => {
   });
 
   it('auth_logout_bad_token_rejected', async () => {
-    const { auth, store } = await makeAuth();
+    const { auth, store, password } = await makeAuth();
     await auth.login({
       email: 'hospital@genki.local',
-      password: 'GenkiDev1',
+      password,
       institution_kind: 'hospital_general',
     });
     const before = store.activeSessionCount();
@@ -267,7 +275,7 @@ describe('AuthPort C3.5 session transitions', () => {
     const timed = await makeAuth({ nowMs: () => now });
     const issued = await timed.auth.login({
       email: 'hospital@genki.local',
-      password: 'GenkiDev1',
+      password: timed.password,
       institution_kind: 'hospital_general',
     });
     now += (REFRESH_TOKEN_TTL_SECONDS + 5) * 1000;
@@ -278,10 +286,10 @@ describe('AuthPort C3.5 session transitions', () => {
   });
 
   it('auth_cannot_switch_institution', async () => {
-    const { auth, secret } = await makeAuth();
+    const { auth, secret, password } = await makeAuth();
     const tokens = await auth.login({
       email: 'hospital@genki.local',
-      password: 'GenkiDev1',
+      password,
       institution_kind: 'hospital_general',
     });
 
@@ -314,7 +322,7 @@ describe('AuthPort C3.5 session transitions', () => {
     // A second login is required to enter another institution.
     const pediatric = await auth.login({
       email: 'pediatrico@genki.local',
-      password: 'GenkiDev1',
+      password,
       institution_kind: 'centro_pediatrico',
     });
     const other = await auth.verifyAccessToken(pediatric.access_token);
