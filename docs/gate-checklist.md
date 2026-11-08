@@ -4,6 +4,10 @@ Evidence is filled only when the matching ticket reaches that gate. Do not pre-c
 
 Protocol-change files (`AGENTS.md`, CI workflows, `ports/` interfaces, initial migrations under the frozen contracts) require the `protocol-change` label and both owners' approval before merge.
 
+## Gate failure templates
+
+- **post-test edits to test files:** After the `test:` commit, do not edit those test paths again (auth harness, tracker-sync pins, or any other frozen red contract). Restore them to the test: tree (`git checkout <test-sha> -- <paths>` so `git diff <test-sha>..HEAD` on those paths is empty), make implementation pass the frozen assertions, and only seek a scoped waiver when a frozen assertion is genuinely wrong for the completed DoD state.
+
 ## Gates
 
 - **G0 repo truth:** #8 content integrated; #9 rebased content integrated; AGENTS E2 override, exact adopted assumptions and tracker rows consistent. E1-05 independent. Neither merge was performed by this planning task.

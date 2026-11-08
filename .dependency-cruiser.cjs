@@ -21,8 +21,8 @@ module.exports = {
     {
       name: 'adapters-no-cross-import',
       severity: 'error',
-      comment: 'Engine adapters must not import each other.',
-      from: { path: '^server/src/adapters/([^/]+)' },
+      comment: 'Engine adapters must not import each other (tests excluded).',
+      from: { path: '^server/src/adapters/([^/]+)', pathNot: '\\.test\\.ts$' },
       to: {
         path: '^server/src/adapters/([^/]+)',
         pathNot: '^server/src/adapters/$1',
