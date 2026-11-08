@@ -10,13 +10,10 @@ import type {
 import { asInstitutionId } from '@genki/shared';
 import type { Pool, RowDataPacket } from 'mysql2/promise';
 import mysql from 'mysql2/promise';
-import { MysqlCatalogoRepository } from '../adapters/mysql/catalogo-repository.js';
-import { MysqlIdPort } from '../adapters/mysql/id.js';
-import { MysqlPacienteRepository } from '../adapters/mysql/paciente-repository.js';
-import { MysqlUnitOfWork } from '../adapters/mysql/unit-of-work.js';
-import { ClinicalError } from '../domain/clinical-error.js';
+import { createMysqlAdapterSet } from '../adapters/mysql/index.js';
+import { closeConsulta } from '../application/close-consulta.js';
 import type { PersistenceCheckpoint } from '../ports/adapter-resource.js';
-import type { ClockPort } from '../ports/clock.js';
+import type { ClinicalContext } from '../ports/clinical-context.js';
 import type { CloseConsultaBundle } from '../ports/consulta-repository.js';
 import {
   defaultKind,
@@ -34,7 +31,7 @@ import type {
   FailurePoint,
 } from './harness.js';
 
-const TEST_DB = 'genki_test_mysql_paciente';
+const TEST_DB = 'genki_test_mysql_contract';
 const PRIMARY_INSTITUTION = 2;
 const MIGRATIONS_DIR = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -49,21 +46,49 @@ function requireAdminUrl(): string {
   return url;
 }
 
-const fixedClock: ClockPort = {
+function testDatabaseUrl(): string {
+  const admin = requireAdminUrl();
+  if (admin.endsWith('/')) {
+    return `${admin}${TEST_DB}`;
+  }
+  return `${admin.replace(/\/?$/, '/')}${TEST_DB}`;
+}
+
+const fixedClock = {
   nowIso(): string {
-    return '2026-11-01T14:00:00.000Z';
+    return '2026-11-07T16:00:00.000Z';
   },
 };
 
-function stubConsultas(): ContractConsultaRepository {
+function isCloseBundle(
+  input: CloseConsultaBundle | { id_paciente: PacienteId; body: CloseConsultaRequest },
+): input is CloseConsultaBundle {
+  return 'consulta' in input && 'diagnosticos' in input && 'tratamientos' in input;
+}
+
+function facadeConsultas(context: ClinicalContext): ContractConsultaRepository {
   return {
     closeConsulta(
-      _input: CloseConsultaBundle | { id_paciente: PacienteId; body: CloseConsultaRequest },
+      input: CloseConsultaBundle | { id_paciente: PacienteId; body: CloseConsultaRequest },
     ): Promise<ConsultaCompleta> {
-      return Promise.reject(new ClinicalError('not_found', 'Consulta MySQL pendiente E2-P3B-03'));
+      if (isCloseBundle(input)) {
+        return context.consultas.closeConsulta(input);
+      }
+      return closeConsulta(context, input);
     },
-    findById: async () => null,
-    listByExpediente: async () => [],
+    findById: (id) => context.consultas.findById(id),
+    listByExpediente: (id) => context.consultas.listByExpediente(id),
+  };
+}
+
+function asContractContext(context: ClinicalContext): ContractClinicalContext {
+  return {
+    pacientes: context.pacientes,
+    consultas: facadeConsultas(context),
+    catalogos: context.catalogos,
+    unitOfWork: context.unitOfWork,
+    clock: context.clock,
+    ids: context.ids,
   };
 }
 
@@ -226,34 +251,10 @@ async function countsFor(pool: Pool, institutionId: number): Promise<CountSnapsh
   };
 }
 
-function buildContext(
-  pool: Pool,
-  institutionId: number,
-  kind: InstitutionKind,
-  unitOfWork: MysqlUnitOfWork,
-  ids: MysqlIdPort,
-  afterWrite: (point: PersistenceCheckpoint) => void,
-): ContractClinicalContext {
-  const pacientes = new MysqlPacienteRepository(
-    asInstitutionId(institutionId),
-    kind,
-    unitOfWork,
-    () => fixedClock.nowIso(),
-    afterWrite,
-  );
-  return {
-    pacientes,
-    consultas: stubConsultas(),
-    catalogos: new MysqlCatalogoRepository(institutionId),
-    unitOfWork,
-    clock: fixedClock,
-    ids,
-  };
-}
-
 let sharedAdmin: mysql.Connection | null = null;
 let sharedPool: Pool | null = null;
 let schemaReady = false;
+const openResources: Array<{ close(): Promise<void> }> = [];
 
 async function sharedConnection(): Promise<Pool> {
   if (sharedPool && schemaReady) {
@@ -298,16 +299,22 @@ export async function makeMysqlClinicalHarness(options?: {
       throw new Error(`checkpoint ${point}`);
     }
   };
-  const unitOfWork = new MysqlUnitOfWork(pool);
-  const ids = new MysqlIdPort();
-  const context = buildContext(pool, PRIMARY_INSTITUTION, kind, unitOfWork, ids, afterWrite);
+
+  const primary = await createMysqlAdapterSet({
+    id_institucion: asInstitutionId(PRIMARY_INSTITUTION),
+    kind,
+    url: testDatabaseUrl(),
+    clock: fixedClock,
+    afterWrite,
+  });
+  openResources.push(primary);
 
   await clearClinical(pool);
   await seedInstitution(pool, PRIMARY_INSTITUTION);
   await seedInstitution(pool, OTHER_INSTITUTION_ID);
 
   return {
-    context,
+    context: asContractContext(primary.set),
     async reset(): Promise<void> {
       pending = null;
       await clearClinical(pool);
@@ -321,7 +328,15 @@ export async function makeMysqlClinicalHarness(options?: {
       return countsFor(pool, PRIMARY_INSTITUTION);
     },
     async otherInstitution(): Promise<ContractClinicalContext> {
-      return buildContext(pool, OTHER_INSTITUTION_ID, kind, unitOfWork, ids, afterWrite);
+      const other = await createMysqlAdapterSet({
+        id_institucion: asInstitutionId(OTHER_INSTITUTION_ID),
+        kind,
+        url: testDatabaseUrl(),
+        clock: fixedClock,
+        afterWrite,
+      });
+      openResources.push(other);
+      return asContractContext(other.set);
     },
     async close(): Promise<void> {
       pending = null;
@@ -330,6 +345,12 @@ export async function makeMysqlClinicalHarness(options?: {
 }
 
 export async function closeMysqlHarnessSharedClient(): Promise<void> {
+  while (openResources.length > 0) {
+    const resource = openResources.pop();
+    if (resource) {
+      await resource.close().catch(() => undefined);
+    }
+  }
   if (sharedPool) {
     await sharedPool.end().catch(() => undefined);
     sharedPool = null;
