@@ -8,12 +8,11 @@ import { test } from 'node:test';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const selfRel = relative(root, fileURLToPath(import.meta.url)).replaceAll('\\', '/');
 
-/** Reconstructed so this file itself is not a hit. */
 const FORBIDDEN_SUBSTRINGS = [
-  ['Genki', 'Dev', '1'].join(''),
-  ['test-secret', '-at-least-16'].join(''),
-  ['genki-dev-jwt-secret', '-change-me'].join(''),
-  ['genki_dev', '_only'].join(''),
+  'GenkiDev1',
+  'test-secret-at-least-16',
+  'genki-dev-jwt-secret-change-me',
+  'genki_dev_only',
 ];
 
 const ENV_SECRET_KEYS =

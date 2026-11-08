@@ -1,3 +1,3 @@
-import { ensureTestCredentials } from './credentials.js';
+import { installTestCredentials } from './credentials.js';
 
-ensureTestCredentials();
+installTestCredentials();

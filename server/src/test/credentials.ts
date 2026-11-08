@@ -6,8 +6,6 @@ export interface TestCredentials {
   jwtSecret: string;
 }
 
-let cached: TestCredentials | null = null;
-
 function randomPassword(): string {
   return `Aa1${randomBytes(12).toString('base64url')}`;
 }
@@ -16,24 +14,29 @@ function randomJwtSecret(): string {
   return randomBytes(32).toString('base64url');
 }
 
-/** Process-local password + JWT secret for tests. Env wins; else node:crypto once. */
-export function ensureTestCredentials(): TestCredentials {
-  if (cached) {
-    return cached;
+export function installTestCredentials(): void {
+  let password = process.env.SEED_PASSWORD?.trim() ?? '';
+  if (!password) {
+    password = randomPassword();
+    process.env.SEED_PASSWORD = password;
   }
-
-  const fromEnv = process.env.SEED_PASSWORD?.trim();
-  const password = fromEnv && fromEnv.length > 0 ? fromEnv : randomPassword();
   const policy = validatePasswordPolicy(password);
   if (policy) {
     throw new Error(`SEED_PASSWORD violates policy: ${policy}`);
   }
 
-  const secretEnv = process.env.JWT_SECRET?.trim();
-  const jwtSecret = secretEnv && secretEnv.length >= 16 ? secretEnv : randomJwtSecret();
+  let jwtSecret = process.env.JWT_SECRET?.trim() ?? '';
+  if (jwtSecret.length < 16) {
+    jwtSecret = randomJwtSecret();
+    process.env.JWT_SECRET = jwtSecret;
+  }
+}
 
-  process.env.SEED_PASSWORD = password;
-  process.env.JWT_SECRET = jwtSecret;
-  cached = { password, jwtSecret };
-  return cached;
+export function testCredentials(): TestCredentials {
+  const password = process.env.SEED_PASSWORD?.trim() ?? '';
+  const jwtSecret = process.env.JWT_SECRET?.trim() ?? '';
+  if (!password || jwtSecret.length < 16) {
+    throw new Error('test credentials missing; call installTestCredentials() first');
+  }
+  return { password, jwtSecret };
 }

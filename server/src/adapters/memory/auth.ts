@@ -10,7 +10,6 @@ export interface MemoryIdentityStoreOptions {
   users?: IdentityUser[];
 }
 
-/** Demo accounts for memory SoR (tests + local). Password from SEED_PASSWORD or tests. */
 export const DEMO_AUTH_USERS: ReadonlyArray<{
   email: string;
   institution_kind: InstitutionKind;

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { createPhase0Auth, createPhase0Registry } from '../../config/compose-memory.js';
-import { ensureTestCredentials } from '../../test/credentials.js';
+import { testCredentials } from '../../test/credentials.js';
 import { buildHttpApp } from './app.js';
 
 describe('HTTP auth routing', () => {
   it('returns tokens from login and routes pacientes via JWT institution', async () => {
-    const { password, jwtSecret } = ensureTestCredentials();
+    const { password, jwtSecret } = testCredentials();
     const auth = await createPhase0Auth(jwtSecret);
     const app = buildHttpApp({ registry: createPhase0Registry(), auth });
 

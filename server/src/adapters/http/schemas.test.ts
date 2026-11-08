@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import type {
   ArchiveRequest,
@@ -24,7 +23,7 @@ import {
 type AssertEqual<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 
-const sampleLoginPassword = `Aa1${randomBytes(8).toString('hex')}`;
+const sampleLoginPassword = 'schema-fixture-password';
 
 const validRegister: RegisterPacienteRequest = {
   tipo_documento: 'DPI',

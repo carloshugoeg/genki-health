@@ -10,7 +10,7 @@ import { createAuthService } from '../adapters/auth/service.js';
 import { MemoryIdentityStore, buildDemoUsers } from '../adapters/memory/auth.js';
 import { buildHttpApp } from '../adapters/http/app.js';
 import { createPhase0Auth, createPhase0Registry } from '../config/compose-memory.js';
-import { ensureTestCredentials } from '../test/credentials.js';
+import { installTestCredentials, testCredentials } from '../test/credentials.js';
 import { AuthError, type AuthPort } from './auth.js';
 import type { IdentityUser } from './identity-store.js';
 
@@ -24,7 +24,8 @@ async function makeAuth(options?: {
   secret: string;
   password: string;
 }> {
-  const creds = ensureTestCredentials();
+  installTestCredentials();
+  const creds = testCredentials();
   const secret = options?.jwtSecret ?? creds.jwtSecret;
   const password = creds.password;
   const users = options?.users ?? (await buildDemoUsers(password));
@@ -225,14 +226,14 @@ describe('AuthPort C3.5 session transitions', () => {
 
     const app = buildHttpApp({
       registry: createPhase0Registry(),
-      auth: await createPhase0Auth(ensureTestCredentials().jwtSecret),
+      auth: await createPhase0Auth(testCredentials().jwtSecret),
     });
     const login = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
       payload: {
         email: 'hospital@genki.local',
-        password: ensureTestCredentials().password,
+        password: testCredentials().password,
         institution_kind: 'hospital_general',
       },
     });
@@ -319,7 +320,6 @@ describe('AuthPort C3.5 session transitions', () => {
       code: 'invalid_token',
     } satisfies Partial<AuthError>);
 
-    // A second login is required to enter another institution.
     const pediatric = await auth.login({
       email: 'pediatrico@genki.local',
       password,
