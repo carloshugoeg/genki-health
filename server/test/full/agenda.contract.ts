@@ -3,7 +3,12 @@ import { describe, expect, it } from 'vitest';
 import type { CITA, CITAInput, Slot } from '@genki/shared/full/agenda';
 import { ClinicalError } from '../../src/domain/clinical-error.js';
 import type { FullContext, OperationContext } from '../../src/ports/full/context.js';
-import type { Op20Request, Op21Request } from '../../src/ports/full/agenda.js';
+import type {
+  Op20Request,
+  Op21Request,
+  Op22Request,
+  Op23Request,
+} from '../../src/ports/full/agenda.js';
 
 /** F1 FullHarness shape used by module contracts (toolchain harness not required). */
 export type FullHarness = {
@@ -34,6 +39,8 @@ type AgendaApplication = {
     actor: OperationContext,
   ) => Promise<Slot[]>;
   executeOp21: (context: FullContext, input: Op21Request, actor: OperationContext) => Promise<CITA>;
+  executeOp22: (context: FullContext, input: Op22Request, actor: OperationContext) => Promise<CITA>;
+  executeOp23: (context: FullContext, input: Op23Request, actor: OperationContext) => Promise<CITA>;
 };
 
 async function loadApplication(): Promise<AgendaApplication> {
@@ -81,6 +88,8 @@ export const FIXTURE = {
   slotStart: '2026-06-01T14:00:00.000Z',
   slotEnd: '2026-06-01T14:30:00.000Z',
   overlapStart: '2026-06-01T14:15:00.000Z',
+  rescheduleStart: '2026-06-01T15:00:00.000Z',
+  otherSlotStart: '2026-06-01T16:00:00.000Z',
 } as const;
 
 function op20Query(
@@ -113,6 +122,35 @@ function op21Body(overrides: Partial<CITAInput> & Record<string, unknown> = {}):
   };
 }
 
+function op22Input(
+  id: number,
+  overrides: Partial<Op22Request['body']> & Record<string, unknown> = {},
+): Op22Request {
+  return {
+    params: { id },
+    query: emptyQuery(),
+    body: {
+      fecha_hora: FIXTURE.rescheduleStart,
+      duracion_minutos: 30,
+      ...overrides,
+    } as Op22Request['body'],
+  };
+}
+
+function op23Input(
+  id: number,
+  overrides: Partial<Op23Request['body']> & Record<string, unknown> = {},
+): Op23Request {
+  return {
+    params: { id },
+    query: emptyQuery(),
+    body: {
+      motivo: 'Paciente solicitó cancelación',
+      ...overrides,
+    } as Op23Request['body'],
+  };
+}
+
 function actorWith(base: OperationContext, patch: Partial<OperationContext>): OperationContext {
   return { ...base, ...patch };
 }
@@ -129,6 +167,8 @@ export function moduleContract(
   describe(`agendaContract:${name}`, () => {
     const has20 = ops.includes(20);
     const has21 = ops.includes(21);
+    const has22 = ops.includes(22);
+    const has23 = ops.includes(23);
 
     if (has20) {
       it('op20_transition_1_persists', async () => {
@@ -358,6 +398,371 @@ export function moduleContract(
             op21Body({ id_paciente: patient.id_paciente }),
             harness.actor,
           ),
+          'internal_error',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        expect(await harness.counts()).toEqual(beforeCounts);
+        await harness.close();
+      });
+    }
+
+    if (has22) {
+      it('op22_transition_1_persists', async () => {
+        const { executeOp21, executeOp22 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-R22-1');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        expect(created.estado).toBe('programada');
+        const moved = await executeOp22(harness.context, op22Input(created.id_cita), harness.actor);
+        expect(moved.id_cita).toBe(created.id_cita);
+        expect(moved.fecha_hora).toBe(FIXTURE.rescheduleStart);
+        expect(moved.duracion_minutos).toBe(30);
+        expect(moved.estado).toBe('programada');
+        expect(moved.id_paciente).toBe(patient.id_paciente);
+        const snap = await harness.nativeSnapshot();
+        expect(snap.citas).toBe(
+          snapshotHash([
+            {
+              id_cita: moved.id_cita,
+              id_profesional: moved.id_profesional,
+              fecha_hora: moved.fecha_hora,
+              duracion_minutos: moved.duracion_minutos,
+              estado: moved.estado,
+            },
+          ]),
+        );
+        await harness.close();
+      });
+
+      it('op22_transition_2_persists', async () => {
+        const { executeOp22 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-R22-2');
+        const seeded = await harness.seedBusyCita({
+          id_paciente: patient.id_paciente,
+          id_profesional: FIXTURE.profesional,
+          fecha_hora: FIXTURE.slotStart,
+          duracion_minutos: 30,
+          estado: 'confirmada',
+        });
+        const moved = await executeOp22(harness.context, op22Input(seeded.id_cita), harness.actor);
+        expect(moved.id_cita).toBe(seeded.id_cita);
+        expect(moved.fecha_hora).toBe(FIXTURE.rescheduleStart);
+        expect(moved.estado).toBe('programada');
+        await harness.close();
+      });
+
+      it('op22_error_domain_unchanged', async () => {
+        const { executeOp21, executeOp22 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-R22-DOM');
+        const first = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        await executeOp21(
+          harness.context,
+          op21Body({
+            id_paciente: patient.id_paciente,
+            fecha_hora: FIXTURE.otherSlotStart,
+          }),
+          harness.actor,
+        );
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp22(
+            harness.context,
+            op22Input(first.id_cita, {
+              fecha_hora: FIXTURE.otherSlotStart,
+              duracion_minutos: 30,
+            }),
+            harness.actor,
+          ),
+          'conflict',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op22_error_schema_unchanged', async () => {
+        const { executeOp21, executeOp22 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-R22-SCH');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp22(
+            harness.context,
+            op22Input(created.id_cita, { mystery: true }),
+            harness.actor,
+          ),
+          'invalid_body',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op22_error_store_unchanged', async () => {
+        const { executeOp21, executeOp22 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-R22-ST');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        const before = await harness.nativeSnapshot();
+        harness.setStoreUnavailable();
+        await expectCode(
+          executeOp22(harness.context, op22Input(created.id_cita), harness.actor),
+          'store_unavailable',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op22_error_role_unchanged', async () => {
+        const { executeOp21, executeOp22 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-R22-ROLE');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        const before = await harness.nativeSnapshot();
+        const forbidden = actorWith(harness.actor, { roles: ['medico'] });
+        await expectCode(
+          executeOp22(harness.context, op22Input(created.id_cita), forbidden),
+          'forbidden',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op22_error_foreign_unchanged', async () => {
+        const { executeOp22 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp22(harness.context, op22Input(909090), harness.actor),
+          'not_found',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op22_midwrite_rolls_back', async () => {
+        const { executeOp21, executeOp22 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-R22-MID');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        const before = await harness.nativeSnapshot();
+        const beforeCounts = await harness.counts();
+        harness.failAfterWrite(1);
+        await expectCode(
+          executeOp22(harness.context, op22Input(created.id_cita), harness.actor),
+          'internal_error',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        expect(await harness.counts()).toEqual(beforeCounts);
+        await harness.close();
+      });
+    }
+
+    if (has23) {
+      it('op23_transition_1_persists', async () => {
+        const { executeOp21, executeOp23 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-C23-1');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        expect(created.estado).toBe('programada');
+        const cancelled = await executeOp23(
+          harness.context,
+          op23Input(created.id_cita),
+          harness.actor,
+        );
+        expect(cancelled.id_cita).toBe(created.id_cita);
+        expect(cancelled.estado).toBe('cancelada');
+        expect(cancelled.fecha_hora).toBe(created.fecha_hora);
+        expect(cancelled.duracion_minutos).toBe(created.duracion_minutos);
+        const afterCounts = await harness.counts();
+        expect(afterCounts.citas).toBe(1);
+        const snap = await harness.nativeSnapshot();
+        expect(snap.citas).toBe(
+          snapshotHash([
+            {
+              id_cita: cancelled.id_cita,
+              id_profesional: cancelled.id_profesional,
+              fecha_hora: cancelled.fecha_hora,
+              duracion_minutos: cancelled.duracion_minutos,
+              estado: 'cancelada',
+            },
+          ]),
+        );
+        await harness.close();
+      });
+
+      it('op23_transition_2_persists', async () => {
+        const { executeOp23 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-C23-2');
+        const seeded = await harness.seedBusyCita({
+          id_paciente: patient.id_paciente,
+          id_profesional: FIXTURE.profesional,
+          fecha_hora: FIXTURE.slotStart,
+          duracion_minutos: 30,
+          estado: 'confirmada',
+        });
+        const cancelled = await executeOp23(
+          harness.context,
+          op23Input(seeded.id_cita),
+          harness.actor,
+        );
+        expect(cancelled.id_cita).toBe(seeded.id_cita);
+        expect(cancelled.estado).toBe('cancelada');
+        await harness.close();
+      });
+
+      it('op23_error_domain_unchanged', async () => {
+        const { executeOp23 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-C23-DOM');
+        const seeded = await harness.seedBusyCita({
+          id_paciente: patient.id_paciente,
+          id_profesional: FIXTURE.profesional,
+          fecha_hora: FIXTURE.slotStart,
+          duracion_minutos: 30,
+          estado: 'cancelada',
+        });
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp23(harness.context, op23Input(seeded.id_cita), harness.actor),
+          'conflict',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op23_error_schema_unchanged', async () => {
+        const { executeOp21, executeOp23 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-C23-SCH');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp23(
+            harness.context,
+            op23Input(created.id_cita, { mystery: true }),
+            harness.actor,
+          ),
+          'invalid_body',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op23_error_store_unchanged', async () => {
+        const { executeOp21, executeOp23 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-C23-ST');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        const before = await harness.nativeSnapshot();
+        harness.setStoreUnavailable();
+        await expectCode(
+          executeOp23(harness.context, op23Input(created.id_cita), harness.actor),
+          'store_unavailable',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op23_error_role_unchanged', async () => {
+        const { executeOp21, executeOp23 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-C23-ROLE');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        const before = await harness.nativeSnapshot();
+        const forbidden = actorWith(harness.actor, { roles: ['medico'] });
+        await expectCode(
+          executeOp23(harness.context, op23Input(created.id_cita), forbidden),
+          'forbidden',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op23_error_foreign_unchanged', async () => {
+        const { executeOp23 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp23(harness.context, op23Input(909090), harness.actor),
+          'not_found',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op23_midwrite_rolls_back', async () => {
+        const { executeOp21, executeOp23 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-C23-MID');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        const before = await harness.nativeSnapshot();
+        const beforeCounts = await harness.counts();
+        harness.failAfterWrite(1);
+        await expectCode(
+          executeOp23(harness.context, op23Input(created.id_cita), harness.actor),
           'internal_error',
         );
         expect(await harness.nativeSnapshot()).toEqual(before);
