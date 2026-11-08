@@ -1,10 +1,12 @@
 # Now
 
-**No active agent claim.** E2-P2-06 is Done on `cursor/e2-p2-06-memory-consulta-13ef` (stacked on PR #22 + merged PR #19). Do not start the next ticket until an owner opens that claim.
+**Active claim:** E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices.
+Owner: Auto (Cursor) for Carlos / Hugo Escobar. Claimed 2026-11-08 08:11 America/Guatemala.
+Branch: `cursor/e2-p2-07-expose-http-da67` (stacked on `cursor/e2-p2-06-memory-consulta-13ef` / PR #23 head `31b79ccc`).
 
 ## Agent lane (dependency-ready)
 
-- **Next:** E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (depends on E2-P2-06 + E2-P2-01; ready when claimed).
+- **In progress:** E2-P2-07 (this claim).
 - E2-P2-09 — Extract storage-neutral JWT service with persistent-session port (depends on E2-P2-01; ready when claimed).
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
 
