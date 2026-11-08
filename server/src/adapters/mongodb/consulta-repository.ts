@@ -355,16 +355,12 @@ export class MongoConsultaRepository implements ConsultaRepositoryPort {
         }));
       }
 
-      // Stage 1: persist consulta + first diagnosis (and its treatments) so
-      // afterDiagnostico runs after an actual write inside the transaction.
-      const firstDx = diagnosticos[0];
-      if (!firstDx) {
+      // Single insert keeps C5.3 consultas find/insert-only (no UPDATE privilege).
+      // afterDiagnostico still runs after a real write so failNext rolls back the txn.
+      if (diagnosticos.length === 0) {
         throw new ClinicalError('invalid_bundle', 'Se requiere al menos un diagnóstico');
       }
-      const firstTreatments = tratamientos.filter(
-        (tx) => tx.id_diagnostico === firstDx.id_diagnostico,
-      );
-      if (firstTreatments.length === 0) {
+      if (tratamientos.length === 0) {
         throw new ClinicalError('invalid_bundle', 'Se requiere al menos un tratamiento');
       }
 
@@ -385,30 +381,15 @@ export class MongoConsultaRepository implements ConsultaRepositoryPort {
           exploracion_fisica: consulta.exploracion_fisica,
           plan: consulta.plan,
           estado: consulta.estado,
-          diagnosticos: [diagnosticoToBson(firstDx)],
-          tratamientos: firstTreatments.map(tratamientoToBson),
-          receta: null,
-          detalles: [],
+          diagnosticos: diagnosticos.map(diagnosticoToBson),
+          tratamientos: tratamientos.map(tratamientoToBson),
+          receta: receta ? recetaToBson(receta) : null,
+          detalles: detalles.map(detalleToBson),
         },
         opts,
       );
       this.afterWrite('afterConsulta');
-      this.afterWrite('afterDiagnostico');
-
-      // Stage 2: replace with the full bounded embedded bundle.
-      await this.db.collection<MongoStringIdDoc>('consultas').updateOne(
-        { _id },
-        {
-          $set: {
-            diagnosticos: diagnosticos.map(diagnosticoToBson),
-            tratamientos: tratamientos.map(tratamientoToBson),
-            receta: receta ? recetaToBson(receta) : null,
-            detalles: detalles.map(detalleToBson),
-          },
-        },
-        opts,
-      );
-      for (let i = 1; i < diagnosticos.length; i += 1) {
+      for (let i = 0; i < diagnosticos.length; i += 1) {
         this.afterWrite('afterDiagnostico');
       }
 

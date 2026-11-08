@@ -140,12 +140,18 @@ async function bootstrapMongo(): Promise<void> {
     console.log('bootstrap mongodb: skipped (MONGO_ADMIN_URI unset)');
     return;
   }
+  const appPassword = requireEnv('MONGO_APP_PASSWORD');
+  const reportPassword = requireEnv('MONGO_REPORT_PASSWORD');
   const { MongoClient } = await import('mongodb');
+  const { installMongoSchema } = await import('../server/src/adapters/mongodb/schema.ts');
+  const { installMongoSecurity } = await import('../server/src/adapters/mongodb/security.ts');
   const client = new MongoClient(adminUri);
   await client.connect();
   try {
     const db = client.db('genki_laboratorio');
     await db.command({ ping: 1 });
+    await installMongoSchema(db);
+    await installMongoSecurity(db, { appPassword, reportPassword });
   } finally {
     await client.close();
   }
