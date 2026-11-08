@@ -2,11 +2,13 @@ import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 import {
   asPacienteId,
   type AuthPrincipalDto,
+  type CloseConsultaRequest,
   type InstitutionKind,
   type LoginRequestDto,
   type RegisterPacienteRequest,
 } from '@genki/shared';
 import { archiveExpediente } from '../../application/archive-expediente.js';
+import { closeConsulta } from '../../application/close-consulta.js';
 import { getHistorial } from '../../application/get-historial.js';
 import { listPacientes } from '../../application/list-pacientes.js';
 import { registerPaciente } from '../../application/register-paciente.js';
@@ -19,7 +21,13 @@ import {
   notFoundEnvelope,
   toErrorDto,
 } from './errors.js';
-import { archiveSchema, paramsSchema, registerSchema, searchSchema } from './schemas.js';
+import {
+  archiveSchema,
+  closeSchema,
+  paramsSchema,
+  registerSchema,
+  searchSchema,
+} from './schemas.js';
 
 export interface HttpAppOptions {
   registry: InstitutionAdapterRegistry;
@@ -75,6 +83,53 @@ function toRegisterInput(data: ReturnType<typeof registerSchema.parse>): Registe
     ...(data.direccion !== undefined ? { direccion: data.direccion } : {}),
     ...(data.id_municipio !== undefined ? { id_municipio: data.id_municipio } : {}),
     ...(responsables !== undefined ? { responsables } : {}),
+  };
+}
+
+function toCloseInput(data: ReturnType<typeof closeSchema.parse>): CloseConsultaRequest {
+  return {
+    id_profesional: data.id_profesional,
+    fecha_hora_inicio: data.fecha_hora_inicio,
+    tipo: data.tipo,
+    motivo_consulta: data.motivo_consulta,
+    diagnosticos: data.diagnosticos.map((dx) => ({
+      descripcion: dx.descripcion,
+      tipo: dx.tipo,
+      es_principal: dx.es_principal,
+      ...(dx.codigo_cie10 !== undefined ? { codigo_cie10: dx.codigo_cie10 } : {}),
+    })),
+    tratamientos: data.tratamientos.map((tx) => ({
+      diagnostico_index: tx.diagnostico_index,
+      tipo: tx.tipo,
+      descripcion: tx.descripcion,
+      fecha_inicio: tx.fecha_inicio,
+      estado: tx.estado,
+      ...(tx.indicaciones !== undefined ? { indicaciones: tx.indicaciones } : {}),
+      ...(tx.fecha_fin_estimada !== undefined ? { fecha_fin_estimada: tx.fecha_fin_estimada } : {}),
+    })),
+    ...(data.enfermedad_actual !== undefined ? { enfermedad_actual: data.enfermedad_actual } : {}),
+    ...(data.exploracion_fisica !== undefined
+      ? { exploracion_fisica: data.exploracion_fisica }
+      : {}),
+    ...(data.plan !== undefined ? { plan: data.plan } : {}),
+    ...(data.receta !== undefined
+      ? {
+          receta: {
+            detalles: data.receta.detalles.map((d) => ({
+              id_medicamento: d.id_medicamento,
+              dosis: d.dosis,
+              via_administracion: d.via_administracion,
+              frecuencia_horas: d.frecuencia_horas,
+              duracion_dias: d.duracion_dias,
+              cantidad: d.cantidad,
+              indicaciones: d.indicaciones ?? null,
+            })),
+            ...(data.receta.observaciones !== undefined
+              ? { observaciones: data.receta.observaciones }
+              : {}),
+          },
+        }
+      : {}),
   };
 }
 
@@ -268,6 +323,40 @@ export function buildHttpApp(options: HttpAppOptions) {
         principal.id_institucion,
       );
       return getHistorial(adapters.pacientes, adapters.consultas, asPacienteId(parsed.data.id));
+    } catch (error) {
+      return sendMapped(reply, error);
+    }
+  });
+
+  app.post('/api/pacientes/:id/consultas', async (request, reply) => {
+    const principal = await requirePrincipal(request, reply);
+    if (!principal) {
+      return;
+    }
+    if (!hasAnyRole(principal, ['administrador', 'medico'])) {
+      const mapped = forbiddenError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    const params = paramsSchema.safeParse(request.params);
+    if (!params.success) {
+      const mapped = invalidQueryError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    const body = closeSchema.safeParse(request.body);
+    if (!body.success) {
+      const mapped = invalidBodyError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    try {
+      const adapters = options.registry.resolve(
+        principal.institution_kind,
+        principal.id_institucion,
+      );
+      const result = await closeConsulta(adapters, {
+        id_paciente: asPacienteId(params.data.id),
+        body: toCloseInput(body.data),
+      });
+      return reply.code(201).send(result);
     } catch (error) {
       return sendMapped(reply, error);
     }

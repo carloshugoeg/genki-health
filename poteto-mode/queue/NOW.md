@@ -1,14 +1,10 @@
 # Now
 
-**Active claim:** E2-P2-08 — Wire atomic consultation use case and HTTP save.
-Owner: Auto (Cursor) for Carlos / Hugo Escobar. Claimed 2026-11-08 14:15 America/Guatemala.
-Branch: `cursor/e2-p2-08-wire-atomic-consultation-230f` (base `origin/main` with PRs #24/#25/#26 merged).
+**No active agent claim.** E2-P2-08 is Done on `cursor/e2-p2-08-wire-atomic-consultation-230f`. E2-P2-07 is Done on `main` (PR #24). E2-P2-09 is Done on `main` (PR #20). E2-P3A-01 is Done on `main` (PR #25). Do not start the next ticket until an owner opens that claim.
 
 ## Agent lane (dependency-ready)
 
-- **In progress:** E2-P2-08 (this claim).
-- **Next:** E2-P2-08 — Wire atomic consultation use case and HTTP save (active claim; pin retained until done).
-- E2-P2-10 — Close the core memory gate with coverage and API isolation tests (depends on E2-P2-09, E2-P2-08; blocked until E2-P2-08).
+- **Next:** E2-P2-10 — Close the core memory gate with coverage and API isolation tests (depends on E2-P2-09, E2-P2-08; ready when claimed).
 - E2-P3A-02 — Create PostgreSQL migrations, type mapping and scoped transaction wrapper (depends on E2-P3A-01 + E2-P1-02 + E2-P2-06; ready when claimed).
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
 
