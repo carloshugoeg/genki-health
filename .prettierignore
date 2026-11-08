@@ -15,3 +15,5 @@ README.md
 *.mmd
 package-lock.json
 .audit
+# Frozen red-test bytes for E2-P3A-01; Prettier must not rewrite after test: commit
+scripts/test/infra.test.mjs
