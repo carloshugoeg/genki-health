@@ -123,12 +123,33 @@ async function bootstrapMysql(): Promise<void> {
     console.log('bootstrap mysql: skipped (MYSQL_ADMIN_URL unset)');
     return;
   }
+  const database = process.env.MYSQL_DATABASE ?? 'genki_pediatrico';
+  const appPassword = requireEnv('APP_DB_PASSWORD');
+  const reportPassword = requireEnv('REPORT_DB_PASSWORD');
   const mysql = await import('mysql2/promise');
-  const connection = await mysql.createConnection(adminUrl);
+  const { installMysqlSecurity } = await import('../server/src/adapters/mysql/security.ts');
+  const { readFileSync, readdirSync, existsSync } = await import('node:fs');
+  const connection = await mysql.createConnection({ uri: adminUrl, multipleStatements: true });
   try {
     for (const role of ROLE_ALLOWLIST.mysql) {
       await connection.query(`CREATE ROLE IF NOT EXISTS \`${role}\``);
     }
+    await connection.query(
+      `CREATE DATABASE IF NOT EXISTS \`${database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_ci`,
+    );
+    await connection.changeUser({ database });
+    const migrationsDir = join(ROOT, 'server/src/adapters/mysql/migrations');
+    if (existsSync(migrationsDir)) {
+      const [tables] = await connection.query(`SHOW TABLES LIKE 'paciente'`);
+      if (!Array.isArray(tables) || tables.length === 0) {
+        for (const file of readdirSync(migrationsDir)
+          .filter((name) => name.endsWith('.sql'))
+          .sort()) {
+          await connection.query(readFileSync(join(migrationsDir, file), 'utf8'));
+        }
+      }
+    }
+    await installMysqlSecurity(connection, { database, appPassword, reportPassword });
   } finally {
     await connection.end();
   }

@@ -150,7 +150,7 @@ export class MysqlConsultaRepository implements ConsultaRepositoryPort {
            FROM expediente e
            INNER JOIN paciente p ON p.id_paciente = e.id_paciente
           WHERE p.id_institucion = ? AND e.id_expediente = ?
-          FOR UPDATE`,
+          FOR UPDATE OF e`,
         [this.id_institucion, bundle.consulta.id_expediente],
       );
       const expediente = expedienteRows[0];

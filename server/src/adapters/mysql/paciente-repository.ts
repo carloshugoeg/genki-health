@@ -397,7 +397,7 @@ export class MysqlPacienteRepository implements PacienteRepositoryPort {
            FROM expediente e
            INNER JOIN paciente p ON p.id_paciente = e.id_paciente
           WHERE p.id_institucion = ? AND e.id_expediente = ?
-          FOR UPDATE`,
+          FOR UPDATE OF e`,
         [this.id_institucion, input.id_expediente],
       );
       const existing = rows[0];
