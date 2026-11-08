@@ -42,12 +42,23 @@ export interface ValidateConsultaInput {
   receta?: { observaciones?: string | null; detalles: ReadonlyArray<ValidateDetalleInput> } | null;
 }
 
+/** Inclusive UTF-8 byte ceiling for JSON.stringify(input). Ticket '<' clarified to '≤'. */
+const MAX_BUNDLE_UTF8_BYTES = 256 * 1024;
+
 function invalidBundle(message: string): never {
   throw new ClinicalError('invalid_bundle', message);
 }
 
+function utf8JsonSize(value: unknown): number {
+  return Buffer.byteLength(JSON.stringify(value), 'utf8');
+}
+
 /** Throws ClinicalError invalid_bundle when C1.2 structural bundle rules fail. */
 export function validateConsulta(input: ValidateConsultaInput, nowIso: string): void {
+  if (utf8JsonSize(input) > MAX_BUNDLE_UTF8_BYTES) {
+    invalidBundle('Consultation bundle exceeds 256 KiB UTF-8 JSON');
+  }
+
   const { diagnosticos, tratamientos, fecha_hora_inicio, receta } = input;
 
   if (diagnosticos.length < 1) {
