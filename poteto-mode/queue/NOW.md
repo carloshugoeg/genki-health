@@ -1,11 +1,11 @@
 # Now
 
-**No active agent claim.** E2-P2-01 is Done on `cursor/e2-p2-01-mvp-dtos-7ad4` (this PR). Do not start the next ticket until an owner opens that claim.
+**Active parallel claim:** E2-P2-05 — Implement pure consultation bundle invariants (in progress on `cursor/e2-p2-05-consulta-invariants-3351`, stacked on PR #17 / `cursor/e2-p2-01-mvp-dtos-7ad4`). Pure-domain lane only. Do not touch JWT/session files (parallel E2-P2-09).
 
 ## Agent lane (dependency-ready)
 
 - **Next:** E2-P2-02 — Freeze one adapter contract suite including native rollback failures (depends on E2-P2-01; ready when claimed).
-- E2-P2-05 — Implement pure consultation bundle invariants (depends on E2-P2-01; ready when claimed).
+- E2-P2-05 — Implement pure consultation bundle invariants (claimed; in progress).
 - E2-P2-09 — Extract storage-neutral JWT service with persistent-session port (depends on E2-P2-01; ready when claimed).
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
 
