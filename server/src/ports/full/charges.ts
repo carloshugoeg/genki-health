@@ -6,6 +6,7 @@ import type {
   CARGO,
   CargoInput,
   CargoCaja,
+  DisposicionInput,
   Page,
   PageQuery,
 } from '@genki/shared/full/charges';
@@ -27,7 +28,7 @@ export type Op69Response = Page<CargoCaja>;
 export type Op70Request = {
   params: { id: number };
   query: Record<string, never>;
-  body: { estado: 'anulado' | 'cortesia'; motivo: string };
+  body: DisposicionInput;
 };
 export type Op70Response = CargoCaja;
 

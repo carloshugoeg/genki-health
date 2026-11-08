@@ -54,7 +54,7 @@ async function buildHarness(institutionId: number, sequences: MemoryIdPort): Pro
   const adapters = createTestMemoryAdapterSet(defaultKind(), institutionId, { ids: sequences });
   seedCatalogs(adapters.memoryState, institutionId);
 
-  const store = new MemoryChargesStore(adapters.memoryState);
+  const store = new MemoryChargesStore(adapters.memoryState, { homeInstitutionId: institutionId });
 
   const contextHolder: { current: FullContext | null } = { current: null };
   const charges = createChargesPort(() => {

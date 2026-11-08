@@ -1,4 +1,4 @@
-/** Engine-neutral orchestration for charges OP-68/69. */
+/** Engine-neutral orchestration for charges OP-68/71. */
 
 import { createHash } from 'node:crypto';
 import type {
@@ -11,11 +11,16 @@ import type {
 } from '@genki/shared/full/charges';
 import { ClinicalError } from '../../domain/clinical-error.js';
 import {
+  applyDisposicion,
   assertCargoInputSchema,
+  assertDisposicionBodySchema,
+  assertDisposicionRole,
   assertGenerateCargoRole,
   assertListPendingRole,
   assertPageQuerySchema,
+  assertTarifarioRole,
   buildCargoFromTariff,
+  projectTariffPage,
   toCargoCaja,
 } from '../../domain/full/charges.js';
 import type {
@@ -33,11 +38,20 @@ import type { FullContext, OperationContext } from '../../ports/full/context.js'
 
 export interface ChargesPersistence {
   isUnavailable(): boolean;
+  hasInstitution(idInstitucion: number): boolean;
   findServicio(idInstitucion: number, codigo: string): SERVICIO_FACTURABLE | null;
+  listServicios(idInstitucion: number): SERVICIO_FACTURABLE[];
   findComando(idInstitucion: number, clave: string): COMANDO_IDEMPOTENTE | null;
+  findCargo(idInstitucion: number, idCargo: number): CARGO | null;
   findCargoByClaveEvento(idInstitucion: number, claveEvento: string): CARGO | null;
   insertCargo(idInstitucion: number, claveEvento: string, cargo: CARGO): void;
   insertComando(comando: COMANDO_IDEMPOTENTE): void;
+  updateCargoDisposicion(
+    idInstitucion: number,
+    idCargo: number,
+    estado: string,
+    motivo: string,
+  ): CARGO;
   listCargosByExpediente(idExpediente: number): CARGO[];
 }
 
@@ -152,6 +166,66 @@ export async function runOp69(
   return page;
 }
 
+export async function runOp70(
+  context: FullContext,
+  input: Op70Request,
+  actor: OperationContext,
+  store: ChargesPersistence,
+): Promise<Op70Response> {
+  if (store.isUnavailable()) {
+    throw new ClinicalError('store_unavailable', 'Almacén no disponible');
+  }
+  const body = assertDisposicionBodySchema(input.body);
+  assertDisposicionRole(actor.roles, actor.permissions);
+  if (!Number.isInteger(input.params.id) || input.params.id < 1) {
+    throw new ClinicalError('not_found', 'Cargo no encontrado');
+  }
+
+  return context.unitOfWork.runInTransaction(async () => {
+    const idInstitucion = Number(actor.id_institucion);
+    const existing = store.findCargo(idInstitucion, input.params.id);
+    if (!existing) {
+      throw new ClinicalError('not_found', 'Cargo no encontrado');
+    }
+    const next = applyDisposicion(existing, body.estado);
+    const saved = store.updateCargoDisposicion(
+      idInstitucion,
+      input.params.id,
+      next.estado,
+      body.motivo,
+    );
+    return toCargoCaja(saved);
+  });
+}
+
+export async function runOp71(
+  _context: FullContext,
+  input: Op71Request,
+  actor: OperationContext,
+  store: ChargesPersistence,
+): Promise<Op71Response> {
+  if (store.isUnavailable()) {
+    throw new ClinicalError('store_unavailable', 'Almacén no disponible');
+  }
+  const query = assertPageQuerySchema(input.query);
+  assertTarifarioRole(actor.roles);
+  const idInstitucion = Number(actor.id_institucion);
+  if (!store.hasInstitution(idInstitucion)) {
+    throw new ClinicalError('not_found', 'Institución no encontrada');
+  }
+  const projected = projectTariffPage(
+    store.listServicios(idInstitucion),
+    query.page,
+    query.page_size,
+  );
+  return {
+    items: projected.items,
+    page: query.page,
+    page_size: query.page_size,
+    total: projected.total,
+  };
+}
+
 export async function executeOp68(
   context: FullContext,
   input: Op68Request,
@@ -168,6 +242,22 @@ export async function executeOp69(
   return context.modules.charges.op69(input, actor);
 }
 
+export async function executeOp70(
+  context: FullContext,
+  input: Op70Request,
+  actor: OperationContext,
+): Promise<Op70Response> {
+  return context.modules.charges.op70(input, actor);
+}
+
+export async function executeOp71(
+  context: FullContext,
+  input: Op71Request,
+  actor: OperationContext,
+): Promise<Op71Response> {
+  return context.modules.charges.op71(input, actor);
+}
+
 export function createChargesPort(
   getContext: () => FullContext,
   store: ChargesPersistence,
@@ -175,11 +265,7 @@ export function createChargesPort(
   return {
     op68: (input, actor) => runOp68(getContext(), input, actor, store),
     op69: (input, actor) => runOp69(getContext(), input, actor, store),
-    op70: async (_input: Op70Request, _actor: OperationContext): Promise<Op70Response> => {
-      throw new ClinicalError('misconfigured', 'OP-70 no implementado en FS-23-C01');
-    },
-    op71: async (_input: Op71Request, _actor: OperationContext): Promise<Op71Response> => {
-      throw new ClinicalError('misconfigured', 'OP-71 no implementado en FS-23-C01');
-    },
+    op70: (input, actor) => runOp70(getContext(), input, actor, store),
+    op71: (input, actor) => runOp71(getContext(), input, actor, store),
   };
 }

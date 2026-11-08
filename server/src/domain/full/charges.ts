@@ -1,6 +1,12 @@
-/** Pure domain rules for module `charges` (OP-68/69). No drivers/config. */
+/** Pure domain rules for module `charges` (OP-68/71). No drivers/config. */
 
-import type { CARGO, CargoCaja, CargoInput, SERVICIO_FACTURABLE } from '@genki/shared/full/charges';
+import type {
+  CARGO,
+  CargoCaja,
+  CargoInput,
+  DisposicionInput,
+  SERVICIO_FACTURABLE,
+} from '@genki/shared/full/charges';
 import { ClinicalError } from '../clinical-error.js';
 
 export const CARGO_ORIGENES = [
@@ -206,4 +212,83 @@ export function toCargoCaja(cargo: CARGO): CargoCaja {
     subtotal: cargo.subtotal,
     estado: cargo.estado,
   };
+}
+
+const DISPOSICION_KEYS = new Set(['estado', 'motivo']);
+export const DISPOSICION_ESTADOS = ['anulado', 'cortesia'] as const;
+export type DisposicionEstado = (typeof DISPOSICION_ESTADOS)[number];
+
+export function assertDisposicionBodySchema(body: unknown): DisposicionInput {
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    throw new ClinicalError('invalid_body', 'Solicitud inválida');
+  }
+  const record = body as Record<string, unknown>;
+  for (const key of Object.keys(record)) {
+    if (!DISPOSICION_KEYS.has(key)) {
+      throw new ClinicalError('invalid_body', 'Solicitud inválida');
+    }
+  }
+  if (
+    typeof record.estado !== 'string' ||
+    !(DISPOSICION_ESTADOS as readonly string[]).includes(record.estado)
+  ) {
+    throw new ClinicalError('invalid_body', 'estado inválido');
+  }
+  if (!isNonEmptyTrimmed(record.motivo, 300)) {
+    throw new ClinicalError('invalid_body', 'motivo inválido');
+  }
+  return {
+    estado: record.estado as DisposicionEstado,
+    motivo: record.motivo,
+  };
+}
+
+export function assertDisposicionRole(
+  roles: readonly string[],
+  permissions: readonly string[],
+): void {
+  if (!roles.includes('caja') || !permissions.includes('cargo.autorizar')) {
+    throw new ClinicalError('forbidden', 'Se requiere caja con cargo.autorizar');
+  }
+}
+
+export function assertDisposicionAllowed(cargo: CARGO, target: DisposicionEstado): void {
+  if (cargo.estado === 'facturado') {
+    throw new ClinicalError('conflict', 'Cargo facturado no admite disposición');
+  }
+  if (cargo.estado !== 'pendiente') {
+    throw new ClinicalError('conflict', 'Solo cargos pendientes admiten disposición');
+  }
+  if (!(DISPOSICION_ESTADOS as readonly string[]).includes(target)) {
+    throw new ClinicalError('invalid_body', 'estado inválido');
+  }
+}
+
+export function applyDisposicion(cargo: CARGO, target: DisposicionEstado): CARGO {
+  assertDisposicionAllowed(cargo, target);
+  return { ...cargo, estado: target };
+}
+
+export function assertTarifarioRole(roles: readonly string[]): void {
+  if (!roles.some((r) => r === 'caja' || r === 'recepcion')) {
+    throw new ClinicalError('forbidden', 'Rol no autorizado para tarifario');
+  }
+}
+
+export function isPublicTariffService(servicio: SERVICIO_FACTURABLE): boolean {
+  return servicio.vigente === true && servicio.tipo !== 'honorario';
+}
+
+export function projectTariffPage(
+  services: readonly SERVICIO_FACTURABLE[],
+  page: number,
+  page_size: number,
+): { items: SERVICIO_FACTURABLE[]; total: number } {
+  const items = services
+    .filter(isPublicTariffService)
+    .slice()
+    .sort((a, b) => a.codigo_servicio.localeCompare(b.codigo_servicio));
+  const total = items.length;
+  const start = (page - 1) * page_size;
+  return { items: items.slice(start, start + page_size), total };
 }

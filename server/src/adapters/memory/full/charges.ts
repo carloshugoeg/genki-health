@@ -1,4 +1,4 @@
-/** Memory adapter for charges extension namespace (OP-68/69). */
+/** Memory adapter for charges extension namespace (OP-68/71). */
 
 import { createHash } from 'node:crypto';
 import type { CARGO, COMANDO_IDEMPOTENTE, SERVICIO_FACTURABLE } from '@genki/shared/full/charges';
@@ -21,6 +21,7 @@ const TABLE_CLAVE = 'cargo_clave_evento';
 export type CargoStored = CARGO & {
   clave_evento: string;
   id_institucion: number;
+  motivo_disposicion?: string | null;
 };
 
 function stableStringify(value: unknown): string {
@@ -41,6 +42,7 @@ export function hashChargesSnapshot(rows: unknown[]): string {
 
 export interface MemoryChargesOptions {
   afterWrite?: () => void;
+  homeInstitutionId?: number;
 }
 
 export class MemoryChargesStore implements ChargesPersistence {
@@ -52,6 +54,10 @@ export class MemoryChargesStore implements ChargesPersistence {
     private readonly state: MemoryInstitutionState,
     private readonly options: MemoryChargesOptions = {},
   ) {}
+
+  hasInstitution(idInstitucion: number): boolean {
+    return this.options.homeInstitutionId === idInstitucion;
+  }
 
   setUnavailable(value: boolean): void {
     this.unavailable = value;
@@ -96,6 +102,19 @@ export class MemoryChargesStore implements ChargesPersistence {
     return null;
   }
 
+  listServicios(idInstitucion: number): SERVICIO_FACTURABLE[] {
+    const rows = this.ns().get(TABLE_SERVICIOS);
+    if (!rows) return [];
+    const out: SERVICIO_FACTURABLE[] = [];
+    for (const row of rows.values()) {
+      const s = row as SERVICIO_FACTURABLE;
+      if (s.id_institucion === idInstitucion) {
+        out.push(structuredClone(s));
+      }
+    }
+    return out;
+  }
+
   seedServicio(servicio: SERVICIO_FACTURABLE): void {
     const key = `${servicio.id_institucion}:${servicio.codigo_servicio}`;
     putExtensionRow(this.ns(), TABLE_SERVICIOS, key, servicio);
@@ -105,6 +124,14 @@ export class MemoryChargesStore implements ChargesPersistence {
     const rows = this.ns().get(TABLE_COMANDOS);
     const row = rows?.get(`${idInstitucion}:${clave}`);
     return row ? structuredClone(row as COMANDO_IDEMPOTENTE) : null;
+  }
+
+  findCargo(idInstitucion: number, idCargo: number): CargoStored | null {
+    const cargo = this.ns().get(TABLE_CARGOS)?.get(idCargo);
+    if (!cargo) return null;
+    const stored = cargo as CargoStored;
+    if (stored.id_institucion !== idInstitucion) return null;
+    return structuredClone(stored);
   }
 
   findCargoByClaveEvento(idInstitucion: number, claveEvento: string): CargoStored | null {
@@ -120,6 +147,7 @@ export class MemoryChargesStore implements ChargesPersistence {
       ...cargo,
       clave_evento: claveEvento,
       id_institucion: idInstitucion,
+      motivo_disposicion: null,
     };
     putExtensionRow(this.ns(), TABLE_CARGOS, cargo.id_cargo, stored);
     this.noteWrite();
@@ -135,6 +163,35 @@ export class MemoryChargesStore implements ChargesPersistence {
       comando,
     );
     this.noteWrite();
+  }
+
+  updateCargoDisposicion(
+    idInstitucion: number,
+    idCargo: number,
+    estado: string,
+    motivo: string,
+  ): CARGO {
+    const existing = this.findCargo(idInstitucion, idCargo);
+    if (!existing) {
+      throw new ClinicalError('not_found', 'Cargo no encontrado');
+    }
+    const updated: CargoStored = {
+      ...existing,
+      estado,
+      motivo_disposicion: motivo,
+    };
+    putExtensionRow(this.ns(), TABLE_CARGOS, idCargo, updated);
+    this.noteWrite();
+    return structuredClone(updated);
+  }
+
+  setCargoEstado(id_cargo: number, estado: string): void {
+    const cargo = this.ns().get(TABLE_CARGOS)?.get(id_cargo);
+    if (!cargo) {
+      throw new ClinicalError('not_found', 'Cargo no encontrado');
+    }
+    const stored = cargo as CargoStored;
+    putExtensionRow(this.ns(), TABLE_CARGOS, id_cargo, { ...stored, estado });
   }
 
   listCargosByExpediente(idExpediente: number): CARGO[] {

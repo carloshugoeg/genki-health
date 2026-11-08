@@ -16,6 +16,10 @@ export type CargoInput = {
   cantidad: string;
   clave_evento: string;
 };
+export type DisposicionInput = {
+  estado: 'anulado' | 'cortesia';
+  motivo: string;
+};
 export type CargoCaja = {
   id_cargo: number;
   descripcion: string;
