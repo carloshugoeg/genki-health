@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash, randomBytes } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
@@ -9,17 +10,42 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const selfRel = relative(root, fileURLToPath(import.meta.url)).replaceAll('\\', '/');
 
 const FORBIDDEN_FINGERPRINTS = [
-  'GenkiDev1',
-  'test-secret-at-least-16',
-  'genki-dev-jwt-secret-change-me',
-  'genki_dev_only',
+  'f284481bd69b80e27a7d660f7a25727712adbe2e6a9301603c91ff41ebc205b2',
+  'd71cc132ca6e90deabcb50e2cc52f47fb8ed4349146c78789d7e0bfb57717632',
+  '1abe58a23a17a5d8f382ae69063ff945190659228fec6972775e7d7ae3ed4695',
+  '4970b80ca41e8781b9c041c0cf031833c851c9ad2bf55db9698dc95a3f925683',
 ];
+
+const FORBIDDEN_FINGERPRINT_SET = new Set(FORBIDDEN_FINGERPRINTS);
 
 const ENV_SECRET_KEYS =
   /^(?:JWT_SECRET|SEED_PASSWORD|POSTGRES_PASSWORD|MYSQL_ROOT_PASSWORD|MYSQL_PASSWORD|MONGO_ROOT_PASSWORD|MONGO_APP_PASSWORD|MONGO_REPORT_PASSWORD|APP_DB_PASSWORD|IDENTITY_DB_PASSWORD|REPORT_DB_PASSWORD)=(.*)$/gm;
 
 function read(rel) {
   return readFileSync(join(root, rel), 'utf8');
+}
+
+function fingerprint(value) {
+  return createHash('sha256').update(value, 'utf8').digest('hex');
+}
+
+function credentialCandidates(text) {
+  const out = new Set();
+  for (const match of text.matchAll(/[A-Za-z0-9_./+-]+/g)) {
+    if (match[0].length >= 8) out.add(match[0]);
+  }
+  return out;
+}
+
+function findRetiredFingerprintHits(text) {
+  const hits = [];
+  for (const candidate of credentialCandidates(text)) {
+    const fp = fingerprint(candidate);
+    if (FORBIDDEN_FINGERPRINT_SET.has(fp)) {
+      hits.push(fp);
+    }
+  }
+  return hits;
 }
 
 function trackedFiles() {
@@ -43,7 +69,11 @@ function trackedFiles() {
 }
 
 test('retired_credential_needles_are_sha256_fingerprints', () => {
-  assert.equal(FORBIDDEN_FINGERPRINTS.length, 4, 'must retain coverage for all 4 retired credentials');
+  assert.equal(
+    FORBIDDEN_FINGERPRINTS.length,
+    4,
+    'must retain coverage for all 4 retired credentials',
+  );
   for (const fp of FORBIDDEN_FINGERPRINTS) {
     assert.match(
       fp,
@@ -56,7 +86,11 @@ test('retired_credential_needles_are_sha256_fingerprints', () => {
 test('schema_sample_password_uses_node_crypto', () => {
   const src = read('server/src/adapters/http/schemas.test.ts');
   assert.match(src, /from ['"]node:crypto['"]/, 'schemas.test.ts must import node:crypto');
-  assert.match(src, /randomBytes/, 'schemas.test.ts must generate sample password with randomBytes');
+  assert.match(
+    src,
+    /randomBytes/,
+    'schemas.test.ts must generate sample password with randomBytes',
+  );
   assert.doesNotMatch(
     src,
     /sampleLoginPassword\s*=\s*'[^']*'/,
@@ -64,14 +98,37 @@ test('schema_sample_password_uses_node_crypto', () => {
   );
 });
 
+test('fingerprint_matcher_detects_all_four_retired_credentials', () => {
+  const synthetic = `Aa1${randomBytes(12).toString('hex')}`;
+  const syntheticFp = fingerprint(synthetic);
+  assert.equal(
+    findRetiredFingerprintHits(`password=${synthetic}\n`).length,
+    0,
+    'unrelated runtime secret must not match retired fingerprints',
+  );
+
+  const planted = execFileSync('git', ['show', '24e40b9:server/src/ports/auth.test.ts'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  const envPlanted = execFileSync('git', ['show', '24e40b9:.env.example'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  const hits = new Set(findRetiredFingerprintHits(`${planted}\n${envPlanted}`));
+  for (const fp of FORBIDDEN_FINGERPRINTS) {
+    assert.ok(hits.has(fp), `retired fingerprint ${fp} must still be detected`);
+  }
+  assert.equal(hits.size, 4, 'all 4 retired credentials must be detected');
+  assert.ok(!hits.has(syntheticFp), 'synthetic runtime value must stay out of retired hits');
+});
+
 test('no_tracked_credential_literals', () => {
   const hits = [];
   for (const rel of trackedFiles()) {
     const text = read(rel);
-    for (const needle of FORBIDDEN_FINGERPRINTS) {
-      if (text.includes(needle)) {
-        hits.push(`${rel}: forbidden substring ${needle}`);
-      }
+    for (const fp of findRetiredFingerprintHits(text)) {
+      hits.push(`${rel}: forbidden credential fingerprint ${fp}`);
     }
     if (rel === '.env.example') {
       for (const match of text.matchAll(ENV_SECRET_KEYS)) {
