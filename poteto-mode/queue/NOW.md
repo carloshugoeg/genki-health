@@ -1,11 +1,11 @@
 # Now
 
-**No active agent claim.** E2-P4A-02 is Done on `cursor/e2-p4a-02-mongo-patient-beb5` (stacked on `cursor/e2-p4a-01-mongo-schema-bcc8`). Do not start the next ticket until an owner opens that claim.
+**Active claim:** E2-P4A-03 — Implement Mongo bounded embedded consultations and full contract runner. Claimed 2026-11-08 ~13:45 America/Guatemala by Auto (Cursor) for Carlos / Hugo Escobar on `cursor/e2-p4a-03-mongo-consulta-26d7` (base `cursor/e2-p4a-02-mongo-patient-beb5`).
 
 ## Agent lane (dependency-ready)
 
-- **Next:** E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (depends on E2-P2-06 + E2-P2-01; ready when claimed).
-- E2-P4A-03 — Mongo bounded embedded consultations and full contract runner (depends on E2-P4A-02; ready when claimed).
+- **In progress:** E2-P4A-03 (this claim).
+- E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (depends on E2-P2-06 + E2-P2-01; ready when claimed).
 - E2-P2-09 — Extract storage-neutral JWT service with persistent-session port (depends on E2-P2-01; ready when claimed).
 - E2-P3A-02 — Create PostgreSQL migrations, type mapping and scoped transaction wrapper (depends on E2-P3A-01 + E2-P1-02 + E2-P2-06; ready when claimed).
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
