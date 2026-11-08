@@ -1,0 +1,22 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "records",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "estado", "order": "ASCENDING" },
+        { "fieldPath": "id_paciente", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "consultations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "id_expediente", "order": "ASCENDING" },
+        { "fieldPath": "fecha_hora_inicio", "order": "DESCENDING" },
+        { "fieldPath": "id_consulta", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
