@@ -1,6 +1,6 @@
 import { ClinicalError } from './clinical-error.js';
 
-/** Domain-local structural diagnosis input. No shared runtime import. */
+/** Domain-local. Mirrors CloseConsultaRequest shape without importing @genki/shared. */
 export interface ValidateDiagnosticoInput {
   codigo_cie10?: string | null;
   descripcion: string;
@@ -8,7 +8,6 @@ export interface ValidateDiagnosticoInput {
   es_principal: boolean;
 }
 
-/** Domain-local structural treatment input. */
 export interface ValidateTratamientoInput {
   diagnostico_index: number;
   tipo: 'farmacologico' | 'procedimiento' | 'terapia' | 'reposo' | 'dieta';
@@ -19,7 +18,6 @@ export interface ValidateTratamientoInput {
   estado: 'activo';
 }
 
-/** Domain-local structural prescription detail input. */
 export interface ValidateDetalleInput {
   id_medicamento: number;
   dosis?: string;
@@ -30,10 +28,7 @@ export interface ValidateDetalleInput {
   indicaciones?: string | null;
 }
 
-/**
- * Primitive structural close-consultation input for pure invariants.
- * Catalog presence and active medication checks are not performed here.
- */
+/** Catalog existence/active checks stay out; those become reference_not_found later. */
 export interface ValidateConsultaInput {
   id_profesional?: number;
   fecha_hora_inicio: string;
@@ -51,10 +46,7 @@ function invalidBundle(message: string): never {
   throw new ClinicalError('invalid_bundle', message);
 }
 
-/**
- * Enforce C1.2 diagnosis/treatment/recipe structural invariants.
- * Throws ClinicalError invalid_bundle on failure; returns void on success.
- */
+/** Throws ClinicalError invalid_bundle when C1.2 structural bundle rules fail. */
 export function validateConsulta(input: ValidateConsultaInput, nowIso: string): void {
   const { diagnosticos, tratamientos, fecha_hora_inicio, receta } = input;
 
