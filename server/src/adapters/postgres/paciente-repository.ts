@@ -13,7 +13,7 @@ import type {
   Sexo,
 } from '@genki/shared';
 import { asExpedienteId, asInstitutionId, asPacienteId } from '@genki/shared';
-import { DatabaseError } from 'pg';
+import pg from 'pg';
 import { ClinicalError } from '../../domain/clinical-error.js';
 import { archivedEstado } from '../../domain/expediente-estado.js';
 import type {
@@ -142,7 +142,7 @@ function escapeLikeLiteral(value: string): string {
 
 function isDuplicateDocumentError(error: unknown): boolean {
   return (
-    error instanceof DatabaseError &&
+    error instanceof pg.DatabaseError &&
     error.code === '23505' &&
     error.constraint === DOCUMENT_CONSTRAINT
   );
