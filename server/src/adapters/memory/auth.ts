@@ -1,36 +1,13 @@
-import { randomUUID } from 'node:crypto';
 import * as argon2 from 'argon2';
-import { SignJWT, jwtVerify } from 'jose';
-import {
-  ACCESS_TOKEN_TTL_SECONDS,
-  ACCESS_TOKEN_TYP,
-  REFRESH_TOKEN_TTL_SECONDS,
-  REFRESH_TOKEN_TYP,
-  asInstitutionId,
-  asUsuarioId,
-  engineForKind,
-  validatePasswordPolicy,
-  type AuthPrincipalDto,
-  type AuthTokensDto,
-  type InstitutionKind,
-  type LoginRequestDto,
-} from '@genki/shared';
-import { AuthError, type AuthPort } from '../../ports/auth.js';
+import { validatePasswordPolicy, type InstitutionKind } from '@genki/shared';
+import type {
+  IdentityStorePort,
+  IdentityUser,
+  RefreshSession,
+} from '../../ports/identity-store.js';
 
-interface StoredUser {
-  id_usuario: number;
-  email: string;
-  hash_contrasena: string;
-  id_institucion: number;
-  institution_kind: InstitutionKind;
-  roles: string[];
-  estado: 'activo' | 'bloqueado' | 'inactivo';
-}
-
-export interface MemoryAuthOptions {
-  jwtSecret: string;
-  /** Optional pre-hashed demo users; if omitted, demo users are built on construct. */
-  users?: StoredUser[];
+export interface MemoryIdentityStoreOptions {
+  users?: IdentityUser[];
 }
 
 const DEMO_PASSWORD = 'GenkiDev1';
@@ -68,7 +45,7 @@ export const DEMO_AUTH_USERS: ReadonlyArray<{
   },
 ];
 
-export async function buildDemoUsers(): Promise<StoredUser[]> {
+export async function buildDemoUsers(): Promise<IdentityUser[]> {
   const policy = validatePasswordPolicy(DEMO_PASSWORD);
   if (policy) {
     throw new Error(`Demo password violates policy: ${policy}`);
@@ -85,154 +62,99 @@ export async function buildDemoUsers(): Promise<StoredUser[]> {
   }));
 }
 
-export class MemoryAuthAdapter implements AuthPort {
-  private readonly secret: Uint8Array;
-  private readonly users: StoredUser[];
-  private readonly refreshJtis = new Set<string>();
+interface StoredRefresh extends RefreshSession {
+  revoked_at: string | null;
+}
 
-  private constructor(jwtSecret: string, users: StoredUser[]) {
-    if (!jwtSecret || jwtSecret.length < 16) {
-      throw new AuthError('JWT_SECRET must be at least 16 characters', 'misconfigured');
-    }
-    this.secret = new TextEncoder().encode(jwtSecret);
+/**
+ * Process-local identity + refresh sessions behind IdentityStorePort.
+ * JWT crypto lives in adapters/auth/service.ts.
+ */
+export class MemoryIdentityStore implements IdentityStorePort {
+  private readonly users: IdentityUser[];
+  private readonly sessions = new Map<string, StoredRefresh>();
+  private chain: Promise<unknown> = Promise.resolve();
+
+  constructor(users: IdentityUser[]) {
     this.users = users;
   }
 
-  static async create(options: MemoryAuthOptions): Promise<MemoryAuthAdapter> {
+  static async create(options: MemoryIdentityStoreOptions = {}): Promise<MemoryIdentityStore> {
     const users = options.users ?? (await buildDemoUsers());
-    return new MemoryAuthAdapter(options.jwtSecret, users);
+    return new MemoryIdentityStore(users);
   }
 
-  async login(input: LoginRequestDto): Promise<AuthTokensDto> {
-    const policyError = validatePasswordPolicy(input.password);
-    if (policyError) {
-      throw new AuthError(policyError, 'password_policy');
+  /** Test helper: count sessions that are not revoked. */
+  activeSessionCount(): number {
+    let n = 0;
+    for (const row of this.sessions.values()) {
+      if (row.revoked_at === null) n += 1;
     }
+    return n;
+  }
 
-    const email = input.email.trim().toLowerCase();
-    const user = this.users.find(
-      (row) => row.email.toLowerCase() === email && row.institution_kind === input.institution_kind,
+  private enqueue<T>(work: () => Promise<T>): Promise<T> {
+    const run = this.chain.then(work, work);
+    this.chain = run.then(
+      () => undefined,
+      () => undefined,
     );
-
-    if (!user || user.estado !== 'activo') {
-      throw new AuthError('Invalid email, password, or institution', 'invalid_credentials');
-    }
-
-    const ok = await argon2.verify(user.hash_contrasena, input.password);
-    if (!ok) {
-      throw new AuthError('Invalid email, password, or institution', 'invalid_credentials');
-    }
-
-    return this.issueTokens(user);
+    return run;
   }
 
-  async refresh(refreshToken: string): Promise<AuthTokensDto> {
-    let payload: Record<string, unknown>;
-    try {
-      const verified = await jwtVerify(refreshToken, this.secret);
-      payload = verified.payload as Record<string, unknown>;
-    } catch {
-      throw new AuthError('Invalid refresh token', 'invalid_token');
-    }
-
-    if (payload.typ !== REFRESH_TOKEN_TYP || typeof payload.jti !== 'string') {
-      throw new AuthError('Invalid refresh token', 'invalid_token');
-    }
-    if (!this.refreshJtis.has(payload.jti)) {
-      throw new AuthError('Refresh token revoked or unknown', 'invalid_token');
-    }
-
-    this.refreshJtis.delete(payload.jti);
-
-    const sub = Number(payload.sub);
-    const user = this.users.find((row) => row.id_usuario === sub);
-    if (!user || user.estado !== 'activo') {
-      throw new AuthError('Invalid refresh token', 'invalid_token');
-    }
-    if (
-      user.id_institucion !== payload.institucion_id ||
-      user.institution_kind !== payload.institucion_kind
-    ) {
-      throw new AuthError('Invalid refresh token', 'invalid_token');
-    }
-
-    return this.issueTokens(user);
+  async findUser(email: string, kind: InstitutionKind): Promise<IdentityUser | null> {
+    const normalized = email.trim().toLowerCase();
+    const user = this.users.find(
+      (row) => row.email.toLowerCase() === normalized && row.institution_kind === kind,
+    );
+    return user ?? null;
   }
 
-  async verifyAccessToken(accessToken: string): Promise<AuthPrincipalDto> {
-    let payload: Record<string, unknown>;
-    try {
-      const verified = await jwtVerify(accessToken, this.secret);
-      payload = verified.payload as Record<string, unknown>;
-    } catch {
-      throw new AuthError('Invalid access token', 'invalid_token');
-    }
-
-    if (payload.typ !== ACCESS_TOKEN_TYP) {
-      throw new AuthError('Invalid access token', 'invalid_token');
-    }
-
-    const sub = Number(payload.sub);
-    const institucion_id = Number(payload.institucion_id);
-    const institucion_kind = payload.institucion_kind as InstitutionKind;
-    const email = String(payload.email ?? '');
-    const roles = Array.isArray(payload.roles) ? payload.roles.map(String) : [];
-    const motor = payload.motor;
-
-    if (!Number.isFinite(sub) || !Number.isFinite(institucion_id) || !email) {
-      throw new AuthError('Invalid access token', 'invalid_token');
-    }
-    if (motor !== engineForKind(institucion_kind)) {
-      throw new AuthError('Token motor does not match institution', 'invalid_token');
-    }
-
-    return {
-      id_usuario: asUsuarioId(sub),
-      email,
-      id_institucion: asInstitutionId(institucion_id),
-      institution_kind: institucion_kind,
-      roles,
-      motor: engineForKind(institucion_kind),
-    };
+  async findUserById(id: number): Promise<IdentityUser | null> {
+    return this.users.find((row) => row.id_usuario === id) ?? null;
   }
 
-  private async issueTokens(user: StoredUser): Promise<AuthTokensDto> {
-    const now = Math.floor(Date.now() / 1000);
-    const motor = engineForKind(user.institution_kind);
-    const jti = randomUUID();
-    this.refreshJtis.add(jti);
+  async insertRefresh(session: RefreshSession): Promise<void> {
+    await this.enqueue(async () => {
+      this.sessions.set(session.jti_hash, { ...session, revoked_at: null });
+    });
+  }
 
-    const access_token = await new SignJWT({
-      email: user.email,
-      institucion_id: user.id_institucion,
-      institucion_kind: user.institution_kind,
-      roles: user.roles,
-      motor,
-      typ: ACCESS_TOKEN_TYP,
-    })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setSubject(String(user.id_usuario))
-      .setIssuedAt(now)
-      .setExpirationTime(now + ACCESS_TOKEN_TTL_SECONDS)
-      .sign(this.secret);
+  async rotateRefresh(oldHash: string, next: RefreshSession, nowIso: string): Promise<boolean> {
+    return this.enqueue(async () => {
+      const current = this.sessions.get(oldHash);
+      if (!current || current.revoked_at !== null) {
+        return false;
+      }
+      if (Date.parse(current.expires_at) <= Date.parse(nowIso)) {
+        current.revoked_at = nowIso;
+        return false;
+      }
+      current.revoked_at = nowIso;
+      this.sessions.set(next.jti_hash, { ...next, revoked_at: null });
+      return true;
+    });
+  }
 
-    const refresh_token = await new SignJWT({
-      institucion_id: user.id_institucion,
-      institucion_kind: user.institution_kind,
-      jti,
-      typ: REFRESH_TOKEN_TYP,
-    })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setSubject(String(user.id_usuario))
-      .setIssuedAt(now)
-      .setExpirationTime(now + REFRESH_TOKEN_TTL_SECONDS)
-      .sign(this.secret);
-
-    return {
-      access_token,
-      refresh_token,
-      token_type: 'Bearer',
-      expires_in: ACCESS_TOKEN_TTL_SECONDS,
-    };
+  async revokeRefresh(hash: string, nowIso: string): Promise<void> {
+    await this.enqueue(async () => {
+      const current = this.sessions.get(hash);
+      if (!current) {
+        this.sessions.set(hash, {
+          jti_hash: hash,
+          id_usuario: 0,
+          created_at: nowIso,
+          expires_at: nowIso,
+          revoked_at: nowIso,
+        });
+        return;
+      }
+      if (current.revoked_at === null) {
+        current.revoked_at = nowIso;
+      }
+    });
   }
 }
+
+/** @deprecated Prefer MemoryIdentityStore + createAuthService; kept name for import churn. */
+export { MemoryIdentityStore as MemoryAuthAdapter };

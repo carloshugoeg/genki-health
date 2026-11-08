@@ -1,10 +1,12 @@
 import { asInstitutionId, engineForKind, type InstitutionKind } from '@genki/shared';
+import { createAuthService } from '../adapters/auth/service.js';
 import {
-  MemoryAuthAdapter,
+  MemoryIdentityStore,
   MemoryIdPort,
   MemoryPacienteRepository,
   MemoryUnitOfWork,
   SystemClock,
+  buildDemoUsers,
 } from '../adapters/memory/index.js';
 import type { AuthPort } from '../ports/index.js';
 import { InstitutionAdapterRegistry, type AdapterSet } from './adapter-registry.js';
@@ -39,5 +41,6 @@ export function createPhase0Registry(): InstitutionAdapterRegistry {
 }
 
 export async function createPhase0Auth(jwtSecret: string): Promise<AuthPort> {
-  return MemoryAuthAdapter.create({ jwtSecret });
+  const identities = new MemoryIdentityStore(await buildDemoUsers());
+  return createAuthService({ jwtSecret, identities });
 }

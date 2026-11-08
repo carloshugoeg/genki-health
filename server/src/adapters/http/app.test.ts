@@ -49,5 +49,19 @@ describe('HTTP auth routing', () => {
     expect(created.statusCode).toBe(201);
     const body = created.json() as { paciente: { id_institucion: number } };
     expect(body.paciente.id_institucion).toBe(1);
+
+    const logout = await app.inject({
+      method: 'POST',
+      url: '/api/auth/logout',
+      payload: { refresh_token: (login.json() as { refresh_token: string }).refresh_token },
+    });
+    expect(logout.statusCode).toBe(204);
+
+    const replay = await app.inject({
+      method: 'POST',
+      url: '/api/auth/refresh',
+      payload: { refresh_token: (login.json() as { refresh_token: string }).refresh_token },
+    });
+    expect(replay.statusCode).toBe(401);
   });
 });

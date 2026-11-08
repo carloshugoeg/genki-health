@@ -24,7 +24,7 @@ async function makeAuth(options?: {
   const auth = createAuthService({
     jwtSecret: secret,
     identities: store,
-    clock: options?.nowMs ? { nowMs: options.nowMs } : undefined,
+    ...(options?.nowMs ? { clock: { nowMs: options.nowMs } } : {}),
   });
   return { auth, store, secret };
 }
@@ -251,7 +251,7 @@ describe('AuthPort C3.5 session transitions', () => {
 
   it('auth_logout_bad_token_rejected', async () => {
     const { auth, store } = await makeAuth();
-    const tokens = await auth.login({
+    await auth.login({
       email: 'hospital@genki.local',
       password: 'GenkiDev1',
       institution_kind: 'hospital_general',
