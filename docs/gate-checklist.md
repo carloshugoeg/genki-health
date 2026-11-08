@@ -4,6 +4,17 @@ Evidence is filled only when the matching ticket reaches that gate. Do not pre-c
 
 Protocol-change files (`AGENTS.md`, CI workflows, `ports/` interfaces, initial migrations under the frozen contracts) require the `protocol-change` label and both owners' approval before merge.
 
+## Post-test formatting edits (recovery template)
+
+Use this when a gate fails because test files changed after the recorded `test:` commit (Prettier, ESLint `--fix`, import sorting, or other autofix), including whitespace-only edits.
+
+1. List every test path whose blob differs from the `test:` commit (`git diff --name-only <test-sha> HEAD -- <test-globs>`).
+2. Restore each path to exact `test:` bytes: `git checkout <test-sha> -- <path>`. Confirm with `git hash-object` matching `git rev-parse <test-sha>:<path>`.
+3. Re-run the named assertions against the unchanged implementation. Do not edit assertions, fixtures, or test helpers that the `test:` commit owned.
+4. If an assertion is wrong, stop and report the mismatch. Do not "fix" the test to match the implementation.
+5. Do not re-run formatters on those restored paths before push. Format production files only. Format test files before the `test:` commit, never after.
+6. Record the restore commit SHA, the `test:` SHA, and the re-run commands in the PR Verification section.
+
 ## Gates
 
 - **G0 repo truth:** #8 content integrated; #9 rebased content integrated; AGENTS E2 override, exact adopted assumptions and tracker rows consistent. E1-05 independent. Neither merge was performed by this planning task.

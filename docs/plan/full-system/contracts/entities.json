@@ -1,0 +1,3643 @@
+{
+  "INSTITUCION": {
+    "id_institucion": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                         P",
+      "source_line": 410
+    },
+    "nombre": {
+      "type": "VARCHAR(120)",
+      "required": true,
+      "key": "UK",
+      "rule": "—                                                       P",
+      "source_line": 412
+    },
+    "tipo": {
+      "type": "VARCHAR(30)",
+      "required": true,
+      "key": "",
+      "rule": "hospital, pediatrico, laboratorio, odontologica         P",
+      "source_line": 414
+    },
+    "nit": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "UK",
+      "rule": "Formato NIT Guatemala                                   P",
+      "source_line": 416
+    },
+    "direccion": {
+      "type": "VARCHAR(200)",
+      "required": true,
+      "key": "",
+      "rule": "—                                                       P",
+      "source_line": 418
+    },
+    "telefono": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "—                                                       P",
+      "source_line": 420
+    },
+    "correo": {
+      "type": "VARCHAR(120)",
+      "required": false,
+      "key": "",
+      "rule": "Formato correo válido                                   P",
+      "source_line": 422
+    },
+    "motor_datos": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "postgresql, mysql, mongodb, firebase                    C",
+      "source_line": 424
+    },
+    "activo": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto verdadero                                   P",
+      "source_line": 426
+    }
+  },
+  "MUNICIPIO": {
+    "id_municipio": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                             P",
+      "source_line": 434
+    },
+    "nombre": {
+      "type": "VARCHAR(80)",
+      "required": true,
+      "key": "UK",
+      "rule": "Nombre del municipio                        P",
+      "source_line": 436
+    }
+  },
+  "PACIENTE": {
+    "id_paciente": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                             C",
+      "source_line": 441
+    },
+    "id_institucion": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ INSTITUCION                               C",
+      "source_line": 443
+    },
+    "tipo_documento": {
+      "type": "VARCHAR(10)",
+      "required": true,
+      "key": "",
+      "rule": "DPI, CUI, pasaporte, ninguno                C",
+      "source_line": 445
+    },
+    "numero_documento": {
+      "type": "VARCHAR(25)",
+      "required": false,
+      "key": "UK*",
+      "rule": "Único por institución cuando existe         C",
+      "source_line": 447
+    },
+    "primer_nombre": {
+      "type": "VARCHAR(50)",
+      "required": true,
+      "key": "",
+      "rule": "—                                           C",
+      "source_line": 449
+    },
+    "segundo_nombre": {
+      "type": "VARCHAR(50)",
+      "required": false,
+      "key": "",
+      "rule": "—                                           C",
+      "source_line": 451
+    },
+    "primer_apellido": {
+      "type": "VARCHAR(50)",
+      "required": true,
+      "key": "",
+      "rule": "—                                           C",
+      "source_line": 453
+    },
+    "segundo_apellido": {
+      "type": "VARCHAR(50)",
+      "required": false,
+      "key": "",
+      "rule": "—                                           C",
+      "source_line": 455
+    },
+    "fecha_nacimiento": {
+      "type": "DATE",
+      "required": false,
+      "key": "Sí",
+      "rule": "puede ser futura                         C",
+      "source_line": 457
+    },
+    "sexo": {
+      "type": "CHAR(1)",
+      "required": true,
+      "key": "",
+      "rule": "M, F                                        C",
+      "source_line": 459
+    },
+    "tipo_sangre": {
+      "type": "VARCHAR(3)",
+      "required": false,
+      "key": "",
+      "rule": "A+, A-, B+, B-, AB+, AB-, O+, O-            R",
+      "source_line": 461
+    },
+    "telefono": {
+      "type": "VARCHAR(20)",
+      "required": false,
+      "key": "",
+      "rule": "—                                           C",
+      "source_line": 463
+    },
+    "correo": {
+      "type": "VARCHAR(120)",
+      "required": false,
+      "key": "",
+      "rule": "Formato correo válido                       C",
+      "source_line": 465
+    },
+    "direccion": {
+      "type": "VARCHAR(200)",
+      "required": false,
+      "key": "",
+      "rule": "—                                           C",
+      "source_line": 467
+    },
+    "id_municipio": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ MUNICIPIO (catálogo geográfico)           C",
+      "source_line": 469
+    },
+    "fecha_registro": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto fecha actual                    C",
+      "source_line": 471
+    },
+    "estado": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "activo, inactivo                            C",
+      "source_line": 473
+    }
+  },
+  "CONTACTO_EMERGENCIA": {
+    "id_contacto": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                              C",
+      "source_line": 481
+    },
+    "id_paciente": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ PACIENTE                                   C",
+      "source_line": 483
+    },
+    "nombre_completo": {
+      "type": "VARCHAR(120)",
+      "required": true,
+      "key": "",
+      "rule": "—                                            C",
+      "source_line": 485
+    },
+    "parentesco": {
+      "type": "VARCHAR(30)",
+      "required": true,
+      "key": "",
+      "rule": "padre, madre, hijo, cónyuge, otro            C",
+      "source_line": 487
+    },
+    "telefono": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "—                                            C",
+      "source_line": 489
+    },
+    "telefono_alterno": {
+      "type": "VARCHAR(20)",
+      "required": false,
+      "key": "",
+      "rule": "—                                            C",
+      "source_line": 491
+    },
+    "es_principal": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "Solo uno principal por paciente              C",
+      "source_line": 493
+    }
+  },
+  "EXPEDIENTE": {
+    "id_expediente": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                            C",
+      "source_line": 498
+    },
+    "id_paciente": {
+      "type": "INT",
+      "required": true,
+      "key": "FK, UK",
+      "rule": "→ PACIENTE, relación 1:1                                   C",
+      "source_line": 500
+    },
+    "numero_expediente": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "UK",
+      "rule": "Único por institución                                      C",
+      "source_line": 502
+    },
+    "fecha_apertura": {
+      "type": "DATE",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto fecha actual                                   C",
+      "source_line": 504
+    },
+    "estado": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "activo, archivado                                          C",
+      "source_line": 506
+    },
+    "fecha_archivo": {
+      "type": "DATE",
+      "required": false,
+      "key": "",
+      "rule": "Obligatoria si estado = archivado                          C",
+      "source_line": 508
+    },
+    "motivo_archivo": {
+      "type": "VARCHAR(30)",
+      "required": false,
+      "key": "",
+      "rule": "traslado, fallecimiento, administrativo, inactividad       R",
+      "source_line": 510
+    },
+    "observacion_archivo": {
+      "type": "VARCHAR(300)",
+      "required": false,
+      "key": "",
+      "rule": "—                                                          R",
+      "source_line": 512
+    }
+  },
+  "ANTECEDENTE": {
+    "id_antecedente": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                  R",
+      "source_line": 517
+    },
+    "id_expediente": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ EXPEDIENTE                                     R",
+      "source_line": 519
+    },
+    "tipo": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "personal, familiar, quirurgico, habito           R",
+      "source_line": 521
+    },
+    "descripcion": {
+      "type": "VARCHAR(300)",
+      "required": true,
+      "key": "",
+      "rule": "—                                                R",
+      "source_line": 523
+    },
+    "fecha_inicio": {
+      "type": "DATE",
+      "required": false,
+      "key": "No",
+      "rule": "puede ser futura                              R",
+      "source_line": 525
+    },
+    "vigente": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto verdadero                            R",
+      "source_line": 527
+    },
+    "fecha_registro": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto fecha actual                         R",
+      "source_line": 529
+    }
+  },
+  "ALERGIA": {
+    "id_alergia": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                    R",
+      "source_line": 534
+    },
+    "id_expediente": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ EXPEDIENTE                                       R",
+      "source_line": 536
+    },
+    "sustancia": {
+      "type": "VARCHAR(120)",
+      "required": true,
+      "key": "",
+      "rule": "Único junto con id_expediente                      R",
+      "source_line": 538
+    },
+    "tipo": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "medicamento, alimento, ambiental, otro             R",
+      "source_line": 540
+    },
+    "severidad": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "leve, moderada, severa                             R",
+      "source_line": 542
+    },
+    "reaccion": {
+      "type": "VARCHAR(200)",
+      "required": false,
+      "key": "",
+      "rule": "—                                                  R",
+      "source_line": 544
+    },
+    "fecha_deteccion": {
+      "type": "DATE",
+      "required": false,
+      "key": "",
+      "rule": "—                                                  R",
+      "source_line": 546
+    }
+  },
+  "PROFESIONAL": {
+    "id_profesional": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                   P",
+      "source_line": 555
+    },
+    "id_institucion": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ INSTITUCION                                     P",
+      "source_line": 557
+    },
+    "numero_colegiado": {
+      "type": "VARCHAR(15)",
+      "required": false,
+      "key": "UK",
+      "rule": "Si TIPO_PERSONAL.requiere_colegiado: obligatorio; si no: NULL (nunca cadena vacía). UNIQUE entre no nulos (E1-06)       P",
+      "source_line": 561
+    },
+    "nombres": {
+      "type": "VARCHAR(80)",
+      "required": true,
+      "key": "",
+      "rule": "—                                                 P",
+      "source_line": 563
+    },
+    "apellidos": {
+      "type": "VARCHAR(80)",
+      "required": true,
+      "key": "",
+      "rule": "—                                                 P",
+      "source_line": 565
+    },
+    "id_especialidad": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ ESPECIALIDAD; solo aplica a médicos             P",
+      "source_line": 567
+    },
+    "telefono": {
+      "type": "VARCHAR(20)",
+      "required": false,
+      "key": "",
+      "rule": "—                                                 C",
+      "source_line": 569
+    },
+    "correo": {
+      "type": "VARCHAR(120)",
+      "required": false,
+      "key": "",
+      "rule": "—                                                 C",
+      "source_line": 571
+    },
+    "activo": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto verdadero                             P",
+      "source_line": 577
+    }
+  },
+  "ESPECIALIDAD": {
+    "id_especialidad": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental       P",
+      "source_line": 586
+    },
+    "nombre": {
+      "type": "VARCHAR(80)",
+      "required": true,
+      "key": "UK",
+      "rule": "—                     P",
+      "source_line": 588
+    },
+    "descripcion": {
+      "type": "VARCHAR(200)",
+      "required": false,
+      "key": "",
+      "rule": "—                     P",
+      "source_line": 590
+    }
+  },
+  "USUARIO": {
+    "id_usuario": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                          C",
+      "source_line": 595
+    },
+    "id_institucion": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ INSTITUCION; determina el motor de datos               C",
+      "source_line": 597
+    },
+    "id_profesional": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ PROFESIONAL; nulo para personal no clínico             C",
+      "source_line": 599
+    },
+    "nombre_usuario": {
+      "type": "VARCHAR(40)",
+      "required": true,
+      "key": "UK",
+      "rule": "—                                                        C",
+      "source_line": 601
+    },
+    "correo": {
+      "type": "VARCHAR(120)",
+      "required": true,
+      "key": "UK",
+      "rule": "—                                                        C",
+      "source_line": 603
+    },
+    "hash_contrasena": {
+      "type": "VARCHAR(255)",
+      "required": true,
+      "key": "",
+      "rule": "Argon2id; nunca se almacena en claro                     R",
+      "source_line": 605
+    },
+    "id_rol": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ ROL                                                    C",
+      "source_line": 607
+    },
+    "estado": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "activo, bloqueado, inactivo                              C",
+      "source_line": 609
+    },
+    "intentos_fallidos": {
+      "type": "SMALLINT",
+      "required": true,
+      "key": "",
+      "rule": "Bloqueo al llegar a 5                                    R",
+      "source_line": 611
+    },
+    "ultimo_acceso": {
+      "type": "TIMESTAMP",
+      "required": false,
+      "key": "",
+      "rule": "—                                                        R",
+      "source_line": 613
+    }
+  },
+  "ROL": {
+    "id_rol": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental",
+      "source_line": 618
+    },
+    "nombre": {
+      "type": "VARCHAR(40)",
+      "required": true,
+      "key": "UK",
+      "rule": "recepcion, enfermeria, medico, laboratorista, odontologo, administrador",
+      "source_line": 622
+    },
+    "descripcion": {
+      "type": "VARCHAR(200)",
+      "required": false,
+      "key": "",
+      "rule": "—",
+      "source_line": 624
+    }
+  },
+  "PERMISO": {
+    "id_permiso": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental",
+      "source_line": 626
+    },
+    "codigo": {
+      "type": "VARCHAR(60)",
+      "required": true,
+      "key": "UK",
+      "rule": "Ej. expediente.leer , diagnostico.crear",
+      "source_line": 628
+    },
+    "descripcion": {
+      "type": "VARCHAR(200)",
+      "required": true,
+      "key": "",
+      "rule": "—",
+      "source_line": 630
+    },
+    "nivel_dato": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "publica, confidencial, restringida",
+      "source_line": 632
+    }
+  },
+  "ROL_PERMISO": {
+    "id_rol": {
+      "type": "INT",
+      "required": true,
+      "key": "PK, FK",
+      "rule": "→ ROL",
+      "source_line": 634
+    },
+    "id_permiso": {
+      "type": "INT",
+      "required": true,
+      "key": "PK, FK",
+      "rule": "→ PERMISO",
+      "source_line": 636
+    }
+  },
+  "CITA": {
+    "id_cita": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                                              C",
+      "source_line": 641
+    },
+    "id_paciente": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ PACIENTE                                                                   C",
+      "source_line": 643
+    },
+    "id_profesional": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ PROFESIONAL                                                                C",
+      "source_line": 645
+    },
+    "id_especialidad": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ ESPECIALIDAD                                                               P",
+      "source_line": 647
+    },
+    "fecha_hora": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "UK*",
+      "rule": "Único junto con id_profesional                                               C",
+      "source_line": 649
+    },
+    "duracion_minutos": {
+      "type": "SMALLINT",
+      "required": true,
+      "key": "",
+      "rule": "Mayor que 0, por defecto 30                                                  P",
+      "source_line": 651
+    },
+    "motivo": {
+      "type": "VARCHAR(200)",
+      "required": false,
+      "key": "",
+      "rule": "—                                                                            R",
+      "source_line": 653
+    },
+    "estado": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "programada, confirmada, atendida, cancelada, no_asistio                      C",
+      "source_line": 655
+    },
+    "id_usuario_registra": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ USUARIO                                                                    C",
+      "source_line": 657
+    },
+    "fecha_creacion": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto fecha actual                                                     C",
+      "source_line": 659
+    }
+  },
+  "CONSULTA": {
+    "id_consulta": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                              R",
+      "source_line": 664
+    },
+    "id_expediente": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ EXPEDIENTE                                                 R",
+      "source_line": 666
+    },
+    "id_profesional": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ PROFESIONAL                                                R",
+      "source_line": 668
+    },
+    "id_cita": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ CITA; nulo si es atención espontánea                       C",
+      "source_line": 670
+    },
+    "fecha_hora_inicio": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "—                                                            C",
+      "source_line": 672
+    },
+    "fecha_hora_fin": {
+      "type": "TIMESTAMP",
+      "required": false,
+      "key": "",
+      "rule": "Debe ser posterior al inicio                                 C",
+      "source_line": 674
+    },
+    "tipo": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "primera_vez, seguimiento, emergencia                         C",
+      "source_line": 676
+    },
+    "motivo_consulta": {
+      "type": "VARCHAR(300)",
+      "required": true,
+      "key": "",
+      "rule": "—                                                            R",
+      "source_line": 678
+    },
+    "enfermedad_actual": {
+      "type": "TEXT",
+      "required": false,
+      "key": "",
+      "rule": "—                                                            R",
+      "source_line": 680
+    },
+    "exploracion_fisica": {
+      "type": "TEXT",
+      "required": false,
+      "key": "",
+      "rule": "—                                                            R",
+      "source_line": 682
+    },
+    "plan": {
+      "type": "TEXT",
+      "required": false,
+      "key": "",
+      "rule": "—                                                            R",
+      "source_line": 684
+    },
+    "estado": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "abierta, cerrada, anulada                                    C",
+      "source_line": 686
+    }
+  },
+  "SIGNOS_VITALES": {
+    "id_signos": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                           R",
+      "source_line": 691
+    },
+    "id_consulta": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ CONSULTA                                R",
+      "source_line": 693
+    },
+    "fecha_hora_toma": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto fecha actual                  R",
+      "source_line": 695
+    },
+    "presion_sistolica": {
+      "type": "SMALLINT",
+      "required": false,
+      "key": "",
+      "rule": "Entre 50 y 300                      R",
+      "source_line": 699
+    },
+    "presion_diastolica": {
+      "type": "SMALLINT",
+      "required": false,
+      "key": "",
+      "rule": "Entre 30 y 200                      R",
+      "source_line": 701
+    },
+    "frecuencia_cardiaca": {
+      "type": "SMALLINT",
+      "required": false,
+      "key": "",
+      "rule": "Entre 20 y 250                      R",
+      "source_line": 703
+    },
+    "frecuencia_respiratoria": {
+      "type": "SMALLINT",
+      "required": false,
+      "key": "",
+      "rule": "Entre 5 y 80                        R",
+      "source_line": 705
+    },
+    "temperatura_c": {
+      "type": "DECIMAL(4,1)",
+      "required": false,
+      "key": "",
+      "rule": "Entre 30.0 y 45.0                   R",
+      "source_line": 707
+    },
+    "saturacion_oxigeno": {
+      "type": "SMALLINT",
+      "required": false,
+      "key": "",
+      "rule": "Entre 50 y 100                      R",
+      "source_line": 709
+    },
+    "peso_kg": {
+      "type": "DECIMAL(5,2)",
+      "required": false,
+      "key": "",
+      "rule": "Mayor que 0                         R",
+      "source_line": 711
+    },
+    "talla_cm": {
+      "type": "DECIMAL(5,1)",
+      "required": false,
+      "key": "",
+      "rule": "Mayor que 0                         R",
+      "source_line": 713
+    }
+  },
+  "DIAGNOSTICO": {
+    "id_diagnostico": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                     R",
+      "source_line": 720
+    },
+    "id_consulta": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ CONSULTA                                          R",
+      "source_line": 722
+    },
+    "codigo_cie10": {
+      "type": "VARCHAR(8)",
+      "required": true,
+      "key": "PK",
+      "rule": "Código oficial OMS               P",
+      "source_line": 737
+    },
+    "descripcion": {
+      "type": "VARCHAR(300)",
+      "required": true,
+      "key": "",
+      "rule": "—                                P",
+      "source_line": 739
+    },
+    "tipo": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "presuntivo, definitivo, descartado                  R",
+      "source_line": 728
+    },
+    "es_principal": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "Solo uno principal por consulta                     R",
+      "source_line": 730
+    },
+    "fecha_registro": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto fecha actual                            R",
+      "source_line": 732
+    },
+    "capitulo": {
+      "type": "VARCHAR(120)",
+      "required": false,
+      "key": "",
+      "rule": "—                                P",
+      "source_line": 741
+    }
+  },
+  "TRATAMIENTO": {
+    "id_tratamiento": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                                R",
+      "source_line": 746
+    },
+    "id_diagnostico": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ DIAGNOSTICO                                                  R",
+      "source_line": 748
+    },
+    "tipo": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "farmacologico, procedimiento, terapia, reposo, dieta           R",
+      "source_line": 750
+    },
+    "descripcion": {
+      "type": "VARCHAR(300)",
+      "required": true,
+      "key": "",
+      "rule": "—                                                              R",
+      "source_line": 752
+    },
+    "indicaciones": {
+      "type": "TEXT",
+      "required": false,
+      "key": "",
+      "rule": "—                                                              R",
+      "source_line": 754
+    },
+    "fecha_inicio": {
+      "type": "DATE",
+      "required": true,
+      "key": "",
+      "rule": "—                                                              R",
+      "source_line": 756
+    },
+    "fecha_fin_estimada": {
+      "type": "DATE",
+      "required": false,
+      "key": "",
+      "rule": "Posterior a fecha_inicio                                       R",
+      "source_line": 758
+    },
+    "estado": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "vigente, finalizado, suspendido                                R",
+      "source_line": 760
+    }
+  },
+  "RECETA": {
+    "id_receta": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                          R",
+      "source_line": 765
+    },
+    "id_consulta": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ CONSULTA                               R",
+      "source_line": 767
+    },
+    "folio": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "UK",
+      "rule": "Correlativo por institución              C",
+      "source_line": 769
+    },
+    "fecha_emision": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto fecha actual                        C",
+      "source_line": 773
+    },
+    "id_profesional": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ PROFESIONAL, quien firma                      C",
+      "source_line": 775
+    },
+    "observaciones": {
+      "type": "VARCHAR(300)",
+      "required": false,
+      "key": "",
+      "rule": "—                                               R",
+      "source_line": 777
+    },
+    "estado": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "emitida, anulada                                C",
+      "source_line": 779
+    }
+  },
+  "DETALLE_RECETA": {
+    "id_receta": {
+      "type": "INT",
+      "required": true,
+      "key": "PK, FK",
+      "rule": "→ RECETA                                        R",
+      "source_line": 781
+    },
+    "id_medicamento": {
+      "type": "INT",
+      "required": true,
+      "key": "PK, FK",
+      "rule": "→ MEDICAMENTO                                   R",
+      "source_line": 783
+    },
+    "dosis": {
+      "type": "VARCHAR(60)",
+      "required": true,
+      "key": "",
+      "rule": "Ej. \"500 mg\"                                    R",
+      "source_line": 785
+    },
+    "via_administracion": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "oral, intravenosa, tópica, intramuscular        R",
+      "source_line": 787
+    },
+    "frecuencia_horas": {
+      "type": "SMALLINT",
+      "required": true,
+      "key": "",
+      "rule": "Mayor que 0                                     R",
+      "source_line": 789
+    },
+    "duracion_dias": {
+      "type": "SMALLINT",
+      "required": true,
+      "key": "",
+      "rule": "Mayor que 0                                     R",
+      "source_line": 791
+    },
+    "cantidad": {
+      "type": "SMALLINT",
+      "required": true,
+      "key": "",
+      "rule": "Mayor que 0                                     R",
+      "source_line": 793
+    },
+    "indicaciones": {
+      "type": "VARCHAR(200)",
+      "required": false,
+      "key": "",
+      "rule": "—                                               R",
+      "source_line": 795
+    }
+  },
+  "MEDICAMENTO": {
+    "id_medicamento": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                    P",
+      "source_line": 800
+    },
+    "nombre_generico": {
+      "type": "VARCHAR(120)",
+      "required": true,
+      "key": "",
+      "rule": "—                                                  P",
+      "source_line": 802
+    },
+    "nombre_comercial": {
+      "type": "VARCHAR(120)",
+      "required": false,
+      "key": "",
+      "rule": "—                                                  P",
+      "source_line": 804
+    },
+    "principio_activo": {
+      "type": "VARCHAR(120)",
+      "required": true,
+      "key": "",
+      "rule": "—                                                  P",
+      "source_line": 806
+    },
+    "concentracion": {
+      "type": "VARCHAR(40)",
+      "required": true,
+      "key": "",
+      "rule": "Ej. \"500 mg\"                                       P",
+      "source_line": 808
+    },
+    "forma_farmaceutica": {
+      "type": "VARCHAR(40)",
+      "required": true,
+      "key": "",
+      "rule": "tableta, jarabe, inyectable, crema                 P",
+      "source_line": 810
+    },
+    "presentacion": {
+      "type": "VARCHAR(60)",
+      "required": false,
+      "key": "",
+      "rule": "—                                                  P",
+      "source_line": 812
+    },
+    "requiere_receta": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "—                                                  P",
+      "source_line": 814
+    },
+    "activo": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "—                                                  P",
+      "source_line": 816
+    }
+  },
+  "SERVICIO_FACTURABLE": {
+    "codigo_servicio": {
+      "type": "VARCHAR(12)",
+      "required": true,
+      "key": "PK",
+      "rule": "Correlativo del tarifario                                                      P",
+      "source_line": 821
+    },
+    "id_institucion": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ INSTITUCION; cada una tiene su tarifario                                     P",
+      "source_line": 823
+    },
+    "nombre": {
+      "type": "VARCHAR(120)",
+      "required": true,
+      "key": "",
+      "rule": "—                                                                              P",
+      "source_line": 825
+    },
+    "tipo": {
+      "type": "VARCHAR(25)",
+      "required": true,
+      "key": "",
+      "rule": "consulta, procedimiento, examen, medicamento, estancia, otro                   P",
+      "source_line": 827
+    },
+    "precio_unitario": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "Mayor que 0; en quetzales                                                      P",
+      "source_line": 829
+    },
+    "unidad": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "sesión, día, unidad, examen                                                    P",
+      "source_line": 831
+    },
+    "afecto_iva": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto verdadero                                                          P",
+      "source_line": 833
+    },
+    "vigente": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto verdadero                                                          P",
+      "source_line": 835
+    }
+  },
+  "FACTURA": {
+    "id_factura": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                                     C",
+      "source_line": 843
+    },
+    "id_institucion": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ INSTITUCION, quien emite                                          P",
+      "source_line": 845
+    },
+    "id_paciente": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ PACIENTE                                                 C",
+      "source_line": 849
+    },
+    "serie": {
+      "type": "VARCHAR(10)",
+      "required": true,
+      "key": "UK*",
+      "rule": "Único junto con numero                                     C",
+      "source_line": 851
+    },
+    "numero": {
+      "type": "INT",
+      "required": true,
+      "key": "UK*",
+      "rule": "Correlativo por serie, sin saltos                          C",
+      "source_line": 853
+    },
+    "fecha_emision": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto fecha actual                                   C",
+      "source_line": 855
+    },
+    "nombre_receptor": {
+      "type": "VARCHAR(150)",
+      "required": true,
+      "key": "",
+      "rule": "Puede diferir del paciente (quien paga)                    C",
+      "source_line": 857
+    },
+    "nit_receptor": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "NIT o la marca CF de consumidor final                      C",
+      "source_line": 859
+    },
+    "subtotal": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "Suma de las líneas antes de impuesto                       C",
+      "source_line": 861
+    },
+    "descuento": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto 0; no puede exceder el subtotal                C",
+      "source_line": 863
+    },
+    "impuesto": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "IVA del 12 % sobre la base afecta                          C",
+      "source_line": 865
+    },
+    "total": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "subtotal − descuento + impuesto                            C",
+      "source_line": 867
+    },
+    "cobertura_seguro": {
+      "type": "DECIMAL(10,2)",
+      "required": false,
+      "key": "",
+      "rule": "Parte que asume la aseguradora                             C",
+      "source_line": 869
+    },
+    "saldo_pendiente": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "total − cobertura − pagos aplicados                        C",
+      "source_line": 871
+    },
+    "estado": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "emitida, pagada, parcial, anulada                          C",
+      "source_line": 873
+    },
+    "motivo_anulacion": {
+      "type": "VARCHAR(200)",
+      "required": false,
+      "key": "",
+      "rule": "Obligatorio si estado = anulada                            C",
+      "source_line": 875
+    },
+    "id_usuario_emite": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ USUARIO                                                  C",
+      "source_line": 877
+    },
+    "autorizacion_fel": {
+      "type": "VARCHAR(60)",
+      "required": false,
+      "key": "",
+      "rule": "Número de autorización de la factura electrónica           C",
+      "source_line": 879
+    }
+  },
+  "DETALLE_FACTURA": {
+    "id_factura": {
+      "type": "INT",
+      "required": true,
+      "key": "PK, FK",
+      "rule": "→ FACTURA                                                C",
+      "source_line": 888
+    },
+    "linea": {
+      "type": "SMALLINT",
+      "required": true,
+      "key": "PK",
+      "rule": "Correlativo dentro de la factura, desde 1                C",
+      "source_line": 890
+    },
+    "codigo_servicio": {
+      "type": "VARCHAR(12)",
+      "required": true,
+      "key": "FK",
+      "rule": "→ SERVICIO_FACTURABLE                                    C",
+      "source_line": 892
+    },
+    "descripcion": {
+      "type": "VARCHAR(150)",
+      "required": true,
+      "key": "",
+      "rule": "Copia del nombre al momento de facturar                  C",
+      "source_line": 894
+    },
+    "cantidad": {
+      "type": "DECIMAL(8,2)",
+      "required": true,
+      "key": "",
+      "rule": "Mayor que 0                                              C",
+      "source_line": 896
+    },
+    "precio_unitario": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "Precio vigente el día de la emisión                      C",
+      "source_line": 898
+    },
+    "subtotal_linea": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "cantidad × precio_unitario                               C",
+      "source_line": 900
+    },
+    "id_cargo": {
+      "type": "INT",
+      "required": true,
+      "key": "FK, UK",
+      "rule": "→ CARGO; un cargo se factura una sola vez                C",
+      "source_line": 902
+    }
+  },
+  "PAGO": {
+    "id_pago": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                           C",
+      "source_line": 913
+    },
+    "id_factura": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ FACTURA                                                 C",
+      "source_line": 915
+    },
+    "fecha_hora": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto fecha actual                                  C",
+      "source_line": 917
+    },
+    "monto": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "Mayor que 0; no puede exceder el saldo                    C",
+      "source_line": 919
+    },
+    "metodo": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "efectivo, tarjeta, transferencia, seguro                  C",
+      "source_line": 921
+    },
+    "referencia": {
+      "type": "VARCHAR(60)",
+      "required": false,
+      "key": "",
+      "rule": "Número de boleta, autorización o transferencia                 C",
+      "source_line": 925
+    },
+    "id_usuario_recibe": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ USUARIO                                                      C",
+      "source_line": 927
+    },
+    "anulado": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "Un pago no se borra: se marca anulado                          C",
+      "source_line": 929
+    }
+  },
+  "TARIFA_HONORARIO": {
+    "id_tarifa": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                                   C",
+      "source_line": 966
+    },
+    "id_profesional": {
+      "type": "INT",
+      "required": true,
+      "key": "FK, UK*",
+      "rule": "→ PROFESIONAL                                                     C",
+      "source_line": 968
+    },
+    "codigo_servicio": {
+      "type": "VARCHAR(12)",
+      "required": true,
+      "key": "FK, UK*",
+      "rule": "→ SERVICIO_FACTURABLE                                             C",
+      "source_line": 970
+    },
+    "modalidad": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "monto_fijo, porcentaje                                            C",
+      "source_line": 972
+    },
+    "monto_fijo": {
+      "type": "DECIMAL(10,2)",
+      "required": false,
+      "key": "",
+      "rule": "Obligatorio si modalidad = monto_fijo                             R",
+      "source_line": 974
+    },
+    "porcentaje": {
+      "type": "DECIMAL(5,2)",
+      "required": false,
+      "key": "",
+      "rule": "Entre 0 y 100; obligatorio si modalidad = porcentaje              R",
+      "source_line": 976
+    },
+    "vigente_desde": {
+      "type": "DATE",
+      "required": true,
+      "key": "UK*",
+      "rule": "Único junto con profesional y servicio                            C",
+      "source_line": 978
+    },
+    "vigente_hasta": {
+      "type": "DATE",
+      "required": false,
+      "key": "",
+      "rule": "Nulo mientras la tarifa siga vigente                              C",
+      "source_line": 980
+    }
+  },
+  "PARTICIPACION": {
+    "id_participacion": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                R",
+      "source_line": 996
+    },
+    "id_profesional": {
+      "type": "INT",
+      "required": true,
+      "key": "FK, UK*",
+      "rule": "→ PROFESIONAL                                  R",
+      "source_line": 998
+    },
+    "codigo_rol": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "FK, UK*",
+      "rule": "→ ROL_CLINICO                                  R",
+      "source_line": 1000
+    },
+    "id_consulta": {
+      "type": "INT",
+      "required": false,
+      "key": "FK, UK*",
+      "rule": "→ CONSULTA                                     R",
+      "source_line": 1002
+    },
+    "id_procedimiento": {
+      "type": "INT",
+      "required": false,
+      "key": "FK, UK*",
+      "rule": "→ PROCEDIMIENTO                                R",
+      "source_line": 1004
+    },
+    "fecha_hora_inicio": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "—                                              R",
+      "source_line": 1006
+    },
+    "fecha_hora_fin": {
+      "type": "TIMESTAMP",
+      "required": false,
+      "key": "",
+      "rule": "Posterior al inicio                            R",
+      "source_line": 1008
+    },
+    "honorario_calculado": {
+      "type": "DECIMAL(10,2)",
+      "required": false,
+      "key": "",
+      "rule": "tarifa × factor del rol, al momento del acto   R",
+      "source_line": 1010
+    },
+    "observacion": {
+      "type": "VARCHAR(200)",
+      "required": false,
+      "key": "",
+      "rule": "—                                              R",
+      "source_line": 1012
+    }
+  },
+  "INSUMO": {
+    "id_insumo": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                               P",
+      "source_line": 1024
+    },
+    "id_institucion": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ INSTITUCION                                                 P",
+      "source_line": 1026
+    },
+    "codigo": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "UK",
+      "rule": "Código de almacén                                             P",
+      "source_line": 1028
+    },
+    "nombre": {
+      "type": "VARCHAR(120)",
+      "required": true,
+      "key": "",
+      "rule": "Ej. gasa estéril 10×10, solución salina 0.9 % 500 ml          P",
+      "source_line": 1030
+    },
+    "tipo": {
+      "type": "VARCHAR(25)",
+      "required": true,
+      "key": "",
+      "rule": "material, solucion, medicamento, descartable, reactivo        P",
+      "source_line": 1032
+    },
+    "id_medicamento": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ MEDICAMENTO, cuando el insumo es un fármaco                 P",
+      "source_line": 1034
+    },
+    "unidad_medida": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "unidad, caja, frasco, metro, mililitro                        P",
+      "source_line": 1036
+    },
+    "precio_unitario": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "Mayor que 0                                                   P",
+      "source_line": 1038
+    },
+    "codigo_servicio": {
+      "type": "VARCHAR(12)",
+      "required": false,
+      "key": "FK",
+      "rule": "→ SERVICIO_FACTURABLE, si se factura al paciente              P",
+      "source_line": 1040
+    },
+    "requiere_lote": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "Los fármacos y reactivos sí; las gasas normalmente no         P",
+      "source_line": 1042
+    },
+    "controlado": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "Estupefacientes y psicotrópicos exigen registro estricto      P",
+      "source_line": 1044
+    },
+    "existencia_actual": {
+      "type": "INT",
+      "required": false,
+      "key": "Sí",
+      "rule": "puede ser negativa                                         C",
+      "source_line": 1046
+    }
+  },
+  "CONSUMO_INSUMO": {
+    "id_consumo": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                   R",
+      "source_line": 1056
+    },
+    "id_insumo": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ INSUMO                                          R",
+      "source_line": 1058
+    },
+    "id_admision": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ ADMISION                                        R",
+      "source_line": 1060
+    },
+    "id_procedimiento": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ PROCEDIMIENTO                                   R",
+      "source_line": 1062
+    },
+    "id_consulta": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ CONSULTA                                        R",
+      "source_line": 1064
+    },
+    "cantidad": {
+      "type": "DECIMAL(8,2)",
+      "required": true,
+      "key": "",
+      "rule": "Mayor que 0                                            R",
+      "source_line": 1068
+    },
+    "precio_unitario": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "Precio del insumo el día del consumo                   C",
+      "source_line": 1070
+    },
+    "fecha_hora": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto fecha actual                               R",
+      "source_line": 1072
+    },
+    "lote": {
+      "type": "VARCHAR(30)",
+      "required": false,
+      "key": "",
+      "rule": "Obligatorio si el insumo lo requiere                   R",
+      "source_line": 1074
+    },
+    "id_profesional_registra": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ PROFESIONAL, quien lo gastó o lo entregó             R",
+      "source_line": 1076
+    }
+  },
+  "CARGO": {
+    "id_cargo": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                                         C",
+      "source_line": 1084
+    },
+    "id_expediente": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ EXPEDIENTE                                                            C",
+      "source_line": 1086
+    },
+    "codigo_servicio": {
+      "type": "VARCHAR(12)",
+      "required": true,
+      "key": "FK",
+      "rule": "→ SERVICIO_FACTURABLE                                                   C",
+      "source_line": 1088
+    },
+    "origen": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "consulta, procedimiento, estancia, insumo, honorario, examen, manual    C",
+      "source_line": 1090
+    },
+    "id_consulta": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ CONSULTA                                                              R",
+      "source_line": 1092
+    },
+    "id_procedimiento": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ PROCEDIMIENTO                                                         R",
+      "source_line": 1094
+    },
+    "id_admision": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ ADMISION                                                              R",
+      "source_line": 1096
+    },
+    "id_consumo": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ CONSUMO_INSUMO                                                        R",
+      "source_line": 1098
+    },
+    "id_participacion": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ PARTICIPACION                                                         R",
+      "source_line": 1100
+    },
+    "descripcion": {
+      "type": "VARCHAR(150)",
+      "required": true,
+      "key": "",
+      "rule": "Texto que se imprimirá en la factura                                    C",
+      "source_line": 1102
+    },
+    "cantidad": {
+      "type": "DECIMAL(8,2)",
+      "required": true,
+      "key": "",
+      "rule": "Mayor que 0; días de cama, unidades de gasa, 1 por consulta             C",
+      "source_line": 1104
+    },
+    "precio_unitario": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "Precio vigente al generarse el cargo                                    C",
+      "source_line": 1106
+    },
+    "subtotal": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "cantidad × precio_unitario                                              C",
+      "source_line": 1108
+    },
+    "fecha_hora": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto fecha actual                                                C",
+      "source_line": 1110
+    },
+    "estado": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "pendiente, facturado, anulado, cortesía                                 C",
+      "source_line": 1112
+    }
+  },
+  "DOCUMENTO_ADJUNTO": {
+    "id_documento": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                  R",
+      "source_line": 1124
+    },
+    "id_expediente": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ EXPEDIENTE                     R",
+      "source_line": 1126
+    },
+    "id_consulta": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ CONSULTA                       R",
+      "source_line": 1128
+    },
+    "nombre_archivo": {
+      "type": "VARCHAR(160)",
+      "required": true,
+      "key": "",
+      "rule": "—                                R",
+      "source_line": 1130
+    },
+    "tipo_mime": {
+      "type": "VARCHAR(60)",
+      "required": true,
+      "key": "",
+      "rule": "—                                R",
+      "source_line": 1132
+    },
+    "ruta": {
+      "type": "VARCHAR(300)",
+      "required": true,
+      "key": "",
+      "rule": "—                                R",
+      "source_line": 1134
+    },
+    "hash_sha256": {
+      "type": "CHAR(64)",
+      "required": true,
+      "key": "",
+      "rule": "Verificación de integridad       R",
+      "source_line": 1136
+    },
+    "fecha_carga": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "—                                R",
+      "source_line": 1138
+    }
+  },
+  "BITACORA": {
+    "id_bitacora": {
+      "type": "BIGINT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                  R",
+      "source_line": 1140
+    },
+    "id_usuario": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ USUARIO                                R",
+      "source_line": 1144
+    },
+    "entidad": {
+      "type": "VARCHAR(40)",
+      "required": true,
+      "key": "",
+      "rule": "Nombre de la tabla afectada              R",
+      "source_line": 1146
+    },
+    "id_registro": {
+      "type": "VARCHAR(40)",
+      "required": true,
+      "key": "",
+      "rule": "Identificador del registro afectado      R",
+      "source_line": 1148
+    },
+    "accion": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "consulta, alta, modificacion, archivo    R",
+      "source_line": 1150
+    },
+    "fecha_hora": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto fecha actual                 R",
+      "source_line": 1152
+    },
+    "direccion_ip": {
+      "type": "VARCHAR(45)",
+      "required": false,
+      "key": "",
+      "rule": "IPv4 o IPv6                              R",
+      "source_line": 1154
+    },
+    "detalle": {
+      "type": "JSON / TEXT",
+      "required": false,
+      "key": "",
+      "rule": "Valores antes y después                  R",
+      "source_line": 1156
+    }
+  },
+  "SERVICIO": {
+    "id_servicio": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                                             P",
+      "source_line": 1163
+    },
+    "nombre": {
+      "type": "VARCHAR(80)",
+      "required": true,
+      "key": "UK",
+      "rule": "Ej. medicina interna, cirugía                                               P",
+      "source_line": 1165
+    },
+    "piso": {
+      "type": "VARCHAR(20)",
+      "required": false,
+      "key": "",
+      "rule": "—                                                                           P",
+      "source_line": 1167
+    },
+    "activo": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "—                                                                           P",
+      "source_line": 1169
+    }
+  },
+  "CAMA": {
+    "id_cama": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                                             P",
+      "source_line": 1171
+    },
+    "id_servicio": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ SERVICIO                                                                  P",
+      "source_line": 1173
+    },
+    "codigo": {
+      "type": "VARCHAR(10)",
+      "required": true,
+      "key": "UK*",
+      "rule": "Único junto con id_servicio                                                 P",
+      "source_line": 1175
+    },
+    "tipo_cama": {
+      "type": "VARCHAR(25)",
+      "required": true,
+      "key": "",
+      "rule": "sala_general, habitación_individual, cuidados_intensivos, aislamiento       P",
+      "source_line": 1177
+    },
+    "codigo_servicio": {
+      "type": "VARCHAR(12)",
+      "required": true,
+      "key": "FK",
+      "rule": "→ SERVICIO_FACTURABLE, la tarifa por día de esa cama                        P",
+      "source_line": 1179
+    },
+    "estado": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "libre, ocupada, mantenimiento                                               C",
+      "source_line": 1181
+    }
+  },
+  "ADMISION": {
+    "id_admision": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                              C",
+      "source_line": 1189
+    },
+    "id_expediente": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ EXPEDIENTE                                                 C",
+      "source_line": 1191
+    },
+    "id_consulta_origen": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ CONSULTA que motivó el ingreso                             R",
+      "source_line": 1193
+    },
+    "id_cama": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ CAMA; la cama pasa a estado ocupada                        C",
+      "source_line": 1195
+    },
+    "tipo_ingreso": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "emergencia, programado, referencia                           C",
+      "source_line": 1197
+    },
+    "fecha_hora_ingreso": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "—                                                            C",
+      "source_line": 1199
+    },
+    "fecha_hora_egreso": {
+      "type": "TIMESTAMP",
+      "required": false,
+      "key": "",
+      "rule": "Posterior al ingreso                                         C",
+      "source_line": 1201
+    },
+    "id_diagnostico_ingreso": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ DIAGNOSTICO                                                R",
+      "source_line": 1203
+    },
+    "id_diagnostico_egreso": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ DIAGNOSTICO                                                R",
+      "source_line": 1205
+    },
+    "condicion_egreso": {
+      "type": "VARCHAR(25)",
+      "required": false,
+      "key": "",
+      "rule": "mejoria, alta_voluntaria, traslado, defuncion                R",
+      "source_line": 1207
+    },
+    "estado": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "activa, cerrada                                              C",
+      "source_line": 1209
+    }
+  },
+  "NOTA_EVOLUCION": {
+    "id_nota": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                        R",
+      "source_line": 1217
+    },
+    "id_admision": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ ADMISION                                             R",
+      "source_line": 1219
+    },
+    "id_profesional": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ PROFESIONAL                                          R",
+      "source_line": 1221
+    },
+    "fecha_hora": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto fecha actual                               R",
+      "source_line": 1223
+    },
+    "contenido": {
+      "type": "TEXT",
+      "required": true,
+      "key": "",
+      "rule": "—                                                      R",
+      "source_line": 1225
+    },
+    "turno": {
+      "type": "VARCHAR(10)",
+      "required": false,
+      "key": "",
+      "rule": "matutino, vespertino, nocturno                         C",
+      "source_line": 1227
+    },
+    "id_nota_anterior": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ NOTA_EVOLUCION (nota previa); nulo si no es corrección  R",
+      "source_line": 1229
+    }
+  },
+  "CATALOGO_PROCEDIMIENTO": {
+    "codigo_procedimiento": {
+      "type": "VARCHAR(10)",
+      "required": true,
+      "key": "PK",
+      "rule": "—                                          P",
+      "source_line": 1237
+    },
+    "nombre": {
+      "type": "VARCHAR(150)",
+      "required": true,
+      "key": "",
+      "rule": "—                                          P",
+      "source_line": 1239
+    },
+    "categoria": {
+      "type": "VARCHAR(40)",
+      "required": true,
+      "key": "",
+      "rule": "quirurgico, diagnostico, terapeutico       P",
+      "source_line": 1241
+    },
+    "duracion_estimada_min": {
+      "type": "SMALLINT",
+      "required": false,
+      "key": "",
+      "rule": "Mayor que 0                                P",
+      "source_line": 1243
+    }
+  },
+  "PROCEDIMIENTO": {
+    "id_procedimiento": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                            R",
+      "source_line": 1245
+    },
+    "id_admision": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ ADMISION                                 R",
+      "source_line": 1247
+    },
+    "id_consulta": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ CONSULTA                                 R",
+      "source_line": 1249
+    },
+    "codigo_procedimiento": {
+      "type": "VARCHAR(10)",
+      "required": true,
+      "key": "FK",
+      "rule": "→ CATALOGO_PROCEDIMIENTO                   R",
+      "source_line": 1251
+    },
+    "id_profesional": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ PROFESIONAL responsable                  R",
+      "source_line": 1253
+    },
+    "fecha_hora": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "—                                          R",
+      "source_line": 1255
+    },
+    "sala": {
+      "type": "VARCHAR(20)",
+      "required": false,
+      "key": "",
+      "rule": "—                                          C",
+      "source_line": 1257
+    },
+    "hallazgos": {
+      "type": "TEXT",
+      "required": false,
+      "key": "",
+      "rule": "—                                          R",
+      "source_line": 1259
+    },
+    "complicaciones": {
+      "type": "TEXT",
+      "required": false,
+      "key": "",
+      "rule": "—                                          R",
+      "source_line": 1261
+    }
+  },
+  "ORDEN_ESTUDIO": {
+    "id_orden": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                                     R",
+      "source_line": 1269
+    },
+    "id_consulta": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ CONSULTA                                                          R",
+      "source_line": 1271
+    },
+    "id_institucion_destino": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ INSTITUCION (laboratorio de la red)                               C",
+      "source_line": 1273
+    },
+    "tipo_examen": {
+      "type": "VARCHAR(80)",
+      "required": true,
+      "key": "",
+      "rule": "—                                                                   R",
+      "source_line": 1275
+    },
+    "prioridad": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "rutina, urgente                                                     C",
+      "source_line": 1277
+    },
+    "indicaciones": {
+      "type": "VARCHAR(300)",
+      "required": false,
+      "key": "",
+      "rule": "—                                                                   R",
+      "source_line": 1279
+    },
+    "fecha_solicitud": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Por defecto fecha actual                                            C",
+      "source_line": 1281
+    },
+    "estado": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "solicitada, en_proceso, resultado_recibido, anulada                 C",
+      "source_line": 1283
+    },
+    "referencia_externa": {
+      "type": "VARCHAR(40)",
+      "required": false,
+      "key": "",
+      "rule": "Identificador de la orden en el laboratorio                         C",
+      "source_line": 1285
+    }
+  },
+  "RESPONSABLE": {
+    "id_responsable": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                             C",
+      "source_line": 1292
+    },
+    "id_paciente": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ PACIENTE                                  C",
+      "source_line": 1294
+    },
+    "tipo_documento": {
+      "type": "VARCHAR(10)",
+      "required": true,
+      "key": "",
+      "rule": "DPI, pasaporte                              C",
+      "source_line": 1296
+    },
+    "numero_documento": {
+      "type": "VARCHAR(25)",
+      "required": true,
+      "key": "",
+      "rule": "—                                           C",
+      "source_line": 1298
+    },
+    "nombre_completo": {
+      "type": "VARCHAR(120)",
+      "required": true,
+      "key": "",
+      "rule": "—                                           C",
+      "source_line": 1300
+    },
+    "parentesco": {
+      "type": "VARCHAR(25)",
+      "required": true,
+      "key": "",
+      "rule": "madre, padre, abuelo, tutor_legal, otro     C",
+      "source_line": 1302
+    },
+    "telefono": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "—                                           C",
+      "source_line": 1304
+    },
+    "correo": {
+      "type": "VARCHAR(120)",
+      "required": false,
+      "key": "",
+      "rule": "—                                           C",
+      "source_line": 1306
+    },
+    "direccion": {
+      "type": "VARCHAR(200)",
+      "required": false,
+      "key": "",
+      "rule": "—                                           C",
+      "source_line": 1308
+    },
+    "es_principal": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "Exactamente uno principal por paciente      C",
+      "source_line": 1310
+    }
+  },
+  "ANTECEDENTE_PERINATAL": {
+    "id_expediente": {
+      "type": "INT",
+      "required": true,
+      "key": "PK, FK",
+      "rule": "→ EXPEDIENTE, relación 1:1       R",
+      "source_line": 1317
+    },
+    "semanas_gestacion": {
+      "type": "SMALLINT",
+      "required": false,
+      "key": "",
+      "rule": "Entre 20 y 45                    R",
+      "source_line": 1319
+    },
+    "tipo_parto": {
+      "type": "VARCHAR(20)",
+      "required": false,
+      "key": "",
+      "rule": "vaginal, cesarea                 R",
+      "source_line": 1321
+    },
+    "peso_nacimiento_g": {
+      "type": "SMALLINT",
+      "required": false,
+      "key": "",
+      "rule": "Entre 300 y 7000                 R",
+      "source_line": 1323
+    },
+    "talla_nacimiento_cm": {
+      "type": "DECIMAL(4,1)",
+      "required": false,
+      "key": "",
+      "rule": "Entre 20 y 70                    R",
+      "source_line": 1325
+    },
+    "apgar_1min": {
+      "type": "SMALLINT",
+      "required": false,
+      "key": "",
+      "rule": "Entre 0 y 10                     R",
+      "source_line": 1327
+    },
+    "apgar_5min": {
+      "type": "SMALLINT",
+      "required": false,
+      "key": "",
+      "rule": "Entre 0 y 10                     R",
+      "source_line": 1329
+    },
+    "complicaciones": {
+      "type": "VARCHAR(300)",
+      "required": false,
+      "key": "",
+      "rule": "—                                R",
+      "source_line": 1331
+    }
+  },
+  "MEDICION_ANTROPOMETRICA": {
+    "id_medicion": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                      R",
+      "source_line": 1336
+    },
+    "id_consulta": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ CONSULTA                                           R",
+      "source_line": 1338
+    },
+    "fecha_medicion": {
+      "type": "DATE",
+      "required": false,
+      "key": "Sí",
+      "rule": "puede ser futura                                  R",
+      "source_line": 1340
+    },
+    "edad_meses": {
+      "type": "SMALLINT",
+      "required": true,
+      "key": "",
+      "rule": "Edad del paciente en el momento de la medición       R",
+      "source_line": 1342
+    },
+    "peso_kg": {
+      "type": "DECIMAL(5,2)",
+      "required": true,
+      "key": "",
+      "rule": "Mayor que 0                                          R",
+      "source_line": 1344
+    },
+    "talla_cm": {
+      "type": "DECIMAL(5,1)",
+      "required": true,
+      "key": "",
+      "rule": "Mayor que 0                                          R",
+      "source_line": 1346
+    },
+    "perimetro_cefalico_cm": {
+      "type": "DECIMAL(4,1)",
+      "required": false,
+      "key": "",
+      "rule": "Se registra hasta los 36 meses                       R",
+      "source_line": 1348
+    },
+    "percentil_peso_edad": {
+      "type": "DECIMAL(5,2)",
+      "required": false,
+      "key": "",
+      "rule": "Entre 0 y 100                                        R",
+      "source_line": 1350
+    },
+    "percentil_talla_edad": {
+      "type": "DECIMAL(5,2)",
+      "required": false,
+      "key": "",
+      "rule": "Entre 0 y 100                                        R",
+      "source_line": 1352
+    },
+    "percentil_pc_edad": {
+      "type": "DECIMAL(5,2)",
+      "required": false,
+      "key": "",
+      "rule": "Entre 0 y 100                                        R",
+      "source_line": 1354
+    },
+    "puntuacion_z_peso": {
+      "type": "DECIMAL(4,2)",
+      "required": false,
+      "key": "",
+      "rule": "—                                                    R",
+      "source_line": 1356
+    },
+    "puntuacion_z_talla": {
+      "type": "DECIMAL(4,2)",
+      "required": false,
+      "key": "",
+      "rule": "—                                                    R",
+      "source_line": 1358
+    },
+    "version_referencia": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "Ej. \"OMS-2006\"                                       R",
+      "source_line": 1360
+    }
+  },
+  "VACUNA": {
+    "id_vacuna": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                  P",
+      "source_line": 1369
+    },
+    "nombre": {
+      "type": "VARCHAR(80)",
+      "required": true,
+      "key": "UK",
+      "rule": "Ej. BCG, pentavalente, SPR                       P",
+      "source_line": 1371
+    },
+    "enfermedad_previene": {
+      "type": "VARCHAR(200)",
+      "required": true,
+      "key": "",
+      "rule": "—                                                P",
+      "source_line": 1373
+    },
+    "dosis_totales": {
+      "type": "SMALLINT",
+      "required": true,
+      "key": "",
+      "rule": "Mayor que 0                                      P",
+      "source_line": 1375
+    },
+    "via_administracion": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "intramuscular, oral, subcutánea                  P",
+      "source_line": 1377
+    },
+    "edad_recomendada_meses": {
+      "type": "SMALLINT",
+      "required": true,
+      "key": "",
+      "rule": "Edad de la primera dosis                         P",
+      "source_line": 1379
+    }
+  },
+  "DOSIS_VACUNA": {
+    "id_dosis": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                  R",
+      "source_line": 1381
+    },
+    "id_expediente": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ EXPEDIENTE                                     R",
+      "source_line": 1383
+    },
+    "id_vacuna": {
+      "type": "INT",
+      "required": true,
+      "key": "FK",
+      "rule": "→ VACUNA                                         R",
+      "source_line": 1385
+    },
+    "numero_dosis": {
+      "type": "SMALLINT",
+      "required": true,
+      "key": "",
+      "rule": "Único junto con expediente y vacuna              R",
+      "source_line": 1387
+    },
+    "fecha_programada": {
+      "type": "DATE",
+      "required": true,
+      "key": "",
+      "rule": "—                                                R",
+      "source_line": 1389
+    },
+    "fecha_aplicacion": {
+      "type": "DATE",
+      "required": false,
+      "key": "",
+      "rule": "Obligatoria si estado = aplicada                 R",
+      "source_line": 1391
+    },
+    "lote": {
+      "type": "VARCHAR(30)",
+      "required": false,
+      "key": "",
+      "rule": "Obligatorio si estado = aplicada                 R",
+      "source_line": 1393
+    },
+    "fabricante": {
+      "type": "VARCHAR(60)",
+      "required": false,
+      "key": "",
+      "rule": "—                                                R",
+      "source_line": 1395
+    },
+    "sitio_aplicacion": {
+      "type": "VARCHAR(30)",
+      "required": false,
+      "key": "",
+      "rule": "brazo_izquierdo, muslo_derecho, oral             R",
+      "source_line": 1397
+    },
+    "id_profesional": {
+      "type": "INT",
+      "required": false,
+      "key": "FK",
+      "rule": "→ PROFESIONAL que aplicó                         R",
+      "source_line": 1399
+    },
+    "estado": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "pendiente, aplicada, omitida, contraindicada     R",
+      "source_line": 1401
+    },
+    "reaccion_adversa": {
+      "type": "VARCHAR(300)",
+      "required": false,
+      "key": "",
+      "rule": "—                                                R",
+      "source_line": 1403
+    }
+  },
+  "HITO_DESARROLLO": {
+    "id_hito": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Autoincremental                                 P",
+      "source_line": 1408
+    },
+    "nombre": {
+      "type": "VARCHAR(120)",
+      "required": true,
+      "key": "UK",
+      "rule": "Ej. \"sostiene la cabeza\"                        P",
+      "source_line": 1410
+    },
+    "area": {
+      "type": "VARCHAR(30)",
+      "required": true,
+      "key": "",
+      "rule": "motor_grueso, motor_fino, lenguaje, social      P",
+      "source_line": 1412
+    },
+    "edad_esperada_meses": {
+      "type": "SMALLINT",
+      "required": true,
+      "key": "",
+      "rule": "Mayor o igual a 0                               P",
+      "source_line": 1414
+    }
+  },
+  "SEGUIMIENTO_HITO": {
+    "id_expediente": {
+      "type": "INT",
+      "required": true,
+      "key": "PK, FK",
+      "rule": "→ EXPEDIENTE                                    R",
+      "source_line": 1416
+    },
+    "id_hito": {
+      "type": "INT",
+      "required": true,
+      "key": "PK, FK",
+      "rule": "→ HITO_DESARROLLO                               R",
+      "source_line": 1418
+    },
+    "alcanzado": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "—                                               R",
+      "source_line": 1420
+    },
+    "fecha_evaluacion": {
+      "type": "DATE",
+      "required": true,
+      "key": "",
+      "rule": "—                                               R",
+      "source_line": 1422
+    },
+    "observacion": {
+      "type": "VARCHAR(300)",
+      "required": false,
+      "key": "",
+      "rule": "—                                               R",
+      "source_line": 1424
+    }
+  },
+  "TIPO_PERSONAL": {
+    "id_tipo_personal": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": null
+    },
+    "nombre": {
+      "type": "VARCHAR(40)",
+      "required": true,
+      "key": "UK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": null
+    },
+    "requiere_colegiado": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": null
+    },
+    "genera_honorario": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": null
+    }
+  },
+  "ROL_CLINICO": {
+    "codigo_rol": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": null
+    },
+    "nombre": {
+      "type": "VARCHAR(60)",
+      "required": true,
+      "key": "UK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": null
+    },
+    "factor_honorario": {
+      "type": "DECIMAL(4,3)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": null
+    },
+    "descripcion": {
+      "type": "VARCHAR(200)",
+      "required": false,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": null
+    }
+  },
+  "ORDEN_EXAMEN": {
+    "id_orden": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "id_paciente": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "institucion_origen": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "medico_solicitante": {
+      "type": "VARCHAR(120)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "fecha_solicitud": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "prioridad": {
+      "type": "VARCHAR(15)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "estado": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "observaciones": {
+      "type": "VARCHAR(500)",
+      "required": false,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "referencia_externa": {
+      "type": "VARCHAR(40)",
+      "required": false,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    }
+  },
+  "EXAMEN": {
+    "codigo_examen": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "nombre": {
+      "type": "VARCHAR(120)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "tipo": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "area": {
+      "type": "VARCHAR(80)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "metodo": {
+      "type": "VARCHAR(80)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "tiempo_entrega_horas": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "requiere_ayuno": {
+      "type": "BOOLEAN",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    }
+  },
+  "MUESTRA": {
+    "id_muestra": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "id_orden": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "codigo_barras": {
+      "type": "VARCHAR(80)",
+      "required": true,
+      "key": "UK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "tipo_muestra": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "fecha_hora_toma": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "condicion": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "responsable_toma": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    }
+  },
+  "RESULTADO": {
+    "id_resultado": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "id_orden": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "codigo_examen": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "id_muestra": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "fecha_hora_resultado": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "datos": {
+      "type": "JSON",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "estado": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "validado_por": {
+      "type": "INT",
+      "required": false,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "fecha_validacion": {
+      "type": "TIMESTAMP",
+      "required": false,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "observaciones": {
+      "type": "VARCHAR(500)",
+      "required": false,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    }
+  },
+  "VALOR_REFERENCIA": {
+    "codigo_examen": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "analito": {
+      "type": "VARCHAR(80)",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "sexo": {
+      "type": "VARCHAR(5)",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "edad_min_meses": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "edad_max_meses": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "valor_min": {
+      "type": "DECIMAL(14,4)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "valor_max": {
+      "type": "DECIMAL(14,4)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    },
+    "unidad": {
+      "type": "VARCHAR(30)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1433
+    }
+  },
+  "ODONTOGRAMA": {
+    "id_odontograma": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "id_expediente": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "fecha": {
+      "type": "DATE",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "notacion": {
+      "type": "VARCHAR(3)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "id_profesional": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "observacion_general": {
+      "type": "VARCHAR(500)",
+      "required": false,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    }
+  },
+  "PIEZA_DENTAL": {
+    "id_odontograma": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "numero_pieza": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "estado": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "superficies": {
+      "type": "JSON",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "movilidad": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "observacion": {
+      "type": "VARCHAR(500)",
+      "required": false,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    }
+  },
+  "PROCEDIMIENTO_DENTAL": {
+    "codigo": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "nombre": {
+      "type": "VARCHAR(150)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "categoria": {
+      "type": "VARCHAR(30)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "duracion_estimada_min": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "costo_referencia": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    }
+  },
+  "PLAN_TRATAMIENTO": {
+    "id_plan": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "id_expediente": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "fecha_elaboracion": {
+      "type": "DATE",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "id_profesional": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "estado": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "total_estimado": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "detalle": {
+      "type": "JSON",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    }
+  },
+  "SESION_TRATAMIENTO": {
+    "id_sesion": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "id_plan": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "id_cita": {
+      "type": "INT",
+      "required": false,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "fecha": {
+      "type": "DATE",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "procedimientos_realizados": {
+      "type": "JSON",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "anestesia_utilizada": {
+      "type": "VARCHAR(200)",
+      "required": false,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "observaciones": {
+      "type": "VARCHAR(500)",
+      "required": false,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    },
+    "saldo_pendiente": {
+      "type": "DECIMAL(10,2)",
+      "required": true,
+      "key": "",
+      "rule": "Frozen delta design; source logical fields retained",
+      "source_line": 1477
+    }
+  },
+  "PROFESIONAL_CONTRATO": {
+    "id_profesional": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "id_tipo_personal": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "modalidad_contrato": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "fecha_ingreso": {
+      "type": "DATE",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    }
+  },
+  "ORDEN_EXAMEN_ITEM": {
+    "id_orden": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "codigo_examen": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    }
+  },
+  "REFERENCIA_OMS": {
+    "version": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "indicador": {
+      "type": "VARCHAR(30)",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "sexo": {
+      "type": "CHAR(1)",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "edad_dias": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "l": {
+      "type": "DECIMAL(14,8)",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "m": {
+      "type": "DECIMAL(14,8)",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "s": {
+      "type": "DECIMAL(14,8)",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    }
+  },
+  "VACUNA_INTERVALO": {
+    "id_vacuna": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "numero_dosis": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "edad_meses": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    }
+  },
+  "OUTBOX_LAB": {
+    "id_evento": {
+      "type": "VARCHAR(80)",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "tipo": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "origen_id": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "destino_id": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "payload": {
+      "type": "JSON",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "estado": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "intentos": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "fecha_hora": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    }
+  },
+  "CORRELATIVO_FACTURA": {
+    "id_institucion": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "serie": {
+      "type": "VARCHAR(10)",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "siguiente": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    }
+  },
+  "COMANDO_IDEMPOTENTE": {
+    "id_institucion": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "clave": {
+      "type": "VARCHAR(80)",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "operacion": {
+      "type": "VARCHAR(20)",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "hash_request": {
+      "type": "CHAR(64)",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "respuesta": {
+      "type": "JSON",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    }
+  },
+  "CONSULTA_BORRADOR": {
+    "id_consulta": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "bundle": {
+      "type": "JSON",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "revision": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    }
+  },
+  "ANULACION_CONSULTA": {
+    "id_consulta": {
+      "type": "INT",
+      "required": true,
+      "key": "PK",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "motivo": {
+      "type": "VARCHAR(300)",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "id_usuario": {
+      "type": "INT",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    },
+    "fecha_hora": {
+      "type": "TIMESTAMP",
+      "required": true,
+      "key": "",
+      "rule": "Additive infrastructure/ADR, not a source entity",
+      "source_line": null
+    }
+  }
+}
