@@ -1,0 +1,80 @@
+import { asInstitutionId, engineForKind } from '@genki/shared';
+import type { Pool } from 'mysql2/promise';
+import mysql from 'mysql2/promise';
+import type { AdapterResource, EngineOptions } from '../../ports/adapter-resource.js';
+import type { ClockPort } from '../../ports/clock.js';
+import { MysqlCatalogoRepository } from './catalogo-repository.js';
+import { MysqlConsultaRepository } from './consulta-repository.js';
+import { MysqlIdPort } from './id.js';
+import { MysqlPacienteRepository } from './paciente-repository.js';
+import { MysqlUnitOfWork } from './unit-of-work.js';
+
+const defaultClock: ClockPort = {
+  nowIso(): string {
+    return new Date().toISOString();
+  },
+};
+
+export { MysqlCatalogoRepository } from './catalogo-repository.js';
+export { MysqlConsultaRepository } from './consulta-repository.js';
+export { MysqlIdPort } from './id.js';
+export { MysqlPacienteRepository } from './paciente-repository.js';
+export {
+  MysqlUnitOfWork,
+  bindMysqlPool,
+  mysqlQuery,
+  activeMysqlConnection,
+} from './unit-of-work.js';
+export {
+  toMysqlDate,
+  toMysqlDatetime,
+  fromMysqlDate,
+  fromMysqlDatetime,
+  fromMysqlDecimal,
+  fromMysqlBoolean,
+} from './mapper.js';
+
+export async function createMysqlAdapterSet(options: EngineOptions): Promise<AdapterResource> {
+  const pool: Pool = mysql.createPool({
+    uri: options.url,
+    connectionLimit: 5,
+    timezone: 'Z',
+  });
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.query(`SELECT 1`);
+    await connection.query(`SET time_zone = '+00:00'`);
+  } finally {
+    connection.release();
+  }
+
+  const clock = options.clock ?? defaultClock;
+  const afterWrite = options.afterWrite ?? (() => {});
+  const unitOfWork = new MysqlUnitOfWork(pool);
+  const ids = new MysqlIdPort();
+  const id_institucion = asInstitutionId(options.id_institucion);
+
+  const set = {
+    engine: engineForKind(options.kind),
+    clock,
+    ids,
+    unitOfWork,
+    pacientes: new MysqlPacienteRepository(
+      id_institucion,
+      options.kind,
+      unitOfWork,
+      () => clock.nowIso(),
+      afterWrite,
+    ),
+    consultas: new MysqlConsultaRepository(id_institucion, unitOfWork, afterWrite),
+    catalogos: new MysqlCatalogoRepository(options.id_institucion),
+  };
+
+  return {
+    set,
+    async close(): Promise<void> {
+      await pool.end();
+    },
+  };
+}
