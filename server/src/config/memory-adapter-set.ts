@@ -7,6 +7,7 @@ import {
   MemoryUnitOfWork,
   SystemClock,
 } from '../adapters/memory/index.js';
+import { ensureMemoryExtensions } from '../adapters/memory/full-state.js';
 import {
   createMemoryInstitutionState,
   type MemoryInstitutionState,
@@ -30,6 +31,7 @@ export function openMemoryAdapterSet(
   const clock = new SystemClock();
   const ids = options?.ids ?? new MemoryIdPort();
   const state = createMemoryInstitutionState();
+  ensureMemoryExtensions(state.getPublished());
   const unitOfWork = new MemoryUnitOfWork(state);
   const afterWrite = options?.afterWrite;
   const set: AdapterSet = {

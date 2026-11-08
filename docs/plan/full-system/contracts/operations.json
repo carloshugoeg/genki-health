@@ -1,0 +1,1181 @@
+[
+  {
+    "id": 1,
+    "title": "Iniciar sesión",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/auth/login",
+    "request": "LoginRequestDto",
+    "response": "AuthTokensDto",
+    "transitions": [
+      "anonymous>authenticated"
+    ],
+    "error": "invalid_credentials",
+    "rules": "Retain JWT; five failed attempts block account; verify current persisted status on every request.",
+    "source_line": 2725
+  },
+  {
+    "id": 2,
+    "title": "Cerrar sesión",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/auth/logout",
+    "request": "refresh_token:string",
+    "response": "void",
+    "transitions": [
+      "authenticated>anonymous"
+    ],
+    "error": "invalid_token",
+    "rules": "Retain 204 and idempotent signed revoked token; add logout timestamp audit, never log token.",
+    "source_line": 2728
+  },
+  {
+    "id": 3,
+    "title": "Cambiar contraseña",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/auth/password",
+    "request": "anterior:string,nueva:string",
+    "response": "void",
+    "transitions": [
+      "active>active"
+    ],
+    "error": "invalid_credentials",
+    "rules": "Verify previous Argon2id; policy >=12 chars <=200, at least one letter and digit; revoke all refresh sessions atomically with password update.",
+    "source_line": 2731
+  },
+  {
+    "id": 4,
+    "title": "Restablecer contraseña",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/usuarios/:id/reset-password",
+    "request": "none",
+    "response": "temporal:string",
+    "transitions": [
+      "blocked>active"
+    ],
+    "error": "not_found",
+    "rules": "Admin only; CSPRNG 24-char temporary password shown once, never audit; must change before clinical access; revoke sessions, clear failed counter.",
+    "source_line": 2734
+  },
+  {
+    "id": 5,
+    "title": "Administrar usuarios y roles",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/usuarios",
+    "request": "UsuarioAdminInput",
+    "response": "UsuarioAdminResult",
+    "transitions": [
+      "absent>active",
+      "active>inactive",
+      "inactive>active"
+    ],
+    "error": "conflict",
+    "rules": "Create/update/deactivate through explicit action upsert with optional id; role allowlist; may not deactivate last active administrator; no password/hash in DTO.",
+    "source_line": 2737
+  },
+  {
+    "id": 6,
+    "title": "Consultar bitácora",
+    "institutions": "HPLO",
+    "method": "GET",
+    "path": "/api/bitacora",
+    "request": "AuditQuery",
+    "response": "Page<BitacoraSafe>",
+    "transitions": [
+      "audit>audit"
+    ],
+    "error": "forbidden",
+    "rules": "Admin/auditor only; stable time/id paging; append-only; restricted reads/writes audited without clinical content.",
+    "source_line": 2740
+  },
+  {
+    "id": 7,
+    "title": "Buscar paciente",
+    "institutions": "HPLO",
+    "method": "GET",
+    "path": "/api/pacientes",
+    "request": "SearchPacientesInput",
+    "response": "PacientePage",
+    "transitions": [
+      "records>records"
+    ],
+    "error": "invalid_query",
+    "rules": "Preserve baseline literal search, active filter, scoped document uniqueness.",
+    "source_line": 2746
+  },
+  {
+    "id": 8,
+    "title": "Registrar paciente nuevo",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/pacientes",
+    "request": "RegisterPacienteRequest",
+    "response": "PacienteResumen",
+    "transitions": [
+      "absent>active"
+    ],
+    "error": "duplicate_document",
+    "rules": "Preserve atomic patient+expediente+required guardian.",
+    "source_line": 2749
+  },
+  {
+    "id": 9,
+    "title": "Actualizar datos del paciente",
+    "institutions": "HPLO",
+    "method": "PATCH",
+    "path": "/api/pacientes/:id",
+    "request": "PacientePatch",
+    "response": "PacienteResumen",
+    "transitions": [
+      "active>active"
+    ],
+    "error": "duplicate_document",
+    "rules": "Allow identity/contact edits except generated ids, institution, state and registration time; validate document uniqueness and no future birth; return only identity to reception.",
+    "source_line": 2752
+  },
+  {
+    "id": 10,
+    "title": "Registrar contacto de emergencia",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/pacientes/:id/contactos",
+    "request": "Input<CONTACTO_EMERGENCIA>",
+    "response": "CONTACTO_EMERGENCIA",
+    "transitions": [
+      "active>active"
+    ],
+    "error": "conflict",
+    "rules": "Atomic replace principal flag on other contacts when adding a new principal; validate ownership.",
+    "source_line": 2755
+  },
+  {
+    "id": 11,
+    "title": "Registrar responsable o tutor",
+    "institutions": "P",
+    "method": "POST",
+    "path": "/api/pacientes",
+    "request": "RegisterPacienteRequest.responsables",
+    "response": "PacienteResumen",
+    "transitions": [
+      "absent>active"
+    ],
+    "error": "guardian_required",
+    "rules": "Keep inline atomic registration, not a new orphan patient workflow; later guardian addition uses contacts-style child write while exactly one principal remains.",
+    "source_line": 2758
+  },
+  {
+    "id": 12,
+    "title": "Consultar ficha del paciente",
+    "institutions": "HPLO",
+    "method": "GET",
+    "path": "/api/pacientes/:id/ficha",
+    "request": "none",
+    "response": "FichaCompleta",
+    "transitions": [
+      "active>active",
+      "archived>archived"
+    ],
+    "error": "not_found",
+    "rules": "Clinical role sees identity+allergies+antecedents, reception gets only baseline identity; never grant reception clinical field access.",
+    "source_line": 2761
+  },
+  {
+    "id": 13,
+    "title": "Abrir expediente",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/pacientes",
+    "request": "RegisterPacienteRequest",
+    "response": "PacienteResumen",
+    "transitions": [
+      "absent>active"
+    ],
+    "error": "duplicate_document",
+    "rules": "Retain registration transaction and one record per patient; not a second opening route.",
+    "source_line": 2767
+  },
+  {
+    "id": 14,
+    "title": "Consultar historial completo",
+    "institutions": "HPLO",
+    "method": "GET",
+    "path": "/api/pacientes/:id/historial",
+    "request": "PageQuery",
+    "response": "Page<HistoryEvent>",
+    "transitions": [
+      "active>active",
+      "archived>archived"
+    ],
+    "error": "not_found",
+    "rules": "Merge all local clinical events including specialty, attachments, admissions, notes, exams, dental, growth and vaccines; timestamp desc then type then id; bridge results only after delivery.",
+    "source_line": 2770
+  },
+  {
+    "id": 15,
+    "title": "Registrar antecedentes",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/pacientes/:id/antecedentes",
+    "request": "Input<ANTECEDENTE>",
+    "response": "ANTECEDENTE",
+    "transitions": [
+      "active>active"
+    ],
+    "error": "expediente_archived",
+    "rules": "Append, source types personal/familiar/quirurgico/habito; no future start date; no clinical DELETE.",
+    "source_line": 2774
+  },
+  {
+    "id": 16,
+    "title": "Registrar alergia",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/pacientes/:id/alergias",
+    "request": "Input<ALERGIA>",
+    "response": "ALERGIA",
+    "transitions": [
+      "active>active"
+    ],
+    "error": "conflict",
+    "rules": "Unique normalized substance per expediente; severity leve/moderada/severa, reference rules from schema.",
+    "source_line": 2779
+  },
+  {
+    "id": 17,
+    "title": "Adjuntar documento",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/pacientes/:id/documentos",
+    "request": "multipart archivo plus optional id_consulta",
+    "response": "DOCUMENTO_ADJUNTO",
+    "transitions": [
+      "active>active"
+    ],
+    "error": "invalid_body",
+    "rules": "PDF/JPEG/PNG magic and MIME, max 10MiB, stream SHA256, generated local path; authorized download GET /api/documentos/:id/contenido; cleanup orphan temp files on failure.",
+    "source_line": 2782
+  },
+  {
+    "id": 18,
+    "title": "Archivar expediente",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/pacientes/:id/archivo",
+    "request": "ArchiveRequest",
+    "response": "ExpedienteDto",
+    "transitions": [
+      "active>archived"
+    ],
+    "error": "already_archived",
+    "rules": "Keep archive behavior; reject active admissions or open consultations with conflict instead of corrupting state.",
+    "source_line": 2785
+  },
+  {
+    "id": 19,
+    "title": "Reactivar expediente",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/pacientes/:id/reactivacion",
+    "request": "motivo:string",
+    "response": "ExpedienteDto",
+    "transitions": [
+      "archived>active"
+    ],
+    "error": "conflict",
+    "rules": "Administrator only; clear archive metadata but append old values to safe audit; never erase history.",
+    "source_line": 2788
+  },
+  {
+    "id": 20,
+    "title": "Consultar disponibilidad",
+    "institutions": "HPO",
+    "method": "GET",
+    "path": "/api/agenda/disponibilidad",
+    "request": "id_profesional:id,desde:iso,hasta:iso",
+    "response": "Slot[]",
+    "transitions": [
+      "schedule>schedule"
+    ],
+    "error": "invalid_query",
+    "rules": "UTC intervals, <=31 days; 08:00-17:00 Guatemala Mon-Sat, 30min default; explicit academic configurable hours not claimed source fact.",
+    "source_line": 2794
+  },
+  {
+    "id": 21,
+    "title": "Agendar cita",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/citas",
+    "request": "Input<CITA>",
+    "response": "CITA",
+    "transitions": [
+      "absent>programada"
+    ],
+    "error": "conflict",
+    "rules": "Lock scoped professional/day; reject overlapping non-cancelled/non-no_asistio intervals, not only identical start.",
+    "source_line": 2797
+  },
+  {
+    "id": 22,
+    "title": "Reprogramar cita",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/citas/:id/reprogramacion",
+    "request": "fecha_hora:iso,duracion_minutos:int",
+    "response": "CITA",
+    "transitions": [
+      "programada>programada",
+      "confirmada>programada"
+    ],
+    "error": "conflict",
+    "rules": "Release prior and reserve new interval atomically; injected mid-write failure restores old slot.",
+    "source_line": 2800
+  },
+  {
+    "id": 23,
+    "title": "Cancelar cita",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/citas/:id/cancelacion",
+    "request": "motivo:string",
+    "response": "CITA",
+    "transitions": [
+      "programada>cancelada",
+      "confirmada>cancelada"
+    ],
+    "error": "conflict",
+    "rules": "Keep record; cancelled interval becomes reusable, never delete.",
+    "source_line": 2803
+  },
+  {
+    "id": 24,
+    "title": "Registrar llegada",
+    "institutions": "HPO",
+    "method": "POST",
+    "path": "/api/citas/:id/llegada",
+    "request": "none",
+    "response": "CITA",
+    "transitions": [
+      "programada>confirmada"
+    ],
+    "error": "conflict",
+    "rules": "Source has no llegada enum; map arrival to confirmada; duplicate arrival idempotent confirmed, attended/cancelled rejected.",
+    "source_line": 2806
+  },
+  {
+    "id": 25,
+    "title": "Ver agenda del día",
+    "institutions": "HPLO",
+    "method": "GET",
+    "path": "/api/agenda",
+    "request": "fecha:date,id_profesional?:id",
+    "response": "CITA[]",
+    "transitions": [
+      "schedule>schedule"
+    ],
+    "error": "invalid_query",
+    "rules": "Convert Guatemala day bounds to UTC half-open interval; role-safe projection omits motivo for nonclinical viewers.",
+    "source_line": 2809
+  },
+  {
+    "id": 26,
+    "title": "Abrir consulta",
+    "institutions": "HPO",
+    "method": "POST",
+    "path": "/api/pacientes/:id/consultas/abiertas",
+    "request": "OpenConsultaInput",
+    "response": "ConsultaDraft",
+    "transitions": [
+      "absent>abierta"
+    ],
+    "error": "expediente_archived",
+    "rules": "Persist open consultation+draft, optional owned confirmed appointment; keep baseline atomic closed shortcut unchanged.",
+    "source_line": 2816
+  },
+  {
+    "id": 27,
+    "title": "Registrar signos vitales",
+    "institutions": "HP",
+    "method": "PUT",
+    "path": "/api/consultas/:id/signos",
+    "request": "Input<SIGNOS_VITALES>",
+    "response": "SIGNOS_VITALES",
+    "transitions": [
+      "abierta>abierta"
+    ],
+    "error": "conflict",
+    "rules": "Enfermeria/medico only; one row per consultation; bounds source §5.1; no BMI persisted.",
+    "source_line": 2819
+  },
+  {
+    "id": 28,
+    "title": "Registrar diagnóstico",
+    "institutions": "HPO",
+    "method": "PUT",
+    "path": "/api/consultas/:id/borrador/diagnosticos",
+    "request": "diagnosticos:DiagnosticoInput[]",
+    "response": "ConsultaDraft",
+    "transitions": [
+      "abierta>abierta"
+    ],
+    "error": "invalid_bundle",
+    "rules": "Store draft only with expected_revision; validate one primary; final normalized children only at close.",
+    "source_line": 2822
+  },
+  {
+    "id": 29,
+    "title": "Registrar tratamiento",
+    "institutions": "HPO",
+    "method": "PUT",
+    "path": "/api/consultas/:id/borrador/tratamientos",
+    "request": "tratamientos:TratamientoInput[]",
+    "response": "ConsultaDraft",
+    "transitions": [
+      "abierta>abierta"
+    ],
+    "error": "invalid_bundle",
+    "rules": "Use diagnosis_index and expected_revision; diagnostic links validated at close; retained baseline enums.",
+    "source_line": 2825
+  },
+  {
+    "id": 30,
+    "title": "Emitir receta",
+    "institutions": "HPO",
+    "method": "PUT",
+    "path": "/api/consultas/:id/borrador/receta",
+    "request": "receta:CloseConsultaRequest.receta",
+    "response": "ConsultaDraft",
+    "transitions": [
+      "abierta>abierta"
+    ],
+    "error": "reference_not_found",
+    "rules": "Validate active medications; final issued prescription and folio only when close commits; draft preview explicitly labeled not issued.",
+    "source_line": 2828
+  },
+  {
+    "id": 31,
+    "title": "Cerrar consulta",
+    "institutions": "HPO",
+    "method": "POST",
+    "path": "/api/consultas/:id/cierre",
+    "request": "expected_revision:int",
+    "response": "ConsultaCompleta",
+    "transitions": [
+      "abierta>cerrada"
+    ],
+    "error": "invalid_bundle",
+    "rules": "Atomically close persisted draft, children, prescription and consultation charge; extend baseline shortcut to charge in same native transaction too; mark linked appointment atendida.",
+    "source_line": 2831
+  },
+  {
+    "id": 32,
+    "title": "Anular consulta",
+    "institutions": "HPO",
+    "method": "POST",
+    "path": "/api/consultas/:id/anulacion",
+    "request": "motivo:string",
+    "response": "ConsultaDto",
+    "transitions": [
+      "abierta>anulada",
+      "cerrada>anulada"
+    ],
+    "error": "conflict",
+    "rules": "Append reason/user/time, retain all clinical children; reject if consultation cargo already invoiced until invoice annulled; cancel only pending generated charges atomically.",
+    "source_line": 2834
+  },
+  {
+    "id": 33,
+    "title": "Consultar recetas del paciente",
+    "institutions": "HPO",
+    "method": "GET",
+    "path": "/api/pacientes/:id/recetas",
+    "request": "PageQuery",
+    "response": "Page<ConsultaCompleta>",
+    "transitions": [
+      "active>active",
+      "archived>archived"
+    ],
+    "error": "not_found",
+    "rules": "Include issue date and annulled markers, medication detail and clinician; no fabricated interaction detection.",
+    "source_line": 2837
+  },
+  {
+    "id": 34,
+    "title": "Consultar camas disponibles",
+    "institutions": "H",
+    "method": "GET",
+    "path": "/api/camas",
+    "request": "id_servicio?:id",
+    "response": "CAMA[]",
+    "transitions": [
+      "beds>beds"
+    ],
+    "error": "invalid_query",
+    "rules": "Only libre scoped beds ordered service/id; show service tariff public values.",
+    "source_line": 2844
+  },
+  {
+    "id": 35,
+    "title": "Registrar ingreso",
+    "institutions": "H",
+    "method": "POST",
+    "path": "/api/pacientes/:id/admisiones",
+    "request": "Input<ADMISION>",
+    "response": "ADMISION",
+    "transitions": [
+      "absent>activa"
+    ],
+    "error": "conflict",
+    "rules": "Lock expediente+bed; one active admission per record and bed; active expediente; owned ingreso diagnosis; admission+occupied bed atomic.",
+    "source_line": 2847
+  },
+  {
+    "id": 36,
+    "title": "Escribir nota de evolución",
+    "institutions": "H",
+    "method": "POST",
+    "path": "/api/admisiones/:id/notas",
+    "request": "Input<NOTA_EVOLUCION>",
+    "response": "NOTA_EVOLUCION",
+    "transitions": [
+      "activa>activa"
+    ],
+    "error": "conflict",
+    "rules": "Append-only, required ADMISION FK; correction references prior note in same admission, original content immutable.",
+    "source_line": 2850
+  },
+  {
+    "id": 37,
+    "title": "Registrar procedimiento",
+    "institutions": "H",
+    "method": "POST",
+    "path": "/api/procedimientos",
+    "request": "ProcedimientoBundle",
+    "response": "PROCEDIMIENTO",
+    "transitions": [
+      "activa>activa"
+    ],
+    "error": "reference_not_found",
+    "rules": "Exactly one admission/consultation anchor; create procedure+team+consumption+charges atomically through shared ports, rollback on missing lot/stock.",
+    "source_line": 2853
+  },
+  {
+    "id": 38,
+    "title": "Registrar egreso",
+    "institutions": "H",
+    "method": "POST",
+    "path": "/api/admisiones/:id/egreso",
+    "request": "id_diagnostico_egreso:id,condicion_egreso:enum,fecha_hora_egreso:iso",
+    "response": "ADMISION",
+    "transitions": [
+      "activa>cerrada"
+    ],
+    "error": "conflict",
+    "rules": "Strictly later than ingreso; owned diagnosis; free bed and bill max(1,ceil(elapsed_hours/24)) days at snapshotted current bed tariff atomically.",
+    "source_line": 2856
+  },
+  {
+    "id": 39,
+    "title": "Solicitar estudio al laboratorio",
+    "institutions": "H",
+    "method": "POST",
+    "path": "/api/consultas/:id/ordenes-laboratorio",
+    "request": "Input<ORDEN_ESTUDIO>,examenes:string[]",
+    "response": "ORDEN_ESTUDIO",
+    "transitions": [
+      "absent>solicitada"
+    ],
+    "error": "reference_not_found",
+    "rules": "Local PG order+outbox commit; local worker imports lab order idempotently with explicit approved referral scope; never synchronous distributed transaction.",
+    "source_line": 2859
+  },
+  {
+    "id": 40,
+    "title": "Registrar antecedentes de nacimiento",
+    "institutions": "P",
+    "method": "PUT",
+    "path": "/api/pacientes/:id/perinatal",
+    "request": "Input<ANTECEDENTE_PERINATAL>",
+    "response": "ANTECEDENTE_PERINATAL",
+    "transitions": [
+      "absent>recorded",
+      "recorded>recorded"
+    ],
+    "error": "invalid_body",
+    "rules": "Source §5.3 ranges, versioned audit on correction; active record required.",
+    "source_line": 2866
+  },
+  {
+    "id": 41,
+    "title": "Registrar medición de crecimiento",
+    "institutions": "P",
+    "method": "POST",
+    "path": "/api/consultas/:id/mediciones",
+    "request": "MedicionInput",
+    "response": "MEDICION_ANTROPOMETRICA",
+    "transitions": [
+      "abierta>abierta",
+      "cerrada>cerrada"
+    ],
+    "error": "reference_not_found",
+    "rules": "Compute age at measurement and WHO LMS percentiles/Z from pinned verified reference, store version and historical values; no synthetic WHO table.",
+    "source_line": 2869
+  },
+  {
+    "id": 42,
+    "title": "Ver curva de crecimiento",
+    "institutions": "P",
+    "method": "GET",
+    "path": "/api/pacientes/:id/crecimiento",
+    "request": "none",
+    "response": "MEDICION_ANTROPOMETRICA[]",
+    "transitions": [
+      "active>active",
+      "archived>archived"
+    ],
+    "error": "not_found",
+    "rules": "Chronological actual measurements SVG chart with WHO reference overlay; no line interpolation that pretends unmeasured data.",
+    "source_line": 2872
+  },
+  {
+    "id": 43,
+    "title": "Consultar esquema de vacunación",
+    "institutions": "P",
+    "method": "GET",
+    "path": "/api/pacientes/:id/vacunas",
+    "request": "none",
+    "response": "DosisSchedule[]",
+    "transitions": [
+      "absent>scheduled",
+      "scheduled>scheduled"
+    ],
+    "error": "reference_not_found",
+    "rules": "Idempotent scheduled dose creation from versioned explicit dose interval catalog; pending/overdue derived relative to clock, not invented dates.",
+    "source_line": 2875
+  },
+  {
+    "id": 44,
+    "title": "Registrar dosis aplicada",
+    "institutions": "P",
+    "method": "POST",
+    "path": "/api/dosis/:id/aplicacion",
+    "request": "fecha_aplicacion:date,lote:string,fabricante?:string,sitio_aplicacion?:string,id_profesional:id",
+    "response": "DOSIS_VACUNA",
+    "transitions": [
+      "pendiente>aplicada"
+    ],
+    "error": "conflict",
+    "rules": "Validate dose <= catalog total; nonfuture date >= birth, required lot/professional; apply+update schedule atomically, repeated command idempotent.",
+    "source_line": 2878
+  },
+  {
+    "id": 45,
+    "title": "Registrar reacción adversa",
+    "institutions": "P",
+    "method": "POST",
+    "path": "/api/dosis/:id/reacciones",
+    "request": "reaccion_adversa:string",
+    "response": "DOSIS_VACUNA",
+    "transitions": [
+      "aplicada>aplicada"
+    ],
+    "error": "conflict",
+    "rules": "Only applied dose accepts reaction, append safe audit, preserve lot and application date.",
+    "source_line": 2881
+  },
+  {
+    "id": 46,
+    "title": "Evaluar hitos de desarrollo",
+    "institutions": "P",
+    "method": "PUT",
+    "path": "/api/pacientes/:id/hitos/:hito",
+    "request": "Input<SEGUIMIENTO_HITO>",
+    "response": "SEGUIMIENTO_HITO",
+    "transitions": [
+      "absent>evaluated",
+      "evaluated>evaluated"
+    ],
+    "error": "reference_not_found",
+    "rules": "Show expected catalog milestones by age; upsert reached flag with date/observations and immutable audit of previous evaluation.",
+    "source_line": 2884
+  },
+  {
+    "id": 47,
+    "title": "Listar dosis pendientes",
+    "institutions": "P",
+    "method": "GET",
+    "path": "/api/vacunas/pendientes",
+    "request": "hasta:date,PageQuery",
+    "response": "Page<DosisPendiente>",
+    "transitions": [
+      "schedule>schedule"
+    ],
+    "error": "invalid_query",
+    "rules": "Pending dates <= requested day, patient contact role-filtered, stable page; no automatic patient outreach.",
+    "source_line": 2887
+  },
+  {
+    "id": 48,
+    "title": "Recibir orden de examen",
+    "institutions": "L",
+    "method": "POST",
+    "path": "/api/laboratorio/ordenes",
+    "request": "LabOrderInput",
+    "response": "ORDEN_EXAMEN",
+    "transitions": [
+      "absent>recibida"
+    ],
+    "error": "conflict",
+    "rules": "One or more active exam codes; idempotent external origin/reference; referred patient mapped by explicit referral link not coincident numeric id.",
+    "source_line": 2894
+  },
+  {
+    "id": 49,
+    "title": "Registrar toma de muestra",
+    "institutions": "L",
+    "method": "POST",
+    "path": "/api/laboratorio/ordenes/:id/muestras",
+    "request": "Input<MUESTRA>",
+    "response": "MUESTRA",
+    "transitions": [
+      "recibida>en_proceso",
+      "en_proceso>en_proceso"
+    ],
+    "error": "conflict",
+    "rules": "Unique barcode, ordered exam-compatible sample, inadequate sample stored but cannot validate result.",
+    "source_line": 2897
+  },
+  {
+    "id": 50,
+    "title": "Cargar resultado",
+    "institutions": "L",
+    "method": "POST",
+    "path": "/api/laboratorio/ordenes/:id/resultados",
+    "request": "ResultadoInput",
+    "response": "RESULTADO",
+    "transitions": [
+      "en_proceso>en_proceso"
+    ],
+    "error": "invalid_bundle",
+    "rules": "Discriminated exam schema, correct sample/order, automatic reference flags and preliminary result+order state atomic; one current result per ordered exam.",
+    "source_line": 2900
+  },
+  {
+    "id": 51,
+    "title": "Validar resultado",
+    "institutions": "L",
+    "method": "POST",
+    "path": "/api/laboratorio/resultados/:id/validacion",
+    "request": "none",
+    "response": "RESULTADO",
+    "transitions": [
+      "preliminar>validado"
+    ],
+    "error": "conflict",
+    "rules": "Authorized professional distinct? no source mandates distinct operator, allow qualified validator; when all ordered exams valid, order becomes validada atomically.",
+    "source_line": 2903
+  },
+  {
+    "id": 52,
+    "title": "Comparar contra valores de referencia",
+    "institutions": "L",
+    "method": "POST",
+    "path": "/api/laboratorio/resultados/:id/comparacion",
+    "request": "none",
+    "response": "ResultadoFlags",
+    "transitions": [
+      "preliminar>preliminar"
+    ],
+    "error": "reference_not_found",
+    "rules": "Also automatic inside OP50; sex/age interval [min,max), one matching range per numeric analyte; fail missing/ambiguous references, store reference snapshot.",
+    "source_line": 2906
+  },
+  {
+    "id": 53,
+    "title": "Entregar resultado",
+    "institutions": "L",
+    "method": "POST",
+    "path": "/api/laboratorio/ordenes/:id/entrega",
+    "request": "none",
+    "response": "ORDEN_EXAMEN",
+    "transitions": [
+      "validada>entregada"
+    ],
+    "error": "conflict",
+    "rules": "Only all validated; local order+delivery outbox atomic; result available at referring hospital after idempotent receipt, not before.",
+    "source_line": 2912
+  },
+  {
+    "id": 54,
+    "title": "Consultar historial de exámenes",
+    "institutions": "L",
+    "method": "GET",
+    "path": "/api/pacientes/:id/examenes",
+    "request": "PageQuery",
+    "response": "Page<LabHistory>",
+    "transitions": [
+      "active>active",
+      "archived>archived"
+    ],
+    "error": "not_found",
+    "rules": "All owned exam results with preliminary/validated/rectified status; origin only receives delivered snapshot.",
+    "source_line": 2915
+  },
+  {
+    "id": 55,
+    "title": "Abrir odontograma",
+    "institutions": "O",
+    "method": "POST",
+    "path": "/api/pacientes/:id/odontogramas",
+    "request": "id_profesional:id,observacion_general?:string",
+    "response": "ODONTOGRAMA",
+    "transitions": [
+      "absent>open"
+    ],
+    "error": "conflict",
+    "rules": "Create exactly 32 permanent FDI teeth (quadrants1..4 positions1..8) with sane surfaces, no 19/29/39/49; one chart per submitted command.",
+    "source_line": 2921
+  },
+  {
+    "id": 56,
+    "title": "Actualizar estado de una pieza",
+    "institutions": "O",
+    "method": "PUT",
+    "path": "/api/odontogramas/:id/piezas/:numero",
+    "request": "PiezaPatch",
+    "response": "PIEZA_DENTAL",
+    "transitions": [
+      "open>open"
+    ],
+    "error": "invalid_body",
+    "rules": "Per-surface status map allows obturada oclusal+caries mesial simultaneously; expected revision prevents lost updates.",
+    "source_line": 2923
+  },
+  {
+    "id": 57,
+    "title": "Elaborar plan de tratamiento",
+    "institutions": "O",
+    "method": "POST",
+    "path": "/api/pacientes/:id/planes",
+    "request": "PlanInput",
+    "response": "PLAN_TRATAMIENTO",
+    "transitions": [
+      "absent>propuesto"
+    ],
+    "error": "reference_not_found",
+    "rules": "Nonempty ordered procedure/tooth lines with snapshot price; calculate total, stable line ids, max100 lines, no user supplied total.",
+    "source_line": 2925
+  },
+  {
+    "id": 58,
+    "title": "Aceptar plan de tratamiento",
+    "institutions": "O",
+    "method": "POST",
+    "path": "/api/planes/:id/aceptacion",
+    "request": "none",
+    "response": "PLAN_TRATAMIENTO",
+    "transitions": [
+      "propuesto>en_proceso"
+    ],
+    "error": "conflict",
+    "rules": "Source OP says in-progress, schema also aceptado: audit proposed->accepted->in-progress in one transaction; immutable accepted budget.",
+    "source_line": 2927
+  },
+  {
+    "id": 59,
+    "title": "Registrar sesión de tratamiento",
+    "institutions": "O",
+    "method": "POST",
+    "path": "/api/planes/:id/sesiones",
+    "request": "SesionInput",
+    "response": "SESION_TRATAMIENTO",
+    "transitions": [
+      "en_proceso>en_proceso",
+      "en_proceso>finalizado"
+    ],
+    "error": "conflict",
+    "rules": "Validate performed plan lines not repeated; session+line completion+procedure charges atomic; completed all marks finalizado.",
+    "source_line": 2929
+  },
+  {
+    "id": 60,
+    "title": "Consultar saldo del paciente",
+    "institutions": "O",
+    "method": "GET",
+    "path": "/api/pacientes/:id/saldo-dental",
+    "request": "none",
+    "response": "DentalBalance",
+    "transitions": [
+      "plan>plan"
+    ],
+    "error": "not_found",
+    "rules": "Budget, performed/billed, paid and remaining separately; join real billing port, never equate session count with payment.",
+    "source_line": 2931
+  },
+  {
+    "id": 61,
+    "title": "Administrar personal",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/personal",
+    "request": "PersonalInput",
+    "response": "PersonalDto",
+    "transitions": [
+      "absent>active",
+      "active>inactive",
+      "active>active"
+    ],
+    "error": "conflict",
+    "rules": "Keep locked PROFESIONAL B; separate 1:1 contrato table stores category/contract/start; conditional colegiado, no forbidden columns on profesional.",
+    "source_line": 2936
+  },
+  {
+    "id": 62,
+    "title": "Definir tarifa de honorarios",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/personal/:id/tarifas",
+    "request": "Input<TARIFA_HONORARIO>",
+    "response": "TARIFA_HONORARIO",
+    "transitions": [
+      "current>closed_and_new"
+    ],
+    "error": "conflict",
+    "rules": "Honorarios type only, no planilla; lock professional+service; nonoverlapping [desde,hasta) version windows; cannot mutate historical tariffs.",
+    "source_line": 2939
+  },
+  {
+    "id": 63,
+    "title": "Registrar el equipo de una atención",
+    "institutions": "HPO",
+    "method": "POST",
+    "path": "/api/participaciones",
+    "request": "Input<PARTICIPACION>",
+    "response": "PARTICIPACION",
+    "transitions": [
+      "absent>recorded"
+    ],
+    "error": "conflict",
+    "rules": "Exactly one consultation/procedure, unique role+professional+act; scoped professional.",
+    "source_line": 2942
+  },
+  {
+    "id": 64,
+    "title": "Calcular honorarios de un acto",
+    "institutions": "HPO",
+    "method": "POST",
+    "path": "/api/actos/honorarios",
+    "request": "ActRef",
+    "response": "PARTICIPACION[]",
+    "transitions": [
+      "recorded>calculated"
+    ],
+    "error": "reference_not_found",
+    "rules": "Snapshot tariff at act time times role factor; percentage of service price; persist amount+idempotent honorario charge in same transaction, never recalculate history silently.",
+    "source_line": 2945
+  },
+  {
+    "id": 65,
+    "title": "Liquidar honorarios de un período",
+    "institutions": "HPO",
+    "method": "GET",
+    "path": "/api/honorarios/liquidacion",
+    "request": "desde:date,hasta:date,id_profesional?:id",
+    "response": "Liquidacion[]",
+    "transitions": [
+      "calculated>calculated"
+    ],
+    "error": "forbidden",
+    "rules": "Monthly report by professional/act/role, RRHH all; clinical self only; no actual bank payouts.",
+    "source_line": 2948
+  },
+  {
+    "id": 66,
+    "title": "Registrar consumo de material",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/consumos",
+    "request": "Input<CONSUMO_INSUMO>,id_paciente:id",
+    "response": "CONSUMO_INSUMO",
+    "transitions": [
+      "stock>stock_decremented"
+    ],
+    "error": "conflict",
+    "rules": "Atomic consumption+stock decrement+charge; positive integer quantity while source stock INT; controlled/requires_lote needs lot; one or zero act anchors with explicit patient.",
+    "source_line": 2951
+  },
+  {
+    "id": 67,
+    "title": "Consultar existencias",
+    "institutions": "HPLO",
+    "method": "GET",
+    "path": "/api/insumos",
+    "request": "PageQuery,bajo_stock?:boolean",
+    "response": "Page<INSUMO>",
+    "transitions": [
+      "stock>stock"
+    ],
+    "error": "invalid_query",
+    "rules": "Low-stock academic threshold <=5 configurable seed metadata, actual counts; public projection excludes cost to unauthorized role.",
+    "source_line": 2954
+  },
+  {
+    "id": 68,
+    "title": "Generar cargo",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/cargos",
+    "request": "CargoInput",
+    "response": "CARGO",
+    "transitions": [
+      "absent>pendiente"
+    ],
+    "error": "conflict",
+    "rules": "Shared application port reused inside close/exit/consume/honoraria/dental; unique source event key, snapshot price; manual charges authorized caja only.",
+    "source_line": 2957
+  },
+  {
+    "id": 69,
+    "title": "Consultar cargos pendientes",
+    "institutions": "HPLO",
+    "method": "GET",
+    "path": "/api/pacientes/:id/cargos",
+    "request": "PageQuery",
+    "response": "Page<CargoCaja>",
+    "transitions": [
+      "pending>pending"
+    ],
+    "error": "not_found",
+    "rules": "Only pendiente, safe projection no clinical origin FKs/descriptions, generic service label for reception.",
+    "source_line": 2960
+  },
+  {
+    "id": 70,
+    "title": "Anular o marcar cortesía un cargo",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/cargos/:id/disposicion",
+    "request": "estado:anulado_or_cortesia,motivo:string",
+    "response": "CargoCaja",
+    "transitions": [
+      "pendiente>anulado",
+      "pendiente>cortesia"
+    ],
+    "error": "conflict",
+    "rules": "Caja with explicit cargo.autorizar permission only; reason audited, invoiced rejects.",
+    "source_line": 2963
+  },
+  {
+    "id": 71,
+    "title": "Consultar tarifario",
+    "institutions": "HPLO",
+    "method": "GET",
+    "path": "/api/tarifario",
+    "request": "PageQuery",
+    "response": "Page<SERVICIO_FACTURABLE>",
+    "transitions": [
+      "catalog>catalog"
+    ],
+    "error": "invalid_query",
+    "rules": "Institution tariff read, no private contract honoraria, active service list.",
+    "source_line": 2969
+  },
+  {
+    "id": 72,
+    "title": "Seleccionar cargos a facturar",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/pacientes/:id/facturas/preview",
+    "request": "cargo_ids:id[]",
+    "response": "InvoicePreview",
+    "transitions": [
+      "pending>pending"
+    ],
+    "error": "conflict",
+    "rules": "Nonempty unique owned pending ids, compute immutable snapshot preview hash; preview does not reserve or mutate cargo, revalidate at issue.",
+    "source_line": 2972
+  },
+  {
+    "id": 73,
+    "title": "Emitir factura",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/pacientes/:id/facturas",
+    "request": "FacturaInput",
+    "response": "FacturaCompleta",
+    "transitions": [
+      "absent>emitida"
+    ],
+    "error": "conflict",
+    "rules": "Native atomic invoice+lines+mark cargos+transactional series counter, gapless successful commits; 12% IVA taxable discounted base; no real FEL call.",
+    "source_line": 2975
+  },
+  {
+    "id": 74,
+    "title": "Registrar pago",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/facturas/:id/pagos",
+    "request": "PagoInput",
+    "response": "FacturaCompleta",
+    "transitions": [
+      "emitida>parcial",
+      "emitida>pagada",
+      "parcial>parcial",
+      "parcial>pagada"
+    ],
+    "error": "conflict",
+    "rules": "Lock invoice, amount<=balance, nonannulled, charge+balance+state atomic; idempotency required; card is simulated method label no PAN capture/provider.",
+    "source_line": 2980
+  },
+  {
+    "id": 75,
+    "title": "Anular factura",
+    "institutions": "HPLO",
+    "method": "POST",
+    "path": "/api/facturas/:id/anulacion",
+    "request": "motivo:string",
+    "response": "FacturaCompleta",
+    "transitions": [
+      "emitida>anulada",
+      "parcial>anulada",
+      "pagada>anulada"
+    ],
+    "error": "conflict",
+    "rules": "Mark invoice+all payments annulled, balance0, cargo anulado, retain sequence forever; no automatic real refunds.",
+    "source_line": 2983
+  },
+  {
+    "id": 76,
+    "title": "Consultar estado de cuenta",
+    "institutions": "HPLO",
+    "method": "GET",
+    "path": "/api/pacientes/:id/cuenta",
+    "request": "PageQuery",
+    "response": "EstadoCuenta",
+    "transitions": [
+      "account>account"
+    ],
+    "error": "not_found",
+    "rules": "Actual invoices/payments/balances; patient role requires bound patient id, otherwise no self access; clinician sees balance only not payments.",
+    "source_line": 2986
+  },
+  {
+    "id": 77,
+    "title": "Cierre de caja",
+    "institutions": "HPLO",
+    "method": "GET",
+    "path": "/api/caja/cierre",
+    "request": "fecha:date",
+    "response": "CierreCaja",
+    "transitions": [
+      "ledger>ledger"
+    ],
+    "error": "invalid_query",
+    "rules": "Guatemala day aggregate nonannulled payments by method; include annulation totals separately, no fictitious fiscal submission.",
+    "source_line": 2989
+  }
+]
