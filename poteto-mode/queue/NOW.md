@@ -1,10 +1,11 @@
 # Now
 
-**No active agent claim.** E2-P2-06 is Done on `cursor/e2-p2-06-memory-consulta-13ef` (stacked on PR #22 + merged PR #19). Do not start the next ticket until an owner opens that claim.
+**Active claim:** E2-P3A-01 — Provision deterministic local engines and safe bootstrap commands. Owner Auto (Cursor) / Hugo Escobar. Branch `cursor/e2-p3a-01-provision-55f2` stacked on `cursor/e2-p2-06-memory-consulta-13ef` (PR #23). Claimed 2026-11-08 08:10 America/Guatemala.
 
 ## Agent lane (dependency-ready)
 
-- **Next:** E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (depends on E2-P2-06 + E2-P2-01; ready when claimed).
+- **Now:** E2-P3A-01 (this claim). Depends on E2-P1-03 + E2-P2-02 (both Done).
+- **Parallel ready (do not steal this claim):** E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (depends on E2-P2-06 + E2-P2-01).
 - E2-P2-09 — Extract storage-neutral JWT service with persistent-session port (depends on E2-P2-01; ready when claimed).
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
 
