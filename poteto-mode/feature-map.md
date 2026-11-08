@@ -15,6 +15,9 @@ Rows that share a ticket share a status. Owner is `Carlos/Cursor`, `Jordin/Claud
 
 ## Rollup
 
+- **Private integration lane:** E2-P5-01 blocked: fixed patient IDs versus repository-generated IDs; no seeds implemented. Dependency lane summaries below retain their original evidence and do not establish runtime validation of this integration.
+
+
 - **Now:** no active agent claim after E2-P3A-03. E2-01 scaffold + Auth are on `main` via merged PR #10. E1-03 is Done (merged PR #8). Do not rewrite the Graphviz shape key.
 - **Next:** E2-P2-07 when an owner claims it (E2-P2-09 and E2-P3A-04 are also dependency-ready). E1-05 (Jordin/Claude) pediatric Chen diagrams (parallel, not an E2 gate). Remaining E2 capabilities stay indexed as later P2–P6 tickets; scaffold landing did not mark them done.
 - **Blocked:** Multitenant permission *grants* beyond institution routing stay stop-and-ask if raised.
@@ -95,3 +98,5 @@ Phase-0 scaffold is on `main`. Real engine adapters remain incomplete. Capabilit
 | Archive a record instead of deleting it | next | Carlos/Cursor | E2-P2-04 / E2-P2-07 |
 | Route the session to the institution engine at login | next | Carlos/Cursor | E2-P2-09 / E2-P5-02 |
 | Comparative note and written engine assignment | next | both | E2-P6-01 / E2-P6-02 |
+
+| Four-institution fake idempotent seeds | blocked: fixed-ID/API mismatch | Codex | E2-P5-01 |

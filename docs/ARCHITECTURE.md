@@ -156,3 +156,7 @@ flowchart TB
 ## Mantenimiento
 
 Los agentes deben actualizar este documento cuando un PR cambie el comportamiento de la aplicación.
+
+## Integración privada E2-P5-01 (2026-11-08)
+
+Las dependencias PG, MySQL, Mongo y Firestore están integradas con merge commits únicamente en la rama privada de trabajo. Los resúmenes por motor anteriores conservan la evidencia de sus ramas originales; no constituyen una validación física de esta integración. No se implementó `db:seed`: C5.5 exige IDs de paciente 101/102/103, pero el registro existente solo admite IDs generados por el repositorio. Resolver esta discrepancia requiere aclarar el contrato antes de cambiar código. No hay cambios de comportamiento, configuración ni datos.

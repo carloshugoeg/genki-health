@@ -84,3 +84,7 @@ Copy these when a gate FAIL names the matching reason. Keep the owning branch ti
 4. Paste the raw log (or an artifact path plus the same bytes) into the PR body with the sha256 and tree SHA. Tear down the Compose project afterward.
 
 **Not enough.** Protocol/`node --test` structural suites alone, paraphrased "Healthy" claims, or a log from a different tree SHA.
+
+## E2-P5-01 — bloqueo de integración privada (2026-11-08)
+
+No se marca ningún gate completo. Se resolvieron los cuatro heads remotos con `git ls-remote`; se integraron las dependencias con merge commits privados. No hay implementación de semillas ni prueba física. Bloqueo: IDs fijos C5.5 frente a IDs generados internamente por las cuatro implementaciones de registro. No se ejecutó `validate.sh`, ni flujos/E2E/revisiones opcionales.

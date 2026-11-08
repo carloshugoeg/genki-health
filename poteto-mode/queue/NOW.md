@@ -23,4 +23,4 @@
 
 ## Authorized private seed lane
 
-E2-P5-01 in progress by Codex on `codex/e2-p5-01-seeds-private-20261108-01`; dependencies integrated privately. Existing lanes above are historical dependency notes. Do not start P5-02.
+E2-P5-01 blocked by fixed-ID/API mismatch; claimed by Codex on `codex/e2-p5-01-seeds-private-20261108-01`; dependencies integrated privately. Existing lanes above are historical dependency notes. Do not start P5-02.
