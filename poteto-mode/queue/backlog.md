@@ -45,7 +45,7 @@ Order is the order a single agent follows when dependencies are satisfied. E1-05
 | 35 | E2-P4A-02 | Implement Mongo patient/expediente/guardian transactions and search | backlog | agent | E2-P4A-01 |
 | 36 | E2-P4A-03 | Implement Mongo bounded embedded consultations and full contract runner | backlog | agent | E2-P4A-02 |
 | 37 | E2-P4A-04 | Enforce and prove Mongo app/report permissions | backlog | agent | E2-P4A-03 |
-| 38 | E2-P4B-01 | Pin Firestore emulator, collection indexes and tested deny-by-default rules | backlog | agent | E2-P1-03, E2-P3A-01 |
+| 38 | E2-P4B-01 | Pin Firestore emulator, collection indexes and tested deny-by-default rules | in progress | agent | E2-P1-03, E2-P3A-01 |
 | 39 | E2-P4B-02 | Implement Firestore buffered read-before-write UoW and integer mapping | backlog | agent | E2-P4B-01, E2-P2-06 |
 | 40 | E2-P4B-03 | Implement Firestore registration, uniqueness reservation, search and archive | backlog | agent | E2-P4B-02 |
 | 41 | E2-P4B-04 | Implement Firestore bounded consultation aggregate and shared runner | backlog | agent | E2-P4B-03 |
