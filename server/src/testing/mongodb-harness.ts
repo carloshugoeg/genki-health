@@ -12,6 +12,11 @@ import { MongoIdPort } from '../adapters/mongodb/id.js';
 import { makeDocumentId, toBsonInt, type MongoStringIdDoc } from '../adapters/mongodb/mapper.js';
 import { MongoPacienteRepository } from '../adapters/mongodb/paciente-repository.js';
 import { assertMongoPrimaryReady, installMongoSchema } from '../adapters/mongodb/schema.js';
+import {
+  installMongoSecurity,
+  MONGO_APP_USER,
+  mongoAuthenticatedUri,
+} from '../adapters/mongodb/security.js';
 import { MongoUnitOfWork } from '../adapters/mongodb/unit-of-work.js';
 import { closeConsulta } from '../application/close-consulta.js';
 import type { PersistenceCheckpoint } from '../ports/adapter-resource.js';
@@ -42,6 +47,14 @@ function requireAdminUri(): string {
     throw new Error('missing required env: MONGO_ADMIN_URI (physical Mongo required)');
   }
   return uri;
+}
+
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`missing required env: ${name} (physical Mongo required)`);
+  }
+  return value;
 }
 
 /** At/after fixture `fecha_hora_inicio` (2026-11-07T15:00Z) so validateConsulta accepts. */
@@ -229,28 +242,52 @@ function buildContext(
   };
 }
 
-let sharedClient: MongoClient | null = null;
-let sharedDb: Db | null = null;
+let sharedAdminClient: MongoClient | null = null;
+let sharedAdminDb: Db | null = null;
+let sharedAppClient: MongoClient | null = null;
+let sharedAppDb: Db | null = null;
 
-async function sharedConnection(): Promise<{ client: MongoClient; db: Db }> {
-  if (sharedClient && sharedDb) {
-    return { client: sharedClient, db: sharedDb };
+async function sharedConnection(): Promise<{
+  adminDb: Db;
+  appClient: MongoClient;
+  appDb: Db;
+}> {
+  if (sharedAdminClient && sharedAdminDb && sharedAppClient && sharedAppDb) {
+    return { adminDb: sharedAdminDb, appClient: sharedAppClient, appDb: sharedAppDb };
   }
-  const client = new MongoClient(requireAdminUri());
-  await client.connect();
-  await assertMongoPrimaryReady(client);
-  const db = client.db(TEST_DB);
-  await installMongoSchema(db);
-  sharedClient = client;
-  sharedDb = db;
-  return { client, db };
+  const adminClient = new MongoClient(requireAdminUri());
+  await adminClient.connect();
+  await assertMongoPrimaryReady(adminClient);
+  const adminDb = adminClient.db(TEST_DB);
+  await installMongoSchema(adminDb);
+  await installMongoSecurity(adminDb, {
+    appPassword: requireEnv('MONGO_APP_PASSWORD'),
+    reportPassword: requireEnv('MONGO_REPORT_PASSWORD'),
+  });
+
+  const appClient = new MongoClient(
+    mongoAuthenticatedUri({
+      adminUri: requireAdminUri(),
+      database: TEST_DB,
+      user: MONGO_APP_USER,
+      password: requireEnv('MONGO_APP_PASSWORD'),
+    }),
+  );
+  await appClient.connect();
+  const appDb = appClient.db(TEST_DB);
+
+  sharedAdminClient = adminClient;
+  sharedAdminDb = adminDb;
+  sharedAppClient = appClient;
+  sharedAppDb = appDb;
+  return { adminDb, appClient, appDb };
 }
 
 export async function makeMongoClinicalHarness(options?: {
   kind?: InstitutionKind;
 }): Promise<ClinicalHarness> {
   const kind = options?.kind ?? defaultKind();
-  const { client, db } = await sharedConnection();
+  const { adminDb, appClient, appDb } = await sharedConnection();
   let pending: FailurePoint | null = null;
   const afterWrite = (point: PersistenceCheckpoint): void => {
     if (pending === point) {
@@ -258,34 +295,34 @@ export async function makeMongoClinicalHarness(options?: {
       throw new Error(`checkpoint ${point}`);
     }
   };
-  const unitOfWork = new MongoUnitOfWork(client, db);
+  const unitOfWork = new MongoUnitOfWork(appClient, appDb);
   // Shared sequence across institutions (matches memory harness) so contract
   // cases allocate distinct numeric ids and findById(foreign) cannot hit a local twin.
-  const sharedIds = new MongoIdPort(db, PRIMARY_INSTITUTION);
-  const context = buildContext(db, PRIMARY_INSTITUTION, kind, unitOfWork, sharedIds, afterWrite);
+  const sharedIds = new MongoIdPort(appDb, PRIMARY_INSTITUTION);
+  const context = buildContext(appDb, PRIMARY_INSTITUTION, kind, unitOfWork, sharedIds, afterWrite);
 
-  await clearClinical(db, PRIMARY_INSTITUTION);
-  await clearClinical(db, OTHER_INSTITUTION_ID);
-  await seedCatalogs(db, PRIMARY_INSTITUTION);
-  await seedCatalogs(db, OTHER_INSTITUTION_ID);
+  await clearClinical(adminDb, PRIMARY_INSTITUTION);
+  await clearClinical(adminDb, OTHER_INSTITUTION_ID);
+  await seedCatalogs(adminDb, PRIMARY_INSTITUTION);
+  await seedCatalogs(adminDb, OTHER_INSTITUTION_ID);
 
   return {
     context,
     async reset(): Promise<void> {
       pending = null;
-      await clearClinical(db, PRIMARY_INSTITUTION);
-      await clearClinical(db, OTHER_INSTITUTION_ID);
-      await seedCatalogs(db, PRIMARY_INSTITUTION);
-      await seedCatalogs(db, OTHER_INSTITUTION_ID);
+      await clearClinical(adminDb, PRIMARY_INSTITUTION);
+      await clearClinical(adminDb, OTHER_INSTITUTION_ID);
+      await seedCatalogs(adminDb, PRIMARY_INSTITUTION);
+      await seedCatalogs(adminDb, OTHER_INSTITUTION_ID);
     },
     failNext(point: FailurePoint): void {
       pending = point;
     },
     async counts(): Promise<CountSnapshot> {
-      return countsFor(db, PRIMARY_INSTITUTION);
+      return countsFor(adminDb, PRIMARY_INSTITUTION);
     },
     async otherInstitution(): Promise<ContractClinicalContext> {
-      return buildContext(db, OTHER_INSTITUTION_ID, kind, unitOfWork, sharedIds, afterWrite);
+      return buildContext(appDb, OTHER_INSTITUTION_ID, kind, unitOfWork, sharedIds, afterWrite);
     },
     async close(): Promise<void> {
       pending = null;
@@ -294,13 +331,18 @@ export async function makeMongoClinicalHarness(options?: {
 }
 
 export async function closeMongoHarnessSharedClient(): Promise<void> {
-  if (sharedClient) {
-    await sharedClient
+  if (sharedAppClient) {
+    await sharedAppClient.close().catch(() => undefined);
+    sharedAppClient = null;
+    sharedAppDb = null;
+  }
+  if (sharedAdminClient) {
+    await sharedAdminClient
       .db(TEST_DB)
       .dropDatabase()
       .catch(() => undefined);
-    await sharedClient.close();
-    sharedClient = null;
-    sharedDb = null;
+    await sharedAdminClient.close();
+    sharedAdminClient = null;
+    sharedAdminDb = null;
   }
 }
