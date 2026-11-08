@@ -551,4 +551,74 @@ describe('HTTP patient search detail catalog archive', () => {
     expect(medicoArchive.statusCode).toBe(403);
     expect((medicoArchive.json() as ErrorDto).error).toBe('forbidden');
   });
+
+  it('close_http_returns_complete_bundle', async () => {
+    const hospital = createTestMemoryAdapterSet('hospital_general', 1);
+    const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
+    seedHospitalCatalogs(hospital);
+    const auth = await authWithHospitalRoles();
+    const app = buildHttpApp({ registry: clinicalRegistry(hospital, pediatric), auth });
+    const adminToken = await loginAs(app, 'hospital@genki.local');
+
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/pacientes',
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: adult('CLOSE-HTTP-1'),
+    });
+    expect(created.statusCode).toBe(201);
+    const id = (created.json() as PacienteResumen).paciente.id_paciente;
+
+    const medicoToken = await loginAs(app, 'medico-h@genki.local');
+    const closed = await app.inject({
+      method: 'POST',
+      url: `/api/pacientes/${id}/consultas`,
+      headers: { authorization: `Bearer ${medicoToken}` },
+      payload: closeBody(),
+    });
+    expect(closed.statusCode).toBe(201);
+    const body = closed.json() as {
+      consulta: { estado: string; id_cita: number | null };
+      diagnosticos: unknown[];
+      tratamientos: unknown[];
+      receta: { folio: string } | null;
+      detalles: unknown[];
+    };
+    expect(body.consulta.estado).toBe('cerrada');
+    expect(body.consulta.id_cita).toBeNull();
+    expect(body.diagnosticos.length).toBeGreaterThanOrEqual(1);
+    expect(body.tratamientos.length).toBeGreaterThanOrEqual(1);
+    expect(body.receta).not.toBeNull();
+    expect(body.receta?.folio).toMatch(/^REC-/);
+    expect(body.detalles.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('recepcion_cannot_close_consulta', async () => {
+    const hospital = createTestMemoryAdapterSet('hospital_general', 1);
+    const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
+    seedHospitalCatalogs(hospital);
+    const auth = await authWithHospitalRoles();
+    const app = buildHttpApp({ registry: clinicalRegistry(hospital, pediatric), auth });
+    const adminToken = await loginAs(app, 'hospital@genki.local');
+
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/pacientes',
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: adult('CLOSE-HTTP-2'),
+    });
+    expect(created.statusCode).toBe(201);
+    const id = (created.json() as PacienteResumen).paciente.id_paciente;
+
+    const recepcionToken = await loginAs(app, 'recepcion@genki.local');
+    const denied = await app.inject({
+      method: 'POST',
+      url: `/api/pacientes/${id}/consultas`,
+      headers: { authorization: `Bearer ${recepcionToken}` },
+      payload: closeBody(),
+    });
+    expect(denied.statusCode).toBe(403);
+    expect((denied.json() as ErrorDto).error).toBe('forbidden');
+    expect(hospital.memoryState.getPublished().consultas.size).toBe(0);
+  });
 });
