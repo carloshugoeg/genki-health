@@ -1,6 +1,6 @@
 # Now
 
-**Active isolated claim:** E2-P5-03, Codex, `feat/T-E2-P5-03-build` (2026-11-08). E2-P2-10 is Done on `cursor/e2-p2-10-memory-gate-660e` (base PR #47). E2-P2-08 is Done on `cursor/e2-p2-08-wire-atomic-consultation-230f`. E2-P2-07 is Done on `main` (PR #24). E2-P2-09 is Done on `main` (PR #20). E2-P3A-01 is Done on `main` (PR #25). Do not start the next ticket until an owner opens that claim.
+**No active agent claim.** E2-P5-03 implementation complete on isolated `feat/T-E2-P5-03-build`; browser flow verification blocked by desktop tooling. E2-P5-04 is the UI successor; no successor claimed. E2-P2-10 is Done on `cursor/e2-p2-10-memory-gate-660e` (base PR #47). E2-P2-08 is Done on `cursor/e2-p2-08-wire-atomic-consultation-230f`. E2-P2-07 is Done on `main` (PR #24). E2-P2-09 is Done on `main` (PR #20). E2-P3A-01 is Done on `main` (PR #25). Do not start the next ticket until an owner opens that claim.
 
 ## Agent lane (dependency-ready)
 

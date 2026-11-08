@@ -138,3 +138,9 @@ flowchart TB
 ## Mantenimiento
 
 Los agentes deben actualizar este documento cuando un PR cambie el comportamiento de la aplicación.
+
+## E2-P5-03 — interfaz compartida (2026-11-08)
+
+React usa History API para las cinco rutas C1.3. Login inicia con correo y contraseña vacíos; el cliente adjunta bearer, serializa la renovación y reintenta una sola vez ante 401. Logout solicita revocación y limpia la sesión aun si falla la red. La búsqueda permite documento/expediente/nombre, estado y páginas de 20. Registro envía solo campos C2 y captura de 1 a 5 responsables con un único principal en Pediatría. Consulta `/api/catalogos` para municipios; no inventa catálogos. Éxito navega a ficha, cuya pantalla y la de consulta indican explícitamente que esperan E2-P5-04.
+
+El servidor de esta base PR49 sigue usando memoria. La interfaz lo advierte y no acredita persistencia nativa. Los catálogos del arranque por defecto están vacíos; los usuarios predeterminados no hospitalarios no tienen permiso de registro. No se modificaron roles, backend ni contratos. La comprobación manual de navegador quedó bloqueada por fallos de las herramientas del escritorio; las pruebas web y una comprobación HTTP de memoria sí pasaron.

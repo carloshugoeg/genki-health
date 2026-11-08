@@ -14,7 +14,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm run test -w @genki/shared && npm run test -w @genki/server",
+    "test": "npm run test -w @genki/shared && npm run test -w @genki/server && npm run test -w @genki/web",
     "test:protocol": "node --test scripts/test/*.test.mjs",
     "test:contract-red": "bash scripts/expect-contract-red.sh",
     "db:bootstrap": "tsx --import dotenv/config scripts/db-bootstrap.ts",
