@@ -8,7 +8,7 @@ export interface MemoryMaps {
   diagnosticos: Map<number, unknown>;
   tratamientos: Map<number, unknown>;
   recetas: Map<number, unknown>;
-  detalles: Map<number, unknown>;
+  detalles: Map<string, unknown>;
   counters: Map<string, number>;
   catalogs: {
     municipios: Map<number, unknown>;

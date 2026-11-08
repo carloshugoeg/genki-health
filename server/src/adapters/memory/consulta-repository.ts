@@ -244,7 +244,7 @@ export class MemoryConsultaRepository implements ConsultaRepositoryPort {
             id_receta,
             ...detalleInput,
           };
-          maps.detalles.set(id_receta * 1_000_000 + detalleInput.id_medicamento, detalle);
+          maps.detalles.set(`${id_receta}:${detalleInput.id_medicamento}`, detalle);
         }
       }
 

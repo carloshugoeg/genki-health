@@ -122,11 +122,14 @@ describe('MemoryConsultaRepository recipe lines', () => {
 
     const history = await adapters.consultas.listByExpediente(expediente.id_expediente);
     expect(history).toHaveLength(2);
-    const byReceta = new Map(
-      history.map((row) => [row.receta?.id_receta, row.detalles[0]?.id_medicamento]),
-    );
-    expect(byReceta.get(1)).toBe(MED_FOR_RECETA_1);
-    expect(byReceta.get(2)).toBe(MED_FOR_RECETA_2);
+    expect(
+      history.find((row) => row.receta?.id_receta === first.receta?.id_receta)?.detalles[0]
+        ?.id_medicamento,
+    ).toBe(MED_FOR_RECETA_1);
+    expect(
+      history.find((row) => row.receta?.id_receta === second.receta?.id_receta)?.detalles[0]
+        ?.id_medicamento,
+    ).toBe(MED_FOR_RECETA_2);
 
     const before = {
       consultas: published.consultas.size,
@@ -148,10 +151,13 @@ describe('MemoryConsultaRepository recipe lines', () => {
 
     const historyAfter = await adapters.consultas.listByExpediente(expediente.id_expediente);
     expect(historyAfter).toHaveLength(2);
-    const byRecetaAfter = new Map(
-      historyAfter.map((row) => [row.receta?.id_receta, row.detalles[0]?.id_medicamento]),
-    );
-    expect(byRecetaAfter.get(1)).toBe(MED_FOR_RECETA_1);
-    expect(byRecetaAfter.get(2)).toBe(MED_FOR_RECETA_2);
+    expect(
+      historyAfter.find((row) => row.receta?.id_receta === first.receta?.id_receta)?.detalles[0]
+        ?.id_medicamento,
+    ).toBe(MED_FOR_RECETA_1);
+    expect(
+      historyAfter.find((row) => row.receta?.id_receta === second.receta?.id_receta)?.detalles[0]
+        ?.id_medicamento,
+    ).toBe(MED_FOR_RECETA_2);
   });
 });
