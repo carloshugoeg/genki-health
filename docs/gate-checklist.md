@@ -54,9 +54,9 @@ Copy these when a gate FAIL names the matching reason. Keep the owning branch ti
 2. Restore every listed test file to that commit's exact bytes: `git checkout <test-sha> -- <path>…`.
 3. Re-run the suite against the current implementation. Keep the impl green on the restored assertions.
 4. If a restored assertion fails, stop and report. Do not weaken, skip, or rewrite the test to match the impl.
-5. If `format:check` would rewrite the restored bytes, add only that frozen path to `.prettierignore` so Prettier cannot mutate the red contract after the fact.
+5. If `format:check` or ESLint would rewrite or reject the restored bytes (`no-undef` on Node globals, `no-useless-escape` on intentional regex escapes, Prettier wrap), add only that frozen path to `.prettierignore` and/or `eslint.config.js` `ignores` so tooling cannot mutate the red contract after the fact.
 
-**Not a fix.** Re-running Prettier on the tests, "equivalent" regex edits, or a journal waiver for format-only drift when the gate asked for a restore.
+**Not a fix.** Re-running Prettier/ESLint auto-fix on the tests, "equivalent" regex or import edits, or a journal waiver for format-only drift when the gate asked for a restore.
 
 ### missing raw runtime health log
 
