@@ -1,12 +1,13 @@
 # Now
 
-**No active agent claim.** E2-P3A-01 is Done on `cursor/e2-p3a-01-provision-55f2` (stacked on PR #23 / P2-06). Do not start the next ticket until an owner opens that claim.
+**No active agent claim.** E2-P4B-01 is Done on `cursor/e2-p4b-01-firestore-rules-a575` (stacked on PR #25 / P3A-01). Do not start the next ticket until an owner opens that claim.
 
 ## Agent lane (dependency-ready)
 
 - **Next:** E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (depends on E2-P2-06 + E2-P2-01; ready when claimed).
 - E2-P2-09 — Extract storage-neutral JWT service with persistent-session port (depends on E2-P2-01; ready when claimed).
 - E2-P3A-02 — Create PostgreSQL migrations, type mapping and scoped transaction wrapper (depends on E2-P3A-01 + E2-P1-02 + E2-P2-06; ready when claimed).
+- E2-P4B-02 — Implement Firestore buffered read-before-write UoW and integer mapping (depends on E2-P4B-01 + E2-P2-06; ready when claimed).
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
 
 ## Parallel Entrega I notes
