@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest';
+import { asInstitutionId } from '@genki/shared';
 import type { CargoInput, SERVICIO_FACTURABLE } from '@genki/shared/full/charges';
 import { ClinicalError } from '../../src/domain/clinical-error.js';
-import { executeOp68, executeOp69 } from '../../src/application/full/charges.js';
+import {
+  executeOp68,
+  executeOp69,
+  executeOp70,
+  executeOp71,
+} from '../../src/application/full/charges.js';
 import type { FullContext, OperationContext } from '../../src/ports/full/context.js';
+import { OTHER_INSTITUTION_ID } from '../contracts/fixtures.js';
 
 export type FullHarness = {
   context: FullContext;
@@ -15,9 +22,12 @@ export type FullHarness = {
   close(): Promise<void>;
   seedPatient(doc?: string): Promise<{ id_paciente: number; id_expediente: number }>;
   seedServicio(overrides?: Partial<SERVICIO_FACTURABLE>): SERVICIO_FACTURABLE;
+  setCargoEstado(id_cargo: number, estado: string): void;
   setStoreUnavailable(value: boolean): void;
   withActor(patch: Partial<OperationContext>): OperationContext;
 };
+
+const AUTORIZAR = { roles: ['caja'] as const, permissions: ['cargo.autorizar'] as const };
 
 function errorCode(err: unknown): string | undefined {
   if (err instanceof ClinicalError) return err.code;
@@ -49,7 +59,7 @@ function manualCargo(id_paciente: number, overrides: Partial<CargoInput> = {}): 
 }
 
 /**
- * Module contract for charges. `ops` selects OP chunks (68/69 for FS-23-C01).
+ * Module contract for charges. `ops` selects OP chunks (68/69 C01, 70/71 C02).
  * F4 HTTP statuses map to ClinicalError codes at this core layer.
  */
 export function moduleContract(
@@ -399,6 +409,428 @@ export function moduleContract(
         );
         expect(await h.nativeSnapshot()).toEqual(snap);
         await other.close();
+        await h.close();
+      });
+    }
+
+    if (want.has(70)) {
+      it('op70_transition_1_persists', async () => {
+        // F4: pendiente>anulado → 200
+        const h = await make();
+        await h.reset();
+        const patient = await h.seedPatient('C70-OK-1');
+        h.seedServicio();
+        const cargo = await executeOp68(
+          h.context,
+          {
+            params: {},
+            query: {},
+            body: manualCargo(patient.id_paciente, { clave_evento: 'evt-70-anula' }),
+          },
+          h.withActor({ roles: ['caja'] }),
+        );
+        const before = await h.nativeSnapshot();
+        const caja = await executeOp70(
+          h.context,
+          {
+            params: { id: cargo.id_cargo },
+            query: {},
+            body: { estado: 'anulado', motivo: 'Error de captura' },
+          },
+          h.withActor(AUTORIZAR),
+        );
+        expect(caja).toEqual({
+          id_cargo: cargo.id_cargo,
+          descripcion: 'Consulta general',
+          cantidad: '1.00',
+          precio_unitario: '100.00',
+          subtotal: '100.00',
+          estado: 'anulado',
+        });
+        expect(await h.nativeSnapshot()).not.toEqual(before);
+        await h.close();
+      });
+
+      it('op70_transition_2_persists', async () => {
+        // F4: pendiente>cortesia → 200
+        const h = await make();
+        await h.reset();
+        const patient = await h.seedPatient('C70-OK-2');
+        h.seedServicio();
+        const cargo = await executeOp68(
+          h.context,
+          {
+            params: {},
+            query: {},
+            body: manualCargo(patient.id_paciente, {
+              clave_evento: 'evt-70-cortesia',
+              cantidad: '2.00',
+            }),
+          },
+          h.withActor({ roles: ['caja'] }),
+        );
+        const caja = await executeOp70(
+          h.context,
+          {
+            params: { id: cargo.id_cargo },
+            query: {},
+            body: { estado: 'cortesia', motivo: 'Cortesía institucional' },
+          },
+          h.withActor(AUTORIZAR),
+        );
+        expect(caja.estado).toBe('cortesia');
+        expect(caja.subtotal).toBe('200.00');
+        expect(caja.id_cargo).toBe(cargo.id_cargo);
+        await h.close();
+      });
+
+      it('op70_error_domain_unchanged', async () => {
+        // F4: 409 conflict — invoiced rejects
+        const h = await make();
+        await h.reset();
+        const patient = await h.seedPatient('C70-DOM-1');
+        h.seedServicio();
+        const cargo = await executeOp68(
+          h.context,
+          {
+            params: {},
+            query: {},
+            body: manualCargo(patient.id_paciente, { clave_evento: 'evt-70-fact' }),
+          },
+          h.withActor({ roles: ['caja'] }),
+        );
+        h.setCargoEstado(cargo.id_cargo, 'facturado');
+        const snap = await h.nativeSnapshot();
+        const counts = await h.counts();
+        await expectCode(
+          executeOp70(
+            h.context,
+            {
+              params: { id: cargo.id_cargo },
+              query: {},
+              body: { estado: 'anulado', motivo: 'Tarde' },
+            },
+            h.withActor(AUTORIZAR),
+          ),
+          'conflict',
+        );
+        expect(await h.nativeSnapshot()).toEqual(snap);
+        expect(await h.counts()).toEqual(counts);
+        await h.close();
+      });
+
+      it('op70_error_schema_unchanged', async () => {
+        // F4: 400 invalid_body
+        const h = await make();
+        await h.reset();
+        const patient = await h.seedPatient('C70-SCH-1');
+        h.seedServicio();
+        const cargo = await executeOp68(
+          h.context,
+          {
+            params: {},
+            query: {},
+            body: manualCargo(patient.id_paciente, { clave_evento: 'evt-70-sch' }),
+          },
+          h.withActor({ roles: ['caja'] }),
+        );
+        const snap = await h.nativeSnapshot();
+        await expectCode(
+          executeOp70(
+            h.context,
+            {
+              params: { id: cargo.id_cargo },
+              query: {},
+              body: { estado: 'anulado', motivo: 'ok', extra: true } as never,
+            },
+            h.withActor(AUTORIZAR),
+          ),
+          'invalid_body',
+        );
+        expect(await h.nativeSnapshot()).toEqual(snap);
+        await h.close();
+      });
+
+      it('op70_error_store_unchanged', async () => {
+        // F4: 503 store_unavailable
+        const h = await make();
+        await h.reset();
+        const patient = await h.seedPatient('C70-STO-1');
+        h.seedServicio();
+        const cargo = await executeOp68(
+          h.context,
+          {
+            params: {},
+            query: {},
+            body: manualCargo(patient.id_paciente, { clave_evento: 'evt-70-sto' }),
+          },
+          h.withActor({ roles: ['caja'] }),
+        );
+        const snap = await h.nativeSnapshot();
+        h.setStoreUnavailable(true);
+        await expectCode(
+          executeOp70(
+            h.context,
+            {
+              params: { id: cargo.id_cargo },
+              query: {},
+              body: { estado: 'anulado', motivo: 'n/a' },
+            },
+            h.withActor(AUTORIZAR),
+          ),
+          'store_unavailable',
+        );
+        expect(await h.nativeSnapshot()).toEqual(snap);
+        await h.close();
+      });
+
+      it('op70_error_role_unchanged', async () => {
+        // F4: 403 — caja without cargo.autorizar
+        const h = await make();
+        await h.reset();
+        const patient = await h.seedPatient('C70-ROL-1');
+        h.seedServicio();
+        const cargo = await executeOp68(
+          h.context,
+          {
+            params: {},
+            query: {},
+            body: manualCargo(patient.id_paciente, { clave_evento: 'evt-70-rol' }),
+          },
+          h.withActor({ roles: ['caja'] }),
+        );
+        const snap = await h.nativeSnapshot();
+        await expectCode(
+          executeOp70(
+            h.context,
+            {
+              params: { id: cargo.id_cargo },
+              query: {},
+              body: { estado: 'anulado', motivo: 'sin permiso' },
+            },
+            h.withActor({ roles: ['caja'], permissions: [] }),
+          ),
+          'forbidden',
+        );
+        expect(await h.nativeSnapshot()).toEqual(snap);
+        await h.close();
+      });
+
+      it('op70_error_foreign_unchanged', async () => {
+        // F4: 404 — foreign cargo id
+        const h = await make();
+        await h.reset();
+        const other = await h.otherInstitution();
+        await other.reset();
+        const foreignPatient = await other.seedPatient('C70-FOR-1');
+        other.seedServicio();
+        const foreignCargo = await executeOp68(
+          other.context,
+          {
+            params: {},
+            query: {},
+            body: manualCargo(foreignPatient.id_paciente, { clave_evento: 'evt-70-for' }),
+          },
+          other.withActor({ roles: ['caja'] }),
+        );
+        const snap = await h.nativeSnapshot();
+        await expectCode(
+          executeOp70(
+            h.context,
+            {
+              params: { id: foreignCargo.id_cargo },
+              query: {},
+              body: { estado: 'anulado', motivo: 'ajeno' },
+            },
+            h.withActor(AUTORIZAR),
+          ),
+          'not_found',
+        );
+        expect(await h.nativeSnapshot()).toEqual(snap);
+        await other.close();
+        await h.close();
+      });
+
+      it('op70_midwrite_rolls_back', async () => {
+        // F4: 500 internal_error; rollback
+        const h = await make();
+        await h.reset();
+        const patient = await h.seedPatient('C70-MID-1');
+        h.seedServicio();
+        const cargo = await executeOp68(
+          h.context,
+          {
+            params: {},
+            query: {},
+            body: manualCargo(patient.id_paciente, { clave_evento: 'evt-70-mid' }),
+          },
+          h.withActor({ roles: ['caja'] }),
+        );
+        const snap = await h.nativeSnapshot();
+        const counts = await h.counts();
+        h.failAfterWrite(1);
+        await expectCode(
+          executeOp70(
+            h.context,
+            {
+              params: { id: cargo.id_cargo },
+              query: {},
+              body: { estado: 'anulado', motivo: 'inyección' },
+            },
+            h.withActor(AUTORIZAR),
+          ),
+          'internal_error',
+        );
+        expect(await h.nativeSnapshot()).toEqual(snap);
+        expect(await h.counts()).toEqual(counts);
+        await h.close();
+      });
+    }
+
+    if (want.has(71)) {
+      it('op71_transition_1_persists', async () => {
+        // F4: catalog>catalog → 200; empty is not 404
+        const h = await make();
+        await h.reset();
+        h.seedServicio({ codigo_servicio: 'CONS-01', nombre: 'Consulta general' });
+        h.seedServicio({
+          codigo_servicio: 'LAB-01',
+          nombre: 'Hemograma',
+          tipo: 'examen',
+          precio_unitario: '75.50',
+        });
+        h.seedServicio({
+          codigo_servicio: 'OLD-01',
+          nombre: 'Servicio retirado',
+          vigente: false,
+        });
+        h.seedServicio({
+          codigo_servicio: 'FOR-01',
+          id_institucion: OTHER_INSTITUTION_ID,
+          nombre: 'Tarifa ajena',
+        });
+        const snap = await h.nativeSnapshot();
+        const page = await executeOp71(
+          h.context,
+          { params: {}, query: { page: 1, page_size: 20 }, body: {} },
+          h.withActor({ roles: ['recepcion'] }),
+        );
+        expect(page.total).toBe(2);
+        expect(page.items.map((s) => s.codigo_servicio)).toEqual(['CONS-01', 'LAB-01']);
+        expect(page.items.every((s) => s.vigente)).toBe(true);
+        expect(page.items.every((s) => s.id_institucion === 1)).toBe(true);
+        expect(page.items.some((s) => s.tipo === 'honorario')).toBe(false);
+        expect(await h.nativeSnapshot()).toEqual(snap);
+
+        const emptyH = await make();
+        await emptyH.reset();
+        const empty = await executeOp71(
+          emptyH.context,
+          { params: {}, query: {}, body: {} },
+          emptyH.withActor({ roles: ['caja'] }),
+        );
+        expect(empty.total).toBe(0);
+        expect(empty.items).toEqual([]);
+        await emptyH.close();
+        await h.close();
+      });
+
+      it('op71_error_domain_unchanged', async () => {
+        // F4: 400 invalid_query — page_size above tariff bound
+        const h = await make();
+        await h.reset();
+        h.seedServicio();
+        const snap = await h.nativeSnapshot();
+        await expectCode(
+          executeOp71(
+            h.context,
+            { params: {}, query: { page: 1, page_size: 51 }, body: {} },
+            h.withActor({ roles: ['caja'] }),
+          ),
+          'invalid_query',
+        );
+        expect(await h.nativeSnapshot()).toEqual(snap);
+        await h.close();
+      });
+
+      it('op71_error_schema_unchanged', async () => {
+        // F4: 400 invalid_query — unknown query key
+        const h = await make();
+        await h.reset();
+        h.seedServicio();
+        const snap = await h.nativeSnapshot();
+        await expectCode(
+          executeOp71(
+            h.context,
+            {
+              params: {},
+              query: { page: 1, page_size: 20, extra: true } as never,
+              body: {},
+            },
+            h.withActor({ roles: ['caja'] }),
+          ),
+          'invalid_query',
+        );
+        expect(await h.nativeSnapshot()).toEqual(snap);
+        await h.close();
+      });
+
+      it('op71_error_store_unchanged', async () => {
+        // F4: 503
+        const h = await make();
+        await h.reset();
+        h.seedServicio();
+        const snap = await h.nativeSnapshot();
+        h.setStoreUnavailable(true);
+        await expectCode(
+          executeOp71(
+            h.context,
+            { params: {}, query: {}, body: {} },
+            h.withActor({ roles: ['caja'] }),
+          ),
+          'store_unavailable',
+        );
+        expect(await h.nativeSnapshot()).toEqual(snap);
+        await h.close();
+      });
+
+      it('op71_error_role_unchanged', async () => {
+        // F4: 403
+        const h = await make();
+        await h.reset();
+        h.seedServicio();
+        const snap = await h.nativeSnapshot();
+        await expectCode(
+          executeOp71(
+            h.context,
+            { params: {}, query: {}, body: {} },
+            h.withActor({ roles: ['laboratorista'] }),
+          ),
+          'forbidden',
+        );
+        expect(await h.nativeSnapshot()).toEqual(snap);
+        await h.close();
+      });
+
+      it('op71_error_foreign_unchanged', async () => {
+        // F4: 404 — actor institution not registered in this store
+        const h = await make();
+        await h.reset();
+        h.seedServicio();
+        const snap = await h.nativeSnapshot();
+        await expectCode(
+          executeOp71(
+            h.context,
+            { params: {}, query: {}, body: {} },
+            {
+              ...h.actor,
+              id_institucion: asInstitutionId(OTHER_INSTITUTION_ID),
+              roles: ['caja'],
+            },
+          ),
+          'not_found',
+        );
+        expect(await h.nativeSnapshot()).toEqual(snap);
         await h.close();
       });
     }

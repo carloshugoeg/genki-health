@@ -187,6 +187,9 @@ async function buildHarness(institutionId: number, sequences: MemoryIdPort): Pro
       store.seedServicio(servicio);
       return servicio;
     },
+    setCargoEstado(id_cargo: number, estado: string): void {
+      store.setCargoEstado(id_cargo, estado);
+    },
     setStoreUnavailable(value: boolean): void {
       store.setUnavailable(value);
     },
@@ -208,5 +211,5 @@ moduleContract(
     const sequences = new MemoryIdPort();
     return buildHarness(1, sequences);
   },
-  [68, 69],
+  [68, 69, 70, 71],
 );
