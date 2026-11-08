@@ -41,7 +41,7 @@ Order is the order a single agent follows when dependencies are satisfied. E1-05
 | 31 | E2-P3B-02 | Implement MySQL pediatric registration, guardians and patient queries | backlog | agent | E2-P3B-01 |
 | 32 | E2-P3B-03 | Implement MySQL consultation bundle and shared contract runner | backlog | agent | E2-P3B-02 |
 | 33 | E2-P3B-04 | Enforce and prove MySQL app/report roles | backlog | agent | E2-P3B-03 |
-| 34 | E2-P4A-01 | Create Mongo validators/indexes and real replica-set transactions | backlog | agent | E2-P3A-01, E2-P1-03, E2-P2-06 |
+| 34 | E2-P4A-01 | Create Mongo validators/indexes and real replica-set transactions | done | agent | E2-P3A-01, E2-P1-03, E2-P2-06 |
 | 35 | E2-P4A-02 | Implement Mongo patient/expediente/guardian transactions and search | backlog | agent | E2-P4A-01 |
 | 36 | E2-P4A-03 | Implement Mongo bounded embedded consultations and full contract runner | backlog | agent | E2-P4A-02 |
 | 37 | E2-P4A-04 | Enforce and prove Mongo app/report permissions | backlog | agent | E2-P4A-03 |

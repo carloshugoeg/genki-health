@@ -1,12 +1,8 @@
 import { MongoClient, type Db } from 'mongodb';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { MongoIdPort } from './id.js';
-import { toBsonDate, toBsonInt } from './mapper.js';
-import {
-  assertMongoPrimaryReady,
-  installMongoSchema,
-  MONGO_SCHEMA_COLLECTIONS,
-} from './schema.js';
+import { toBsonDate, toBsonInt, type MongoStringIdDoc } from './mapper.js';
+import { assertMongoPrimaryReady, installMongoSchema, MONGO_SCHEMA_COLLECTIONS } from './schema.js';
 import { activeMongoSession, MongoUnitOfWork } from './unit-of-work.js';
 
 const TEST_DB = 'genki_test_mongodb_schema';
@@ -54,19 +50,25 @@ describe('Mongo schema and replica-set transactions (E2-P4A-01)', () => {
     await client.connect();
     await assertMongoPrimaryReady(client);
     db = client.db(TEST_DB);
-  });
+    await db.dropDatabase();
+    await installMongoSchema(db);
+  }, 60_000);
 
   beforeEach(async () => {
-    await client.db(TEST_DB).dropDatabase();
-    await installMongoSchema(db);
-  });
+    for (const name of MONGO_SCHEMA_COLLECTIONS) {
+      await db.collection(name).deleteMany({});
+    }
+  }, 30_000);
 
   afterAll(async () => {
     if (client) {
-      await client.db(TEST_DB).dropDatabase().catch(() => undefined);
+      await client
+        .db(TEST_DB)
+        .dropDatabase()
+        .catch(() => undefined);
       await client.close();
     }
-  });
+  }, 30_000);
 
   it('mongo_requires_primary_replica_set', async () => {
     const hello = await db.command({ hello: 1 });
@@ -90,13 +92,14 @@ describe('Mongo schema and replica-set transactions (E2-P4A-01)', () => {
       (idx) =>
         idx.unique === true &&
         idx.partialFilterExpression?.es_principal === true &&
-        idx.key?.id_paciente === 1,
+        idx.key?.id_paciente === 1 &&
+        idx.key?.es_principal === 1,
     );
     expect(principalPartial, 'responsables partial unique principal').toBeDefined();
   });
 
   it('mongo_validator_rejects_wrong_scalar', async () => {
-    const coll = db.collection('pacientes');
+    const coll = db.collection<MongoStringIdDoc>('pacientes');
     const bad = samplePacienteDoc({
       id_paciente: 'not-an-int',
     });
@@ -118,14 +121,14 @@ describe('Mongo schema and replica-set transactions (E2-P4A-01)', () => {
     });
     expect(allocated).toBe(1);
 
-    const counter = await db.collection('counters').findOne({
+    const counter = await db.collection<MongoStringIdDoc>('counters').findOne({
       _id: `${INSTITUTION_ID}:paciente`,
     });
     expect(counter).not.toBeNull();
     expect(Number(counter!.next)).toBe(2);
     // Driver promoteValues maps Int32→number on read; assert wire type via $type.
     const counterTypes = await db
-      .collection('counters')
+      .collection<MongoStringIdDoc>('counters')
       .aggregate([
         { $match: { _id: `${INSTITUTION_ID}:paciente` } },
         {
@@ -139,12 +142,14 @@ describe('Mongo schema and replica-set transactions (E2-P4A-01)', () => {
     expect(counterTypes[0]?.nextType).toBe('int');
     expect(counterTypes[0]?.institutionType).toBe('int');
 
-    await db.collection('pacientes').insertOne(samplePacienteDoc());
-    const stored = await db.collection('pacientes').findOne({ _id: `${INSTITUTION_ID}:1` });
+    await db.collection<MongoStringIdDoc>('pacientes').insertOne(samplePacienteDoc());
+    const stored = await db.collection<MongoStringIdDoc>('pacientes').findOne({
+      _id: `${INSTITUTION_ID}:1`,
+    });
     expect(typeof stored!._id).toBe('string');
     expect(stored!._id).not.toMatch(/ObjectId/i);
     const pacienteTypes = await db
-      .collection('pacientes')
+      .collection<MongoStringIdDoc>('pacientes')
       .aggregate([
         { $match: { _id: `${INSTITUTION_ID}:1` } },
         {
@@ -161,10 +166,12 @@ describe('Mongo schema and replica-set transactions (E2-P4A-01)', () => {
 
   it('mongo_transaction_failure_aborts', async () => {
     const uow = new MongoUnitOfWork(client, db);
-    const coll = db.collection('municipios');
+    const coll = db.collection<MongoStringIdDoc>('municipios');
 
     await expect(
       uow.runInTransaction(async () => {
+        const session = activeMongoSession();
+        expect(session).toBeDefined();
         await coll.insertOne(
           {
             _id: `${INSTITUTION_ID}:1`,
@@ -172,7 +179,7 @@ describe('Mongo schema and replica-set transactions (E2-P4A-01)', () => {
             id_municipio: toBsonInt(1),
             nombre: 'Municipio de prueba',
           },
-          { session: activeMongoSession() },
+          { session: session! },
         );
         throw new Error('forced abort');
       }),
@@ -181,6 +188,8 @@ describe('Mongo schema and replica-set transactions (E2-P4A-01)', () => {
     expect(await coll.countDocuments({})).toBe(0);
 
     await uow.runInTransaction(async () => {
+      const session = activeMongoSession();
+      expect(session).toBeDefined();
       await coll.insertOne(
         {
           _id: `${INSTITUTION_ID}:1`,
@@ -188,7 +197,7 @@ describe('Mongo schema and replica-set transactions (E2-P4A-01)', () => {
           id_municipio: toBsonInt(1),
           nombre: 'Municipio de prueba',
         },
-        { session: activeMongoSession() },
+        { session: session! },
       );
       await uow.runInTransaction(async () => {
         expect(activeMongoSession()).toBeDefined();

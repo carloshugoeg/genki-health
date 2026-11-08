@@ -12,18 +12,19 @@ export class MongoCatalogoRepository implements CatalogoRepositoryPort {
 
   async list(): Promise<CatalogosDto> {
     const session = activeMongoSession();
+    const opts = session ? { session } : {};
     const filter = { institution_id: toBsonInt(this.institutionId) };
 
     const [municipioDocs, profesionalDocs, medicamentoDocs] = await Promise.all([
-      this.db.collection('municipios').find(filter, { session }).sort({ id_municipio: 1 }).toArray(),
+      this.db.collection('municipios').find(filter, opts).sort({ id_municipio: 1 }).toArray(),
       this.db
         .collection('profesionales')
-        .find({ ...filter, activo: true }, { session })
+        .find({ ...filter, activo: true }, opts)
         .sort({ id_profesional: 1 })
         .toArray(),
       this.db
         .collection('medicamentos')
-        .find({ ...filter, activo: true }, { session })
+        .find({ ...filter, activo: true }, opts)
         .sort({ id_medicamento: 1 })
         .toArray(),
     ]);

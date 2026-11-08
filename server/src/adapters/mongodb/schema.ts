@@ -20,7 +20,10 @@ interface IndexSpec {
 /** Compound / partial unique indexes from C5.1. */
 export const MONGO_INDEXES: Record<string, IndexSpec[]> = {
   pacientes: [
-    { keys: { institution_id: 1, id_paciente: 1 }, options: { unique: true, name: 'uq_inst_id_paciente' } },
+    {
+      keys: { institution_id: 1, id_paciente: 1 },
+      options: { unique: true, name: 'uq_inst_id_paciente' },
+    },
     {
       keys: { institution_id: 1, numero_documento: 1 },
       options: { unique: true, name: 'uq_inst_numero_documento' },
@@ -45,9 +48,12 @@ export const MONGO_INDEXES: Record<string, IndexSpec[]> = {
     },
   ],
   responsables: [
-    { keys: { institution_id: 1, id_paciente: 1 }, options: { name: 'ix_inst_responsable_paciente' } },
     {
       keys: { institution_id: 1, id_paciente: 1 },
+      options: { name: 'ix_inst_responsable_paciente' },
+    },
+    {
+      keys: { institution_id: 1, id_paciente: 1, es_principal: 1 },
       options: {
         unique: true,
         name: 'uq_inst_paciente_principal',
@@ -56,7 +62,10 @@ export const MONGO_INDEXES: Record<string, IndexSpec[]> = {
     },
   ],
   consultas: [
-    { keys: { institution_id: 1, id_consulta: 1 }, options: { unique: true, name: 'uq_inst_id_consulta' } },
+    {
+      keys: { institution_id: 1, id_consulta: 1 },
+      options: { unique: true, name: 'uq_inst_id_consulta' },
+    },
     {
       keys: { institution_id: 1, id_expediente: 1, fecha_hora_inicio: -1, id_consulta: -1 },
       options: { name: 'ix_inst_expediente_inicio_consulta' },
@@ -112,7 +121,11 @@ export async function assertMongoPrimaryReady(client: MongoClient): Promise<void
   }
 }
 
-async function ensureCollection(db: Db, name: string, jsonSchema: Record<string, unknown>): Promise<void> {
+async function ensureCollection(
+  db: Db,
+  name: string,
+  jsonSchema: Record<string, unknown>,
+): Promise<void> {
   const existing = await db.listCollections({ name }, { nameOnly: true }).toArray();
   const validator = {
     $jsonSchema: jsonSchema.$jsonSchema ?? jsonSchema,
@@ -147,6 +160,9 @@ async function ensureIndexes(db: Db, name: string, specs: IndexSpec[]): Promise<
 export async function installMongoSchema(db: Db): Promise<void> {
   for (const name of MONGO_SCHEMA_COLLECTIONS) {
     const entry = MONGO_JSON_SCHEMA[name];
+    if (!entry) {
+      throw new Error(`missing mongo json schema for collection ${name}`);
+    }
     await ensureCollection(db, name, entry);
     await ensureIndexes(db, name, MONGO_INDEXES[name] ?? []);
   }

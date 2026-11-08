@@ -1,5 +1,11 @@
 import { Int32 } from 'mongodb';
 
+/** String `_id` documents (`<institution>:<key>`); never ObjectId DTO keys. */
+export interface MongoStringIdDoc {
+  _id: string;
+  [key: string]: unknown;
+}
+
 /** BSON Int32 for every numeric id / counter field (C5.1). */
 export function toBsonInt(value: number): Int32 {
   return new Int32(value);
