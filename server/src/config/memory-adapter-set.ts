@@ -10,11 +10,15 @@ import {
   createMemoryInstitutionState,
   type MemoryInstitutionState,
 } from '../adapters/memory/state.js';
-import type { PersistenceCheckpoint } from '../ports/index.js';
+import type { IdPort, PersistenceCheckpoint } from '../ports/index.js';
 import type { AdapterSet } from './adapter-registry.js';
 
 export interface MemoryAdapterOptions {
+  /** Inject a shared sequence domain for institutions in one simulated physical store. */
+  ids?: IdPort;
   afterWrite?: (point: PersistenceCheckpoint) => void;
+  afterConsulta?: () => void;
+  afterDiagnostico?: () => void;
 }
 
 export function openMemoryAdapterSet(
