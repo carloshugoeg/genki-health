@@ -1,11 +1,10 @@
 # Now
 
-**No active agent claim.** E2-P4A-03 is Done on `cursor/e2-p4a-03-mongo-consulta-26d7` (stacked on `cursor/e2-p4a-02-mongo-patient-beb5`). Do not start the next ticket until an owner opens that claim.
+**Active claim:** E2-P4A-04 — Enforce and prove Mongo app/report permissions on `cursor/e2-p4a-04-mongo-permissions-f1c6` (stacked on `cursor/e2-p4a-03-mongo-consulta-26d7`). Claimed 2026-11-08 ~14:00 America/Guatemala by Auto (Cursor).
 
 ## Agent lane (dependency-ready)
 
-- **Next:** E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (depends on E2-P2-06 + E2-P2-01; ready when claimed).
-- E2-P4A-04 — Enforce and prove Mongo app/report permissions (depends on E2-P4A-03; ready when claimed).
+- **Next after this claim:** E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (depends on E2-P2-06 + E2-P2-01; ready when claimed).
 - E2-P2-09 — Extract storage-neutral JWT service with persistent-session port (depends on E2-P2-01; ready when claimed).
 - E2-P3A-02 — Create PostgreSQL migrations, type mapping and scoped transaction wrapper (depends on E2-P3A-01 + E2-P1-02 + E2-P2-06; ready when claimed).
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
