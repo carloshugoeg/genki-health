@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { asInstitutionId } from '@genki/shared';
 import type { CONTACTO_EMERGENCIA } from '@genki/shared/full/patient';
+import { MemoryIdPort } from '../../../src/adapters/memory/id.js';
 import {
   getExtensionNamespace,
   registerExtensionNamespace,
@@ -8,7 +9,12 @@ import {
 } from '../../../src/adapters/memory/full-state.js';
 import { MemoryPatientRepository } from '../../../src/adapters/memory/full/patient.js';
 import { createTestMemoryAdapterSet } from '../../../src/config/memory-test-factory.js';
-import type { FullContext, FullModulePorts, OperationContext } from '../../../src/ports/full/context.js';
+import type { IdPort } from '../../../src/ports/id.js';
+import type {
+  FullContext,
+  FullModulePorts,
+  OperationContext,
+} from '../../../src/ports/full/context.js';
 import type { PatientRepositoryPort } from '../../../src/ports/full/patient.js';
 import { moduleContract, type FullHarness } from '../patient.contract.js';
 
@@ -52,11 +58,19 @@ function actorFor(institutionId: number): OperationContext {
   };
 }
 
-async function makeHarness(institutionId = 1): Promise<FullHarness> {
-  resetExtensionRegistryForTests();
-  registerExtensionNamespace(PATIENT_SLUG);
+async function makeHarness(
+  institutionId = 1,
+  sharedIds: IdPort = new MemoryIdPort(),
+  registerNamespace = true,
+): Promise<FullHarness> {
+  if (registerNamespace) {
+    resetExtensionRegistryForTests();
+    registerExtensionNamespace(PATIENT_SLUG);
+  }
 
-  const set = createTestMemoryAdapterSet('hospital_general', institutionId);
+  const set = createTestMemoryAdapterSet('hospital_general', institutionId, {
+    ids: sharedIds,
+  });
   const patientRepo = new MemoryPatientRepository({
     state: set.memoryState,
     ids: set.ids,
@@ -120,7 +134,7 @@ async function makeHarness(institutionId = 1): Promise<FullHarness> {
       patientRepo.failAfterWrite(n);
     },
     async otherInstitution() {
-      return makeHarness(99);
+      return makeHarness(99, sharedIds, false);
     },
     async close() {},
   };
