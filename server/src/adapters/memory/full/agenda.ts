@@ -2,11 +2,13 @@ import type { InstitutionId } from '@genki/shared';
 import type { CITA } from '@genki/shared/full/agenda';
 import { ClinicalError } from '../../../domain/clinical-error.js';
 import {
+  assertArrivalEstado,
   assertCancellableEstado,
   assertNoOverlap,
   assertNotInPast,
   assertReschedulableEstado,
   generateAvailableSlots,
+  guatemalaDayBoundsUtc,
   intervalEndIso,
   lockKeysForInterval,
   parseOp20Query,
@@ -15,6 +17,9 @@ import {
   parseOp22Params,
   parseOp23Body,
   parseOp23Params,
+  parseOp24Params,
+  parseOp25Query,
+  projectCitaMotivo,
   type BusyInterval,
 } from '../../../domain/full/agenda.js';
 import type {
@@ -26,6 +31,10 @@ import type {
   Op22Response,
   Op23Request,
   Op23Response,
+  Op24Request,
+  Op24Response,
+  Op25Request,
+  Op25Response,
 } from '../../../ports/full/agenda.js';
 import type { OperationContext } from '../../../ports/full/context.js';
 import type { IdPort, UnitOfWorkPort } from '../../../ports/index.js';
@@ -47,6 +56,8 @@ export type MemoryAgendaAdapter = {
   op21(input: Op21Request, context: OperationContext): Promise<Op21Response>;
   op22(input: Op22Request, context: OperationContext): Promise<Op22Response>;
   op23(input: Op23Request, context: OperationContext): Promise<Op23Response>;
+  op24(input: Op24Request, context: OperationContext): Promise<Op24Response>;
+  op25(input: Op25Request, context: OperationContext): Promise<Op25Response>;
   failAfterWrite(n: number): void;
   setStoreUnavailable(value: boolean): void;
   resetTestHooks(): void;
@@ -260,6 +271,53 @@ export function createMemoryAgendaAdapter(deps: MemoryAgendaDeps): MemoryAgendaA
       putExtensionRow(ns, TABLE_CITAS, updated.id_cita, updated);
       noteWrite();
       return structuredClone(updated);
+    },
+
+    async op24(input, _context): Promise<Op24Response> {
+      assertStoreUp();
+      const params = parseOp24Params(input.params as Record<string, unknown>);
+      const ns = namespaceOf(deps.state);
+      const current = requireCita(ns, params.id);
+      const action = assertArrivalEstado(current.estado);
+      if (action === 'noop') {
+        return structuredClone(current);
+      }
+      const updated: CITA = {
+        ...current,
+        estado: 'confirmada',
+      };
+      putExtensionRow(ns, TABLE_CITAS, updated.id_cita, updated);
+      noteWrite();
+      return structuredClone(updated);
+    },
+
+    async op25(input, context): Promise<Op25Response> {
+      assertStoreUp();
+      const query = parseOp25Query(input.query as Record<string, unknown>);
+      if (query.id_profesional !== undefined) {
+        requireProfessional(query.id_profesional);
+      }
+      const { desde, hasta } = guatemalaDayBoundsUtc(query.fecha);
+      const desdeMs = Date.parse(desde);
+      const hastaMs = Date.parse(hasta);
+      const ns = namespaceOf(deps.state);
+      const rows = listCitas(ns)
+        .filter((row) => {
+          const at = Date.parse(row.fecha_hora);
+          if (!(at >= desdeMs && at < hastaMs)) {
+            return false;
+          }
+          if (query.id_profesional !== undefined && row.id_profesional !== query.id_profesional) {
+            return false;
+          }
+          return true;
+        })
+        .sort((a, b) => {
+          const byTime = Date.parse(a.fecha_hora) - Date.parse(b.fecha_hora);
+          return byTime !== 0 ? byTime : a.id_cita - b.id_cita;
+        })
+        .map((row) => projectCitaMotivo(structuredClone(row), context.roles));
+      return rows;
     },
 
     failAfterWrite(n: number): void {
