@@ -15,16 +15,16 @@ import {
   createTestMemoryAdapterSet,
   type TestMemoryAdapterSet,
 } from '../../config/memory-test-factory.js';
+import type { IdentityUser } from '../../ports/identity-store.js';
+import { testCredentials } from '../../test/credentials.js';
 import {
   SEED_CIE10,
   SEED_MEDICAMENTO_1,
   SEED_PROFESIONAL_ID,
   expectedPrimaryCatalog,
 } from '../../testing/catalog-seeds.js';
-import { MemoryAuthAdapter, buildDemoUsers, type MemoryAuthOptions } from '../memory/auth.js';
+import { buildDemoUsers } from '../memory/auth.js';
 import { buildHttpApp } from './app.js';
-
-const JWT_SECRET = 'test-secret-at-least-16';
 
 function adult(numero_documento: string, name = 'Ana'): RegisterPacienteRequest {
   return {
@@ -102,9 +102,10 @@ function closeBody(): CloseConsultaRequest {
 }
 
 async function authWithHospitalRoles() {
-  const demos = await buildDemoUsers();
+  const { password, jwtSecret } = testCredentials();
+  const demos = await buildDemoUsers(password);
   const hash = demos[0]!.hash_contrasena;
-  const users: NonNullable<MemoryAuthOptions['users']> = [
+  const users: IdentityUser[] = [
     ...demos,
     {
       id_usuario: 10,
@@ -134,7 +135,7 @@ async function authWithHospitalRoles() {
       estado: 'activo',
     },
   ];
-  return MemoryAuthAdapter.create({ jwtSecret: JWT_SECRET, users });
+  return createPhase0Auth(jwtSecret, users);
 }
 
 function clinicalRegistry(hospital: TestMemoryAdapterSet, pediatric: TestMemoryAdapterSet) {
@@ -159,10 +160,11 @@ async function loginAs(
     | 'laboratorio_clinico'
     | 'clinica_odontologica' = 'hospital_general',
 ): Promise<string> {
+  const { password } = testCredentials();
   const login = await app.inject({
     method: 'POST',
     url: '/api/auth/login',
-    payload: { email, password: 'GenkiDev1', institution_kind },
+    payload: { email, password, institution_kind },
   });
   expect(login.statusCode).toBe(200);
   return (login.json() as AuthTokensDto).access_token;
@@ -170,7 +172,8 @@ async function loginAs(
 
 describe('HTTP auth routing', () => {
   it('returns tokens from login and routes pacientes via JWT institution', async () => {
-    const auth = await createPhase0Auth(JWT_SECRET);
+    const { password, jwtSecret } = testCredentials();
+    const auth = await createPhase0Auth(jwtSecret);
     const app = buildHttpApp({ registry: createPhase0Registry(), auth });
 
     const login = await app.inject({
@@ -178,12 +181,12 @@ describe('HTTP auth routing', () => {
       url: '/api/auth/login',
       payload: {
         email: 'hospital@genki.local',
-        password: 'GenkiDev1',
+        password,
         institution_kind: 'hospital_general',
       },
     });
     expect(login.statusCode).toBe(200);
-    const tokens = login.json() as { access_token: string };
+    const tokens = login.json() as { access_token: string; refresh_token: string };
 
     const unauthorized = await app.inject({
       method: 'POST',
@@ -215,6 +218,20 @@ describe('HTTP auth routing', () => {
     expect(created.statusCode).toBe(201);
     const body = created.json() as { paciente: { id_institucion: number } };
     expect(body.paciente.id_institucion).toBe(1);
+
+    const logout = await app.inject({
+      method: 'POST',
+      url: '/api/auth/logout',
+      payload: { refresh_token: tokens.refresh_token },
+    });
+    expect(logout.statusCode).toBe(204);
+
+    const replay = await app.inject({
+      method: 'POST',
+      url: '/api/auth/refresh',
+      payload: { refresh_token: tokens.refresh_token },
+    });
+    expect(replay.statusCode).toBe(401);
   });
 });
 

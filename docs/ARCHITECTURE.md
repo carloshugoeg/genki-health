@@ -14,7 +14,7 @@ El repositorio tiene el esqueleto cliente-servidor (npm workspaces) traído desd
 | Diagramas Chen detallados (sección 6.4) | Parcial (E1-03/E1-05 pueden seguir abiertos) | `docs/entregas/entrega-1/diagramas/chen-6.4.*` |
 | Monorepo TypeScript (Fastify + React/Vite) | Scaffold on `main` (E2-01 via PR #10) | `server/`, `web/`, `shared/` |
 | Puertos hexagonales + adaptador memory | Live reference base for TDD | `server/src/ports`, `server/src/adapters/memory` |
-| Auth / JWT / sesión | Locked + implementado (memory SoR) | `server/src/ports/auth.ts`, `adapters/memory/auth.ts` |
+| Auth / JWT / sesión | Locked + JWT service + IdentityStorePort (memory SoR) | `server/src/ports/auth.ts`, `adapters/auth/service.ts`, `adapters/memory/auth.ts` (`MemoryIdentityStore`) |
 | Motores reales (pg/mysql/mongo/firebase) | Pendiente / incomplete | carpetas vacías bajo `server/src/adapters/` |
 | `scripts/validate.sh` + CI | G1 base gate on `main` (E2-P0-03) | `scripts/validate.sh`, `scripts/journal-gate.mjs`, `.github/workflows/ci.yml` |
 | Contratos HTTP/puertos/DTO (C2/C3) | Congelados (E2-P1-01); tipos/schemas/runtime parcial (E2-P2-01); suite adaptadores C3.4 memory verde (E2-P2-02…E2-P2-06); memory UoW/registry (E2-P2-03); alta/búsqueda/archivo (E2-P2-04); invariantes de consulta (E2-P2-05); consulta cerrada memory + bridge TEST-ONLY (E2-P2-06); HTTP search/detail/catalog/archive (E2-P2-07) | `docs/plan/contracts/API.md`, `PORTS-TESTS.md`, `DTO-BASELINE.ts`, `shared/src/mvp.ts`, `server/src/adapters/http/schemas.ts`, `server/src/adapters/http/errors.ts`, `server/src/adapters/http/app.ts`, `server/src/domain/clinical-error.ts`, `server/src/domain/consulta.ts`, `server/src/application/list-pacientes.ts`, `server/src/application/get-historial.ts`, `server/src/application/close-consulta.ts`, `server/test/contracts/`, `server/src/adapters/memory/state.ts`, `server/src/adapters/memory/paciente-repository.ts`, `server/src/adapters/memory/consulta-repository.ts`, `server/src/adapters/memory/catalogo-repository.ts`, `server/src/config/adapter-registry.ts`, `server/src/testing/memory-harness.ts` |
@@ -102,13 +102,15 @@ flowchart TB
     FB --> FBDB
 ```
 
-### Flujo de autenticación (locked 2026-10-19)
+### Flujo de autenticación (locked 2026-10-19; E2-P2-09)
 
-1. `POST /api/auth/login` con `email`, `password`, `institution_kind` → Argon2id verify → access JWT (30m) + refresh JWT (14d).
-2. Claims de access: `sub`, `email`, `institucion_id`, `institucion_kind`, `roles`, `motor`, `iat`, `exp`, `typ:"access"`.
+1. `POST /api/auth/login` con `email`, `password`, `institution_kind` → `IdentityStorePort.findUser` → Argon2id verify → access JWT (30m) + refresh JWT (14d). El refresh `jti` se persiste como `SHA-256(jti)` vía `insertRefresh`.
+2. Claims de access: `sub`, `email`, `institucion_id`, `institucion_kind`, `roles`, `motor`, `iat`, `exp`, `typ:"access"`. Verify usa `algorithms: ['HS256']`, pares kind/id 1–4, y `estado === 'activo'`.
 3. Rutas clínicas (p. ej. `POST /api/pacientes`) exigen `Authorization: Bearer <access>`; el middleware resuelve el registro.
-4. `POST /api/auth/refresh` rota el refresh (`jti` anterior invalidado).
-5. Identidad: `AuthPort` de plataforma (memory ahora; Hospital PostgreSQL después). No es por-adaptador clínico.
+4. `POST /api/auth/refresh` rota con `rotateRefresh` (un ganador); replay o perdedor concurrente → `invalid_token`.
+5. `POST /api/auth/logout` (sin bearer) revoca el refresh; el access ya emitido sigue válido hasta `exp` (C1 / A12).
+6. Identidad: `createAuthService` (storage-neutral) sobre `IdentityStorePort`. Memory SoR ahora; Hospital PostgreSQL en E2-P3A-05. No es por-adaptador clínico.
+7. Statechart de sesión: `docs/progress/statecharts/e2-p2-09/`.
 
 ## Módulos del dominio clínico
 

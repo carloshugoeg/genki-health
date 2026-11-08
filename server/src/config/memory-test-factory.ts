@@ -3,6 +3,11 @@ import type { MemoryInstitutionState } from '../adapters/memory/state.js';
 import type { AdapterSet } from './adapter-registry.js';
 import { openMemoryAdapterSet, type MemoryAdapterOptions } from './memory-adapter-set.js';
 
+export {
+  registerExtensionNamespace,
+  resetExtensionRegistryForTests,
+} from '../adapters/memory/full-state.js';
+
 export interface TestMemoryAdapterSet extends AdapterSet {
   readonly memoryState: MemoryInstitutionState;
 }

@@ -21,6 +21,7 @@ export interface AuthPort {
   login(input: LoginRequestDto): Promise<AuthTokensDto>;
   refresh(refreshToken: string): Promise<AuthTokensDto>;
   verifyAccessToken(accessToken: string): Promise<AuthPrincipalDto>;
+  logout(refreshToken: string): Promise<void>;
 }
 
 export function isInstitutionKind(value: string): value is InstitutionKind {

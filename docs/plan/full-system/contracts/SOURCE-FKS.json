@@ -1,0 +1,590 @@
+[
+  {
+    "entity": "PACIENTE",
+    "column": "id_institucion",
+    "target": "INSTITUCION",
+    "source_line": 443,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "PACIENTE",
+    "column": "id_municipio",
+    "target": "MUNICIPIO",
+    "source_line": 469,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CONTACTO_EMERGENCIA",
+    "column": "id_paciente",
+    "target": "PACIENTE",
+    "source_line": 483,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "EXPEDIENTE",
+    "column": "id_paciente",
+    "target": "PACIENTE",
+    "source_line": 500,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "ANTECEDENTE",
+    "column": "id_expediente",
+    "target": "EXPEDIENTE",
+    "source_line": 519,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "ALERGIA",
+    "column": "id_expediente",
+    "target": "EXPEDIENTE",
+    "source_line": 536,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "PROFESIONAL",
+    "column": "id_institucion",
+    "target": "INSTITUCION",
+    "source_line": 557,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "PROFESIONAL",
+    "column": "id_especialidad",
+    "target": "ESPECIALIDAD",
+    "source_line": 567,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "USUARIO",
+    "column": "id_institucion",
+    "target": "INSTITUCION",
+    "source_line": 597,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "USUARIO",
+    "column": "id_profesional",
+    "target": "PROFESIONAL",
+    "source_line": 599,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "USUARIO",
+    "column": "id_rol",
+    "target": "ROL",
+    "source_line": 607,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "ROL_PERMISO",
+    "column": "id_rol",
+    "target": "ROL",
+    "source_line": 634,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "ROL_PERMISO",
+    "column": "id_permiso",
+    "target": "PERMISO",
+    "source_line": 636,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CITA",
+    "column": "id_paciente",
+    "target": "PACIENTE",
+    "source_line": 643,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CITA",
+    "column": "id_profesional",
+    "target": "PROFESIONAL",
+    "source_line": 645,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CITA",
+    "column": "id_especialidad",
+    "target": "ESPECIALIDAD",
+    "source_line": 647,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CITA",
+    "column": "id_usuario_registra",
+    "target": "USUARIO",
+    "source_line": 657,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CONSULTA",
+    "column": "id_expediente",
+    "target": "EXPEDIENTE",
+    "source_line": 666,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CONSULTA",
+    "column": "id_profesional",
+    "target": "PROFESIONAL",
+    "source_line": 668,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CONSULTA",
+    "column": "id_cita",
+    "target": "CITA",
+    "source_line": 670,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "SIGNOS_VITALES",
+    "column": "id_consulta",
+    "target": "CONSULTA",
+    "source_line": 693,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "DIAGNOSTICO",
+    "column": "id_consulta",
+    "target": "CONSULTA",
+    "source_line": 722,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "TRATAMIENTO",
+    "column": "id_diagnostico",
+    "target": "DIAGNOSTICO",
+    "source_line": 748,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "RECETA",
+    "column": "id_consulta",
+    "target": "CONSULTA",
+    "source_line": 767,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "RECETA",
+    "column": "id_profesional",
+    "target": "PROFESIONAL",
+    "source_line": 775,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "DETALLE_RECETA",
+    "column": "id_receta",
+    "target": "RECETA",
+    "source_line": 781,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "DETALLE_RECETA",
+    "column": "id_medicamento",
+    "target": "MEDICAMENTO",
+    "source_line": 783,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "SERVICIO_FACTURABLE",
+    "column": "id_institucion",
+    "target": "INSTITUCION",
+    "source_line": 823,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "FACTURA",
+    "column": "id_institucion",
+    "target": "INSTITUCION",
+    "source_line": 845,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "FACTURA",
+    "column": "id_paciente",
+    "target": "PACIENTE",
+    "source_line": 849,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "FACTURA",
+    "column": "id_usuario_emite",
+    "target": "USUARIO",
+    "source_line": 877,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "DETALLE_FACTURA",
+    "column": "id_factura",
+    "target": "FACTURA",
+    "source_line": 888,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "DETALLE_FACTURA",
+    "column": "codigo_servicio",
+    "target": "SERVICIO_FACTURABLE",
+    "source_line": 892,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "DETALLE_FACTURA",
+    "column": "id_cargo",
+    "target": "CARGO",
+    "source_line": 902,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "PAGO",
+    "column": "id_factura",
+    "target": "FACTURA",
+    "source_line": 915,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "PAGO",
+    "column": "id_usuario_recibe",
+    "target": "USUARIO",
+    "source_line": 927,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "TARIFA_HONORARIO",
+    "column": "id_profesional",
+    "target": "PROFESIONAL",
+    "source_line": 968,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "TARIFA_HONORARIO",
+    "column": "codigo_servicio",
+    "target": "SERVICIO_FACTURABLE",
+    "source_line": 970,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "PARTICIPACION",
+    "column": "id_profesional",
+    "target": "PROFESIONAL",
+    "source_line": 998,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "PARTICIPACION",
+    "column": "codigo_rol",
+    "target": "ROL_CLINICO",
+    "source_line": 1000,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "PARTICIPACION",
+    "column": "id_consulta",
+    "target": "CONSULTA",
+    "source_line": 1002,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "PARTICIPACION",
+    "column": "id_procedimiento",
+    "target": "PROCEDIMIENTO",
+    "source_line": 1004,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "INSUMO",
+    "column": "id_institucion",
+    "target": "INSTITUCION",
+    "source_line": 1026,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "INSUMO",
+    "column": "id_medicamento",
+    "target": "MEDICAMENTO",
+    "source_line": 1034,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "INSUMO",
+    "column": "codigo_servicio",
+    "target": "SERVICIO_FACTURABLE",
+    "source_line": 1040,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CONSUMO_INSUMO",
+    "column": "id_insumo",
+    "target": "INSUMO",
+    "source_line": 1058,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CONSUMO_INSUMO",
+    "column": "id_admision",
+    "target": "ADMISION",
+    "source_line": 1060,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CONSUMO_INSUMO",
+    "column": "id_procedimiento",
+    "target": "PROCEDIMIENTO",
+    "source_line": 1062,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CONSUMO_INSUMO",
+    "column": "id_consulta",
+    "target": "CONSULTA",
+    "source_line": 1064,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CONSUMO_INSUMO",
+    "column": "id_profesional_registra",
+    "target": "PROFESIONAL",
+    "source_line": 1076,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CARGO",
+    "column": "id_expediente",
+    "target": "EXPEDIENTE",
+    "source_line": 1086,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CARGO",
+    "column": "codigo_servicio",
+    "target": "SERVICIO_FACTURABLE",
+    "source_line": 1088,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CARGO",
+    "column": "id_consulta",
+    "target": "CONSULTA",
+    "source_line": 1092,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CARGO",
+    "column": "id_procedimiento",
+    "target": "PROCEDIMIENTO",
+    "source_line": 1094,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CARGO",
+    "column": "id_admision",
+    "target": "ADMISION",
+    "source_line": 1096,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CARGO",
+    "column": "id_consumo",
+    "target": "CONSUMO_INSUMO",
+    "source_line": 1098,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CARGO",
+    "column": "id_participacion",
+    "target": "PARTICIPACION",
+    "source_line": 1100,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "DOCUMENTO_ADJUNTO",
+    "column": "id_expediente",
+    "target": "EXPEDIENTE",
+    "source_line": 1126,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "DOCUMENTO_ADJUNTO",
+    "column": "id_consulta",
+    "target": "CONSULTA",
+    "source_line": 1128,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "BITACORA",
+    "column": "id_usuario",
+    "target": "USUARIO",
+    "source_line": 1144,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CAMA",
+    "column": "id_servicio",
+    "target": "SERVICIO",
+    "source_line": 1173,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "CAMA",
+    "column": "codigo_servicio",
+    "target": "SERVICIO_FACTURABLE",
+    "source_line": 1179,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "ADMISION",
+    "column": "id_expediente",
+    "target": "EXPEDIENTE",
+    "source_line": 1191,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "ADMISION",
+    "column": "id_consulta_origen",
+    "target": "CONSULTA",
+    "source_line": 1193,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "ADMISION",
+    "column": "id_cama",
+    "target": "CAMA",
+    "source_line": 1195,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "ADMISION",
+    "column": "id_diagnostico_ingreso",
+    "target": "DIAGNOSTICO",
+    "source_line": 1203,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "ADMISION",
+    "column": "id_diagnostico_egreso",
+    "target": "DIAGNOSTICO",
+    "source_line": 1205,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "NOTA_EVOLUCION",
+    "column": "id_admision",
+    "target": "ADMISION",
+    "source_line": 1219,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "NOTA_EVOLUCION",
+    "column": "id_profesional",
+    "target": "PROFESIONAL",
+    "source_line": 1221,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "NOTA_EVOLUCION",
+    "column": "id_nota_anterior",
+    "target": "NOTA_EVOLUCION",
+    "source_line": 1229,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "PROCEDIMIENTO",
+    "column": "id_admision",
+    "target": "ADMISION",
+    "source_line": 1247,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "PROCEDIMIENTO",
+    "column": "id_consulta",
+    "target": "CONSULTA",
+    "source_line": 1249,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "PROCEDIMIENTO",
+    "column": "codigo_procedimiento",
+    "target": "CATALOGO_PROCEDIMIENTO",
+    "source_line": 1251,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "PROCEDIMIENTO",
+    "column": "id_profesional",
+    "target": "PROFESIONAL",
+    "source_line": 1253,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "ORDEN_ESTUDIO",
+    "column": "id_consulta",
+    "target": "CONSULTA",
+    "source_line": 1271,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "ORDEN_ESTUDIO",
+    "column": "id_institucion_destino",
+    "target": "INSTITUCION",
+    "source_line": 1273,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "RESPONSABLE",
+    "column": "id_paciente",
+    "target": "PACIENTE",
+    "source_line": 1294,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "ANTECEDENTE_PERINATAL",
+    "column": "id_expediente",
+    "target": "EXPEDIENTE",
+    "source_line": 1317,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "MEDICION_ANTROPOMETRICA",
+    "column": "id_consulta",
+    "target": "CONSULTA",
+    "source_line": 1338,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "DOSIS_VACUNA",
+    "column": "id_expediente",
+    "target": "EXPEDIENTE",
+    "source_line": 1383,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "DOSIS_VACUNA",
+    "column": "id_vacuna",
+    "target": "VACUNA",
+    "source_line": 1385,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "DOSIS_VACUNA",
+    "column": "id_profesional",
+    "target": "PROFESIONAL",
+    "source_line": 1399,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "SEGUIMIENTO_HITO",
+    "column": "id_expediente",
+    "target": "EXPEDIENTE",
+    "source_line": 1416,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  },
+  {
+    "entity": "SEGUIMIENTO_HITO",
+    "column": "id_hito",
+    "target": "HITO_DESARROLLO",
+    "source_line": 1418,
+    "scope": "institution+parent id; cross-store actor uses validated reference, no impossible FK"
+  }
+]

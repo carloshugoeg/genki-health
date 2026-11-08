@@ -168,6 +168,19 @@ export function buildHttpApp(options: HttpAppOptions) {
     }
   });
 
+  app.post<{ Body: { refresh_token?: string } }>('/api/auth/logout', async (request, reply) => {
+    const refresh_token = request.body?.refresh_token;
+    if (!refresh_token || typeof refresh_token !== 'string') {
+      return reply.code(400).send({ error: 'invalid_body', message: 'refresh_token is required' });
+    }
+    try {
+      await options.auth.logout(refresh_token);
+      return reply.code(204).send();
+    } catch (error) {
+      return sendMapped(reply, error);
+    }
+  });
+
   app.get('/api/auth/me', async (request, reply) => {
     const principal = await requirePrincipal(request, reply);
     if (!principal) {
