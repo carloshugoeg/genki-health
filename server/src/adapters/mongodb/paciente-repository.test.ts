@@ -7,12 +7,12 @@ import {
   pediatricKind,
   pediatricRegisterInput,
   threeSearchPatients,
-} from '../../../test/contracts/fixtures.js';
-import { assertCountsEqual, type ClinicalHarness } from '../../../test/contracts/harness.js';
+} from '../../testing/paciente-fixtures.js';
+import { assertCountsEqual, type ClinicalHarness } from '../../testing/harness.js';
 import {
   closeMongoHarnessSharedClient,
   makeMongoClinicalHarness,
-} from '../../../test/contracts/mongodb-harness.js';
+} from '../../testing/mongodb-harness.js';
 
 function errorCode(err: unknown): string | undefined {
   if (err instanceof ClinicalError) {
