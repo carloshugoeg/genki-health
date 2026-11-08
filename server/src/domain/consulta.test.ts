@@ -3,6 +3,8 @@ import { ClinicalError } from './clinical-error.js';
 import { validateConsulta, type ValidateConsultaInput } from './consulta.js';
 
 const NOW = '2026-11-08T12:00:00.000Z';
+/** Inclusive UTF-8 byte ceiling for JSON.stringify(bundle). Ticket '<' clarified to '≤'. */
+const MAX_BUNDLE_UTF8_BYTES = 256 * 1024;
 
 function validBundle(overrides: Partial<ValidateConsultaInput> = {}): ValidateConsultaInput {
   return {
@@ -24,6 +26,58 @@ function validBundle(overrides: Partial<ValidateConsultaInput> = {}): ValidateCo
       },
     ],
     ...overrides,
+  };
+}
+
+function utf8JsonSize(bundle: ValidateConsultaInput): number {
+  return Buffer.byteLength(JSON.stringify(bundle), 'utf8');
+}
+
+/** Build a structurally valid bundle whose JSON.stringify UTF-8 size equals targetBytes. */
+function bundleWithUtf8JsonSize(targetBytes: number): ValidateConsultaInput {
+  const probe = validBundle({
+    diagnosticos: [
+      {
+        descripcion: '',
+        tipo: 'presuntivo',
+        es_principal: true,
+      },
+    ],
+  });
+  const baseSize = utf8JsonSize(probe);
+  if (targetBytes < baseSize) {
+    throw new Error(`targetBytes ${targetBytes} is below empty-description base ${baseSize}`);
+  }
+  probe.diagnosticos = [
+    {
+      descripcion: 'a'.repeat(targetBytes - baseSize),
+      tipo: 'presuntivo',
+      es_principal: true,
+    },
+  ];
+  const size = utf8JsonSize(probe);
+  if (size !== targetBytes) {
+    throw new Error(`sized bundle got ${size} bytes, want ${targetBytes}`);
+  }
+  return probe;
+}
+
+/**
+ * Bundle whose serialized string.length is ≤ MAX but UTF-8 byteLength is over.
+ * Proves the limit uses bytes, not JS string.length.
+ */
+function bundleWithMultibyteUtf8OverLimit(): ValidateConsultaInput {
+  const asciiBase = bundleWithUtf8JsonSize(MAX_BUNDLE_UTF8_BYTES - 200);
+  const descripcion = asciiBase.diagnosticos[0]!.descripcion;
+  const replaceCount = 250;
+  return {
+    ...asciiBase,
+    diagnosticos: [
+      {
+        ...asciiBase.diagnosticos[0]!,
+        descripcion: `${descripcion.slice(0, -replaceCount)}${'é'.repeat(replaceCount)}`,
+      },
+    ],
   };
 }
 
@@ -303,5 +357,25 @@ describe('E2-P2-05 validateConsulta bundle invariants', () => {
         NOW,
       ),
     ).not.toThrow();
+  });
+
+  it('validate_consulta_rejects_oversized_serialized_bundle', () => {
+    const under = bundleWithUtf8JsonSize(MAX_BUNDLE_UTF8_BYTES - 1);
+    expect(utf8JsonSize(under)).toBe(MAX_BUNDLE_UTF8_BYTES - 1);
+    expect(() => validateConsulta(under, NOW)).not.toThrow();
+
+    const exact = bundleWithUtf8JsonSize(MAX_BUNDLE_UTF8_BYTES);
+    expect(utf8JsonSize(exact)).toBe(MAX_BUNDLE_UTF8_BYTES);
+    expect(() => validateConsulta(exact, NOW)).not.toThrow();
+
+    const overByOne = bundleWithUtf8JsonSize(MAX_BUNDLE_UTF8_BYTES + 1);
+    expect(utf8JsonSize(overByOne)).toBe(MAX_BUNDLE_UTF8_BYTES + 1);
+    expectInvalidBundle(() => validateConsulta(overByOne, NOW));
+
+    const multibyteOver = bundleWithMultibyteUtf8OverLimit();
+    const serialized = JSON.stringify(multibyteOver);
+    expect(serialized.length).toBeLessThanOrEqual(MAX_BUNDLE_UTF8_BYTES);
+    expect(Buffer.byteLength(serialized, 'utf8')).toBeGreaterThan(MAX_BUNDLE_UTF8_BYTES);
+    expectInvalidBundle(() => validateConsulta(multibyteOver, NOW));
   });
 });
