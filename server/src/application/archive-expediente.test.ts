@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createMemoryAdapterSet } from '../config/compose-memory.js';
+import { createTestMemoryAdapterSet } from '../config/memory-test-factory.js';
 import { registerPaciente } from './register-paciente.js';
 import { archiveExpediente } from './archive-expediente.js';
 
 describe('archiveExpediente', () => {
   it('archives expediente without writing archivado onto paciente', async () => {
-    const adapters = createMemoryAdapterSet('hospital_general', 1);
+    const adapters = createTestMemoryAdapterSet('hospital_general', 1);
     const { paciente, expediente } = await registerPaciente(adapters.pacientes, {
       tipo_documento: 'DPI',
       numero_documento: '111',

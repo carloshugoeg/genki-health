@@ -19,8 +19,22 @@ export interface AdapterSet {
 
 export type AdapterSetFactory = (institutionId: InstitutionId) => AdapterSet;
 
+/** Locked C3.2 kind → institution id assignment (CORE institutions 1–4). */
+export const LOCKED_KIND_INSTITUTION_ID: Readonly<Record<InstitutionKind, number>> = {
+  hospital_general: 1,
+  centro_pediatrico: 2,
+  laboratorio_clinico: 3,
+  clinica_odontologica: 4,
+};
+
 function cacheKey(kind: InstitutionKind, institutionId: InstitutionId): string {
   return `${kind}:${institutionId}`;
+}
+
+function assertLockedAssignment(kind: InstitutionKind, institutionId: InstitutionId): void {
+  if (LOCKED_KIND_INSTITUTION_ID[kind] !== institutionId) {
+    throw new Error(`Unsupported institution assignment: ${kind}:${institutionId}`);
+  }
 }
 
 export class InstitutionAdapterRegistry {
@@ -39,6 +53,7 @@ export class InstitutionAdapterRegistry {
   }
 
   resolve(kind: InstitutionKind, institutionId: InstitutionId): AdapterSet {
+    assertLockedAssignment(kind, institutionId);
     const key = cacheKey(kind, institutionId);
     const cached = this.cache.get(key);
     if (cached) {

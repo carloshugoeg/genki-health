@@ -1,5 +1,5 @@
 import type { InstitutionKind } from '@genki/shared';
-import { createMemoryAdapterSet } from '../../src/config/compose-memory.js';
+import { createTestMemoryAdapterSet } from '../../src/config/memory-test-factory.js';
 import type {
   ClinicalHarness,
   ContractClinicalContext,
@@ -55,7 +55,7 @@ export async function makeMemoryClinicalHarness(options?: {
   kind?: InstitutionKind;
 }): Promise<ClinicalHarness> {
   const kind = options?.kind ?? defaultKind();
-  const primarySet = createMemoryAdapterSet(kind, 1);
+  const primarySet = createTestMemoryAdapterSet(kind, 1);
 
   const bags: MemoryBags = {
     pacientes: (primarySet.pacientes as unknown as { pacientes?: Map<unknown, unknown> }).pacientes,
@@ -66,7 +66,7 @@ export async function makeMemoryClinicalHarness(options?: {
   const context = primarySet as unknown as ContractClinicalContext;
 
   const otherInstitution = async (): Promise<ContractClinicalContext> => {
-    const other = createMemoryAdapterSet(kind, OTHER_INSTITUTION_ID);
+    const other = createTestMemoryAdapterSet(kind, OTHER_INSTITUTION_ID);
     return other as unknown as ContractClinicalContext;
   };
 

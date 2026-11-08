@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { createMemoryAdapterSet } from '../config/compose-memory.js';
+import { createTestMemoryAdapterSet } from '../config/memory-test-factory.js';
 import { registerPaciente } from './register-paciente.js';
 
 describe('registerPaciente', () => {
   it('creates paciente and expediente on memory adapter', async () => {
-    const adapters = createMemoryAdapterSet('hospital_general', 1);
+    const adapters = createTestMemoryAdapterSet('hospital_general', 1);
     const result = await registerPaciente(adapters.pacientes, {
       tipo_documento: 'DPI',
       numero_documento: '1234567890101',
@@ -20,7 +20,7 @@ describe('registerPaciente', () => {
   });
 
   it('rejects duplicate document', async () => {
-    const adapters = createMemoryAdapterSet('hospital_general', 1);
+    const adapters = createTestMemoryAdapterSet('hospital_general', 1);
     const input = {
       tipo_documento: 'DPI',
       numero_documento: '999',

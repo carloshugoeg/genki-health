@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PacienteId } from '@genki/shared';
-import { createMemoryAdapterSet } from '../../config/compose-memory.js';
+import { createTestMemoryAdapterSet } from '../../config/memory-test-factory.js';
 import type { CreatePacienteInput } from '../../ports/index.js';
 
 function sampleInput(doc: string, name: string): CreatePacienteInput {
@@ -16,7 +16,7 @@ function sampleInput(doc: string, name: string): CreatePacienteInput {
 
 describe('MemoryUnitOfWork', () => {
   it('uow_nested_join_rolls_back_with_outer_failure', async () => {
-    const set = createMemoryAdapterSet('hospital_general', 1);
+    const set = createTestMemoryAdapterSet('hospital_general', 1);
     let createdId: PacienteId | undefined;
 
     await expect(
@@ -37,7 +37,7 @@ describe('MemoryUnitOfWork', () => {
   });
 
   it('uow_outside_reader_misses_uncommitted_writes', async () => {
-    const set = createMemoryAdapterSet('hospital_general', 1);
+    const set = createTestMemoryAdapterSet('hospital_general', 1);
     let releaseHold!: () => void;
     const hold = new Promise<void>((resolve) => {
       releaseHold = resolve;
@@ -62,7 +62,7 @@ describe('MemoryUnitOfWork', () => {
   });
 
   it('uow_concurrent_writers_serialize', async () => {
-    const set = createMemoryAdapterSet('hospital_general', 1);
+    const set = createTestMemoryAdapterSet('hospital_general', 1);
     let phaseA = 0;
     let phaseB = 0;
     let releaseA!: () => void;
@@ -103,7 +103,7 @@ describe('MemoryUnitOfWork', () => {
   });
 
   it('memory_returned_dto_is_clone', async () => {
-    const set = createMemoryAdapterSet('hospital_general', 1);
+    const set = createTestMemoryAdapterSet('hospital_general', 1);
     const { paciente } = await set.pacientes.createWithExpediente(sampleInput('clone-1', 'Clara'));
     paciente.primer_nombre = 'MUTATED';
     const again = await set.pacientes.findById(paciente.id_paciente);
