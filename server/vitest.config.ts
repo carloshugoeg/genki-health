@@ -37,5 +37,14 @@ export default defineConfig({
           fileParallelism: false,
         }
       : {}),
+    coverage: {
+      provider: 'v8',
+      include: ['src/domain/**/*.ts', 'src/application/**/*.ts'],
+      exclude: ['src/**/*.test.ts', 'src/adapters/**'],
+      thresholds: {
+        lines: 80,
+      },
+      reporter: ['text', 'json-summary'],
+    },
   },
 });
