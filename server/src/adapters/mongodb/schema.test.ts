@@ -1,4 +1,4 @@
-import { BSON, MongoClient, type Db } from 'mongodb';
+import { MongoClient, type Db } from 'mongodb';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { MongoIdPort } from './id.js';
 import { toBsonDate, toBsonInt } from './mapper.js';
@@ -122,16 +122,41 @@ describe('Mongo schema and replica-set transactions (E2-P4A-01)', () => {
       _id: `${INSTITUTION_ID}:paciente`,
     });
     expect(counter).not.toBeNull();
-    expect(counter!.next).toBeInstanceOf(BSON.Int32);
     expect(Number(counter!.next)).toBe(2);
-    expect(counter!.institution_id).toBeInstanceOf(BSON.Int32);
+    // Driver promoteValues maps Int32→number on read; assert wire type via $type.
+    const counterTypes = await db
+      .collection('counters')
+      .aggregate([
+        { $match: { _id: `${INSTITUTION_ID}:paciente` } },
+        {
+          $project: {
+            nextType: { $type: '$next' },
+            institutionType: { $type: '$institution_id' },
+          },
+        },
+      ])
+      .toArray();
+    expect(counterTypes[0]?.nextType).toBe('int');
+    expect(counterTypes[0]?.institutionType).toBe('int');
 
     await db.collection('pacientes').insertOne(samplePacienteDoc());
     const stored = await db.collection('pacientes').findOne({ _id: `${INSTITUTION_ID}:1` });
-    expect(stored!.id_paciente).toBeInstanceOf(BSON.Int32);
-    expect(stored!.institution_id).toBeInstanceOf(BSON.Int32);
     expect(typeof stored!._id).toBe('string');
     expect(stored!._id).not.toMatch(/ObjectId/i);
+    const pacienteTypes = await db
+      .collection('pacientes')
+      .aggregate([
+        { $match: { _id: `${INSTITUTION_ID}:1` } },
+        {
+          $project: {
+            idType: { $type: '$id_paciente' },
+            institutionType: { $type: '$institution_id' },
+          },
+        },
+      ])
+      .toArray();
+    expect(pacienteTypes[0]?.idType).toBe('int');
+    expect(pacienteTypes[0]?.institutionType).toBe('int');
   });
 
   it('mongo_transaction_failure_aborts', async () => {
