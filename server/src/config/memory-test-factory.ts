@@ -1,8 +1,18 @@
 import type { InstitutionKind } from '@genki/shared';
+import type { MemoryInstitutionState } from '../adapters/memory/state.js';
 import type { AdapterSet } from './adapter-registry.js';
-import { buildMemoryAdapterSet } from './memory-adapter-set.js';
+import { openMemoryAdapterSet, type MemoryAdapterOptions } from './memory-adapter-set.js';
+
+export interface TestMemoryAdapterSet extends AdapterSet {
+  readonly memoryState: MemoryInstitutionState;
+}
 
 /** Test-only memory composition. Not imported by production main/createPhase0Registry. */
-export function createTestMemoryAdapterSet(kind: InstitutionKind, institutionId = 1): AdapterSet {
-  return buildMemoryAdapterSet(kind, institutionId);
+export function createTestMemoryAdapterSet(
+  kind: InstitutionKind,
+  institutionId = 1,
+  options?: MemoryAdapterOptions,
+): TestMemoryAdapterSet {
+  const opened = openMemoryAdapterSet(kind, institutionId, options);
+  return Object.assign(opened.set, { memoryState: opened.state });
 }
