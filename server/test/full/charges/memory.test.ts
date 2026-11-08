@@ -6,6 +6,8 @@ import {
   hashChargesSnapshot,
 } from '../../../src/adapters/memory/full/charges.js';
 import {
+  getExtensionNamespace,
+  putExtensionRow,
   registerExtensionNamespace,
   resetExtensionRegistryForTests,
 } from '../../../src/adapters/memory/full-state.js';
@@ -189,6 +191,28 @@ async function buildHarness(institutionId: number, sequences: MemoryIdPort): Pro
     },
     setStoreUnavailable(value: boolean): void {
       store.setUnavailable(value);
+    },
+    seedSettledCargo(id_expediente: number): void {
+      const namespace = getExtensionNamespace(adapters.memoryState.getPublished(), 'charges');
+      putExtensionRow(namespace, 'cargos', 8_000_001, {
+        id_cargo: 8_000_001,
+        id_expediente,
+        codigo_servicio: 'CONS-01',
+        origen: 'manual',
+        id_consulta: null,
+        id_procedimiento: null,
+        id_admision: null,
+        id_consumo: null,
+        id_participacion: null,
+        descripcion: 'Cargo ya facturado',
+        cantidad: 1,
+        precio_unitario: '100.00',
+        subtotal: '100.00',
+        fecha_hora: actor.now,
+        estado: 'facturado',
+        clave_evento: 'fixture:facturado',
+        id_institucion: institutionId,
+      });
     },
     withActor(patch: Partial<OperationContext>): OperationContext {
       return { ...actor, ...patch, id_institucion: asInstitutionId(institutionId) };

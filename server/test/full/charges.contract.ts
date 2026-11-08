@@ -15,6 +15,8 @@ export type FullHarness = {
   close(): Promise<void>;
   seedPatient(doc?: string): Promise<{ id_paciente: number; id_expediente: number }>;
   seedServicio(overrides?: Partial<SERVICIO_FACTURABLE>): SERVICIO_FACTURABLE;
+  /** One non-pending cargo on this expediente. OP69 must leave it off the page. */
+  seedSettledCargo(id_expediente: number): void;
   setStoreUnavailable(value: boolean): void;
   withActor(patch: Partial<OperationContext>): OperationContext;
 };
@@ -87,8 +89,21 @@ export function moduleContract(
         expect(cargo.id_expediente).toBe(patient.id_expediente);
         expect(cargo.origen).toBe('manual');
         const afterCounts = await h.counts();
+        const after = await h.nativeSnapshot();
         expect(afterCounts.cargos).toBe(beforeCounts.cargos + 1);
-        expect(await h.nativeSnapshot()).not.toEqual(before);
+        expect(after).not.toEqual(before);
+        const replay = await executeOp68(
+          h.context,
+          {
+            params: {},
+            query: {},
+            body: manualCargo(patient.id_paciente, { clave_evento: 'evt-ok-1' }),
+          },
+          h.withActor({ roles: ['caja'] }),
+        );
+        expect(replay).toEqual(cargo);
+        expect(await h.counts()).toEqual(afterCounts);
+        expect(await h.nativeSnapshot()).toEqual(after);
         await h.close();
       });
 
@@ -127,6 +142,23 @@ export function moduleContract(
         );
         expect(await h.nativeSnapshot()).toEqual(snap);
         expect(await h.counts()).toEqual(counts);
+        await expectCode(
+          executeOp68(
+            h.context,
+            {
+              params: {},
+              query: {},
+              body: manualCargo(patient.id_paciente, {
+                clave_evento: 'evt-other-payload',
+                cantidad: '3.00',
+              }),
+            },
+            { ...actor, idempotency_key: 'evt-dup' },
+          ),
+          'conflict',
+        );
+        expect(await h.nativeSnapshot()).toEqual(snap);
+        expect(await h.counts()).toEqual(counts);
         await h.close();
       });
 
@@ -137,22 +169,24 @@ export function moduleContract(
         const patient = await h.seedPatient('C68-SCH-1');
         h.seedServicio();
         const snap = await h.nativeSnapshot();
-        await expectCode(
-          executeOp68(
-            h.context,
-            {
-              params: {},
-              query: {},
-              body: {
-                ...manualCargo(patient.id_paciente),
-                extra: true,
-              } as unknown as CargoInput,
-            },
-            h.withActor({ roles: ['caja'] }),
-          ),
-          'invalid_body',
-        );
-        expect(await h.nativeSnapshot()).toEqual(snap);
+        const counts = await h.counts();
+        const rejected = [
+          { ...manualCargo(patient.id_paciente), extra: true },
+          { ...manualCargo(patient.id_paciente, { clave_evento: 'evt-bad-type' }), cantidad: 2 },
+          { ...manualCargo(patient.id_paciente), clave_evento: '' },
+        ];
+        for (const body of rejected) {
+          await expectCode(
+            executeOp68(
+              h.context,
+              { params: {}, query: {}, body: body as unknown as CargoInput },
+              h.withActor({ roles: ['caja'] }),
+            ),
+            'invalid_body',
+          );
+          expect(await h.nativeSnapshot()).toEqual(snap);
+          expect(await h.counts()).toEqual(counts);
+        }
         await h.close();
       });
 
@@ -214,6 +248,24 @@ export function moduleContract(
           'not_found',
         );
         expect(await h.nativeSnapshot()).toEqual(snap);
+        const patient = await h.seedPatient('C68-FK-SVC');
+        const afterPatient = await h.nativeSnapshot();
+        await expectCode(
+          executeOp68(
+            h.context,
+            {
+              params: {},
+              query: {},
+              body: manualCargo(patient.id_paciente, {
+                clave_evento: 'evt-missing-service',
+                codigo_servicio: 'NO-SUCH',
+              }),
+            },
+            h.withActor({ roles: ['caja'] }),
+          ),
+          'not_found',
+        );
+        expect(await h.nativeSnapshot()).toEqual(afterPatient);
         await h.close();
       });
 
@@ -264,6 +316,7 @@ export function moduleContract(
           },
           actor,
         );
+        h.seedSettledCargo(patient.id_expediente);
         const snap = await h.nativeSnapshot();
         const page = await executeOp69(
           h.context,
@@ -318,19 +371,26 @@ export function moduleContract(
         await h.reset();
         const patient = await h.seedPatient('C69-SCH-1');
         const snap = await h.nativeSnapshot();
-        await expectCode(
-          executeOp69(
-            h.context,
-            {
-              params: { id: patient.id_paciente },
-              query: { page: 1, page_size: 51 },
-              body: {},
-            },
-            h.withActor({ roles: ['caja'] }),
-          ),
-          'invalid_query',
-        );
-        expect(await h.nativeSnapshot()).toEqual(snap);
+        const queries = [
+          { page: 1, page_size: 51 },
+          { page: 1, page_size: 20, orden: 'id' },
+          { page: 1.5 },
+        ];
+        for (const query of queries) {
+          await expectCode(
+            executeOp69(
+              h.context,
+              {
+                params: { id: patient.id_paciente },
+                query: query as { page?: number; page_size?: number },
+                body: {},
+              },
+              h.withActor({ roles: ['caja'] }),
+            ),
+            'invalid_query',
+          );
+          expect(await h.nativeSnapshot()).toEqual(snap);
+        }
         await h.close();
       });
 
