@@ -8,6 +8,8 @@ import type {
   Op21Request,
   Op22Request,
   Op23Request,
+  Op24Request,
+  Op25Request,
 } from '../../src/ports/full/agenda.js';
 
 /** F1 FullHarness shape used by module contracts (toolchain harness not required). */
@@ -41,6 +43,12 @@ type AgendaApplication = {
   executeOp21: (context: FullContext, input: Op21Request, actor: OperationContext) => Promise<CITA>;
   executeOp22: (context: FullContext, input: Op22Request, actor: OperationContext) => Promise<CITA>;
   executeOp23: (context: FullContext, input: Op23Request, actor: OperationContext) => Promise<CITA>;
+  executeOp24: (context: FullContext, input: Op24Request, actor: OperationContext) => Promise<CITA>;
+  executeOp25: (
+    context: FullContext,
+    input: Op25Request,
+    actor: OperationContext,
+  ) => Promise<CITA[]>;
 };
 
 async function loadApplication(): Promise<AgendaApplication> {
@@ -90,6 +98,10 @@ export const FIXTURE = {
   overlapStart: '2026-06-01T14:15:00.000Z',
   rescheduleStart: '2026-06-01T15:00:00.000Z',
   otherSlotStart: '2026-06-01T16:00:00.000Z',
+  dayFecha: '2026-06-01',
+  nextDayFecha: '2026-06-02',
+  nextDaySlotStart: '2026-06-02T14:00:00.000Z',
+  impossibleFecha: '2026-02-30',
 } as const;
 
 function op20Query(
@@ -151,6 +163,33 @@ function op23Input(
   };
 }
 
+function op24Input(
+  id: number,
+  overrides: {
+    params?: Partial<Op24Request['params']> & Record<string, unknown>;
+    body?: Partial<Op24Request['body']> & Record<string, unknown>;
+  } = {},
+): Op24Request {
+  return {
+    params: { id, ...(overrides.params ?? {}) } as Op24Request['params'],
+    query: emptyQuery(),
+    body: { ...(overrides.body ?? {}) } as Op24Request['body'],
+  };
+}
+
+function op25Query(
+  overrides: Partial<Op25Request['query']> & Record<string, unknown> = {},
+): Op25Request {
+  return {
+    params: emptyParams(),
+    query: {
+      fecha: FIXTURE.dayFecha,
+      ...overrides,
+    } as Op25Request['query'],
+    body: emptyBody(),
+  };
+}
+
 function actorWith(base: OperationContext, patch: Partial<OperationContext>): OperationContext {
   return { ...base, ...patch };
 }
@@ -169,6 +208,8 @@ export function moduleContract(
     const has21 = ops.includes(21);
     const has22 = ops.includes(22);
     const has23 = ops.includes(23);
+    const has24 = ops.includes(24);
+    const has25 = ops.includes(25);
 
     if (has20) {
       it('op20_transition_1_persists', async () => {
@@ -767,6 +808,270 @@ export function moduleContract(
         );
         expect(await harness.nativeSnapshot()).toEqual(before);
         expect(await harness.counts()).toEqual(beforeCounts);
+        await harness.close();
+      });
+    }
+
+    if (has24) {
+      it('op24_transition_1_persists', async () => {
+        const { executeOp21, executeOp24 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-A24-1');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        expect(created.estado).toBe('programada');
+        const arrived = await executeOp24(
+          harness.context,
+          op24Input(created.id_cita),
+          harness.actor,
+        );
+        expect(arrived.id_cita).toBe(created.id_cita);
+        expect(arrived.estado).toBe('confirmada');
+        expect(arrived.fecha_hora).toBe(created.fecha_hora);
+        const again = await executeOp24(harness.context, op24Input(created.id_cita), harness.actor);
+        expect(again.estado).toBe('confirmada');
+        const snap = await harness.nativeSnapshot();
+        expect(snap.citas).toBe(
+          snapshotHash([
+            {
+              id_cita: arrived.id_cita,
+              id_profesional: arrived.id_profesional,
+              fecha_hora: arrived.fecha_hora,
+              duracion_minutos: arrived.duracion_minutos,
+              estado: 'confirmada',
+            },
+          ]),
+        );
+        await harness.close();
+      });
+
+      it('op24_error_domain_unchanged', async () => {
+        const { executeOp24 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-A24-DOM');
+        const seeded = await harness.seedBusyCita({
+          id_paciente: patient.id_paciente,
+          id_profesional: FIXTURE.profesional,
+          fecha_hora: FIXTURE.slotStart,
+          duracion_minutos: 30,
+          estado: 'cancelada',
+        });
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp24(harness.context, op24Input(seeded.id_cita), harness.actor),
+          'conflict',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op24_error_schema_unchanged', async () => {
+        const { executeOp21, executeOp24 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-A24-SCH');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp24(
+            harness.context,
+            op24Input(created.id_cita, { body: { mystery: true } }),
+            harness.actor,
+          ),
+          'invalid_body',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op24_error_store_unchanged', async () => {
+        const { executeOp21, executeOp24 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-A24-ST');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        const before = await harness.nativeSnapshot();
+        harness.setStoreUnavailable();
+        await expectCode(
+          executeOp24(harness.context, op24Input(created.id_cita), harness.actor),
+          'store_unavailable',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op24_error_role_unchanged', async () => {
+        const { executeOp21, executeOp24 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-A24-ROLE');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        const before = await harness.nativeSnapshot();
+        const forbidden = actorWith(harness.actor, { roles: ['medico'] });
+        await expectCode(
+          executeOp24(harness.context, op24Input(created.id_cita), forbidden),
+          'forbidden',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op24_error_foreign_unchanged', async () => {
+        const { executeOp24 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp24(harness.context, op24Input(909090), harness.actor),
+          'not_found',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op24_midwrite_rolls_back', async () => {
+        const { executeOp21, executeOp24 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-A24-MID');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({ id_paciente: patient.id_paciente }),
+          harness.actor,
+        );
+        const before = await harness.nativeSnapshot();
+        const beforeCounts = await harness.counts();
+        harness.failAfterWrite(1);
+        await expectCode(
+          executeOp24(harness.context, op24Input(created.id_cita), harness.actor),
+          'internal_error',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        expect(await harness.counts()).toEqual(beforeCounts);
+        await harness.close();
+      });
+    }
+
+    if (has25) {
+      it('op25_transition_1_persists', async () => {
+        const { executeOp21, executeOp25 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const patient = await harness.seedPatient('AGENDA-D25-1');
+        const created = await executeOp21(
+          harness.context,
+          op21Body({
+            id_paciente: patient.id_paciente,
+            motivo: 'Dolor de cabeza',
+          }),
+          harness.actor,
+        );
+        await harness.seedBusyCita({
+          id_paciente: patient.id_paciente,
+          id_profesional: FIXTURE.profesional,
+          fecha_hora: FIXTURE.nextDaySlotStart,
+          duracion_minutos: 30,
+          estado: 'programada',
+        });
+        const beforeCounts = await harness.counts();
+        const rows = await executeOp25(harness.context, op25Query(), harness.actor);
+        expect(rows).toHaveLength(1);
+        expect(rows[0]?.id_cita).toBe(created.id_cita);
+        expect(rows[0]?.fecha_hora).toBe(FIXTURE.slotStart);
+        expect(rows[0]?.motivo).toBeNull();
+        expect(await harness.counts()).toEqual(beforeCounts);
+        const filtered = await executeOp25(
+          harness.context,
+          op25Query({ id_profesional: FIXTURE.profesional }),
+          harness.actor,
+        );
+        expect(filtered).toHaveLength(1);
+        expect(filtered[0]?.id_cita).toBe(created.id_cita);
+        await harness.close();
+      });
+
+      it('op25_error_domain_unchanged', async () => {
+        const { executeOp25 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp25(
+            harness.context,
+            op25Query({ fecha: FIXTURE.impossibleFecha }),
+            harness.actor,
+          ),
+          'invalid_query',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op25_error_schema_unchanged', async () => {
+        const { executeOp25 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp25(harness.context, op25Query({ mystery: true }), harness.actor),
+          'invalid_query',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op25_error_store_unchanged', async () => {
+        const { executeOp25 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const before = await harness.nativeSnapshot();
+        harness.setStoreUnavailable();
+        await expectCode(
+          executeOp25(harness.context, op25Query(), harness.actor),
+          'store_unavailable',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op25_error_role_unchanged', async () => {
+        const { executeOp25 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const before = await harness.nativeSnapshot();
+        const forbidden = actorWith(harness.actor, { roles: ['administrador'] });
+        await expectCode(executeOp25(harness.context, op25Query(), forbidden), 'forbidden');
+        expect(await harness.nativeSnapshot()).toEqual(before);
+        await harness.close();
+      });
+
+      it('op25_error_foreign_unchanged', async () => {
+        const { executeOp25 } = await loadApplication();
+        const harness = await make();
+        await harness.reset();
+        const before = await harness.nativeSnapshot();
+        await expectCode(
+          executeOp25(harness.context, op25Query({ id_profesional: 404404 }), harness.actor),
+          'not_found',
+        );
+        expect(await harness.nativeSnapshot()).toEqual(before);
         await harness.close();
       });
     }
