@@ -110,7 +110,7 @@ Plan sugerido (con aprobación de Carlos):
 
 ## 8. Estado tras los fixes (9 nov 2026, tarde)
 
-Auditoría `2611091735`: flujo 566/579, 0 respuestas 5xx, aislamiento 52/52. Después de esa corrida se corrigieron vacunas (`id_profesional` desde el usuario) y la auditoría de odontología (usa `demo-4-odontologo`). Falta volver a correr esos 5 casos: Firestore real agotó la cuota diaria del plan gratuito (`RESOURCE_EXHAUSTED`), y mientras no se restablezca la API no arranca.
+Auditoría `2611091735`: flujo 566/579, 0 respuestas 5xx, aislamiento 52/52. Después de esa corrida se corrigieron vacunas (`id_profesional` desde el usuario) y la auditoría de odontología (usa `demo-4-odontologo`). Esos 5 casos no se volvieron a correr: Firestore real agotó la cuota diaria del plan gratuito (`RESOURCE_EXHAUSTED`), y se decidió no esperar a que se restableciera.
 
 | # | Estado | Nota |
 |---|---|---|
@@ -125,22 +125,22 @@ Auditoría `2611091735`: flujo 566/579, 0 respuestas 5xx, aislamiento 52/52. Des
 | 9 | Hecho (parcial) | Cama, admisión y diagnóstico salen de datos reales. No hay endpoint para listar admisiones; la UI recuerda la admisión activa |
 | 10 | Hecho | `equipo` y `consumos` son opcionales; `id_profesional` sale del usuario |
 | 11 | Hecho | `profesionalOf(principal)` busca `usuario.id_profesional` (caché de 60 s); el JWT no cambia |
-| 12 | Pendiente (Carlos) | Cambia permisos por rol; la rúbrica no lo exige |
+| 12 | Decidido: sin cambio | El administrador mantiene el permiso; la rúbrica no exige separarlo (`poteto-mode/decisions/locked.md`) |
 | 13 | Hecho | La ficha oculta secciones por rol; 0 respuestas 403 con 10 usuarios demo |
-| 14 | Documentado | `docs/ARCHITECTURE.md`; la denylist requiere aprobación de cambio de auth |
+| 14 | Decidido: documentado | Sin denylist; el access token vence a los 30 min (`docs/ARCHITECTURE.md`) |
 | 15–17 | Hecho | Fecha de nacimiento futura → 400; login con contraseña incorrecta → 401 genérico; 413 en JSON |
 | 18 | Pendiente | Esperando el feedback del profesor |
 | 19, 21 | Hecho | Documento comparativo: consultas equivalentes en los 4 motores, cifrado en reposo fuera de alcance, resultados de la auditoría |
 | 20 | Hecho | Las migraciones corren con la conexión admin; dos corridas seguidas de `db:setup:all` terminan limpias (~5.5 min) |
 
-**Cambios de protocolo que revisan ambos dueños** (`AGENTS.md`):
+**Cambios de protocolo aprobados el 9 nov 2026** (`poteto-mode/decisions/locked.md`):
 - `ConsultationRepositoryPort` gana 5 métodos.
 - Migraciones aditivas `full-05-01-clinical-maintenance.sql` (PG y MySQL), `full-13-vaccine-intervals.sql` (MySQL), y enums y `bitacora` en el validador de Mongo.
 - GRANTs de columna nuevos.
 - Filas ROL `enfermeria`, `laboratorista` y `odontologo`.
 - Los usuarios demo clínicos quedan vinculados a `id_profesional = 1`.
 
-Pendiente de decisión: el FK de `usuario.id_profesional` apunta a la tabla `profesional` de PostgreSQL (solo la institución 1). Para las instituciones 2–4, el id se refiere al profesional del motor de cada institución. Hay que decidir si se acepta así o se quita el FK.
+Decidido: el FK de `usuario.id_profesional` se queda en PostgreSQL. Para las instituciones 2–4, el id se refiere al profesional del motor de cada institución.
 
 **Tests:**
 - Typecheck, lint, Prettier y depcruise limpios.
