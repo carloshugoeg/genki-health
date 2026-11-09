@@ -40,6 +40,12 @@ export const DEMO_AUTH_USERS: ReadonlyArray<{
     id_institucion: 4,
     roles: ['secretaria'],
   },
+  {
+    email: 'superadmin@example.invalid',
+    institution_kind: 'hospital_general',
+    id_institucion: 1,
+    roles: ['superadministrador'],
+  },
 ];
 
 export async function buildDemoUsers(

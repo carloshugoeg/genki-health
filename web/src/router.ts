@@ -1,5 +1,6 @@
 export const MVP_PATHS = [
   '/login',
+  '/panel',
   '/pacientes',
   '/pacientes/nuevo',
   '/pacientes/:id',
@@ -7,8 +8,9 @@ export const MVP_PATHS = [
 ] as const;
 export function route(
   path: string,
-): 'login' | 'patients' | 'register' | 'record' | 'consultation' | 'unknown' {
+): 'login' | 'panel' | 'patients' | 'register' | 'record' | 'consultation' | 'unknown' {
   if (path === '/login') return 'login';
+  if (path === '/panel') return 'panel';
   if (path === '/pacientes') return 'patients';
   if (path === '/pacientes/nuevo') return 'register';
   if (/^\/pacientes\/[1-9]\d*$/.test(path)) return 'record';

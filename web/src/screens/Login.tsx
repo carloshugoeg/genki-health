@@ -16,7 +16,7 @@ export function Login() {
         password: String(data.get('password')),
         institution_kind: String(data.get('institution')) as InstitutionKind,
       });
-      navigate('/pacientes');
+      navigate('/');
     } catch (e) {
       setError(errorMessage(e));
     } finally {

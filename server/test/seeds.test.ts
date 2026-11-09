@@ -122,8 +122,8 @@ describe('disposable physical seeds', () => {
 
   it('seed_twice_keeps_counts_and_password_hash', () => {
     expect(second).toEqual(first);
-    expect(users).toHaveLength(16);
-    expect(new Set(users.map((user) => user.hash_contrasena)).size).toBe(16);
+    expect(users).toHaveLength(17);
+    expect(new Set(users.map((user) => user.hash_contrasena)).size).toBe(17);
     for (const user of users) expect(user.hash_contrasena).toMatch(/^\$argon2id\$/);
   });
 
@@ -136,9 +136,12 @@ describe('disposable physical seeds', () => {
       }
     }
     expect(users.map((user) => user.correo).sort()).toEqual(
-      INSTITUTIONS.flatMap((meta) =>
-        ROLES.map((role) => `demo-${meta.id}-${role}@example.invalid`),
-      ).sort(),
+      [
+        ...INSTITUTIONS.flatMap((meta) =>
+          ROLES.map((role) => `demo-${meta.id}-${role}@example.invalid`),
+        ),
+        'superadmin@example.invalid',
+      ].sort(),
     );
     for (const path of [
       '../../scripts/seed.ts',

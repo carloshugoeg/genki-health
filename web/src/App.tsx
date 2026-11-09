@@ -4,9 +4,15 @@ import { api, errorMessage, logout } from './api';
 import { loadSession } from './session';
 import { navigate, route } from './router';
 import { Login } from './screens/Login';
+import { Panel } from './screens/Panel';
 import { Pacientes } from './screens/Pacientes';
 import { RegisterPaciente } from './screens/RegisterPaciente';
 import { Historial } from './screens/Historial';
+
+function isSuperadmin(principal: AuthPrincipalDto): boolean {
+  return principal.roles.includes('superadministrador');
+}
+
 export function App() {
   const [location, setLocation] = useState(() => window.location.pathname + window.location.search);
   const [principal, setPrincipal] = useState<AuthPrincipalDto | null>(null);
@@ -22,9 +28,13 @@ export function App() {
   }, []);
   useEffect(() => {
     if (!session.access_token && current !== 'login') navigate('/login', true);
-    else if (session.access_token && (current === 'unknown' || current === 'login'))
-      navigate('/pacientes', true);
   }, [current, session.access_token]);
+  useEffect(() => {
+    if (!session.access_token || !principal) return;
+    if (current === 'login' || current === 'unknown') {
+      navigate(isSuperadmin(principal) ? '/panel' : '/pacientes', true);
+    }
+  }, [principal, current, session.access_token]);
   useEffect(() => {
     if (!session.access_token) {
       setPrincipal(null);
@@ -65,11 +75,18 @@ export function App() {
         <p className="lede">Historiales clínicos por institución</p>
         {principal && (
           <>
-            <p>
-              {institution?.nombre} · Motor asignado: {principal.motor}
-            </p>
+            {current !== 'panel' && (
+              <p>
+                {institution?.nombre} · Motor asignado: {principal.motor}
+              </p>
+            )}
             <nav className="actions" aria-label="Principal">
-              <button onClick={() => navigate('/pacientes')}>Pacientes</button>
+              {isSuperadmin(principal) && current !== 'panel' && (
+                <button onClick={() => navigate('/panel')}>Volver al panel</button>
+              )}
+              {current !== 'panel' && (
+                <button onClick={() => navigate('/pacientes')}>Pacientes</button>
+              )}
               <button disabled={busy} onClick={() => void signOut()}>
                 Cerrar sesión
               </button>
@@ -96,6 +113,8 @@ export function App() {
         </div>
       ) : !principal ? (
         <p role="status">Verificando sesión…</p>
+      ) : current === 'panel' && isSuperadmin(principal) ? (
+        <Panel />
       ) : current === 'patients' ? (
         <Pacientes search={location.includes('?') ? location.slice(location.indexOf('?')) : ''} />
       ) : current === 'register' ? (

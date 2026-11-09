@@ -38,7 +38,13 @@ export function toErrorDto(error: unknown): MappedHttpError {
   }
   if (error instanceof AuthError) {
     const status =
-      error.code === 'password_policy' ? 400 : error.code === 'misconfigured' ? 500 : 401;
+      error.code === 'password_policy'
+        ? 400
+        : error.code === 'forbidden'
+          ? 403
+          : error.code === 'misconfigured'
+            ? 500
+            : 401;
     return {
       status,
       body: {
