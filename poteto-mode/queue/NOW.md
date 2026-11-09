@@ -1,5 +1,7 @@
 # Now
 
+**Hot lane** on `cursor/genki-ui-dashboard` (not a numbered E2 ticket, no queue claim). Patients and professionals show as name plus id, institution screens use a sidepanel and a home dashboard, and `npm run db:setup:all` is safe to run again. Do not start the next numbered ticket from this note.
+
 **Integration lane** on `cursor/genki-integration` (draft PR base `cursor/genki-fixes-1` @ 321b1e8): merge Codex lane A (caja OP61–77) + lane B (agenda OP20–25) with merge commits; GRANTs; assertRoles for A/B; `npm run db:setup:all`.
 
 **Hotfix lane** on `cursor/genki-fixes-1` (draft PR base `cursor/genki-lane-2-specialties` @ 628e7e75): Mongo open-consulta tratamientos validator, lane 1–2 GRANT gaps, superadmin clinical-role bypass via central `assertRoles`.

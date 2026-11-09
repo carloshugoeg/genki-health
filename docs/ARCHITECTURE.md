@@ -2,6 +2,14 @@
 
 Plataforma compartida de historiales clínicos para cuatro instituciones médicas independientes. Proyecto final de Bases de Datos II, Universidad Rafael Landívar. Integrantes: Carlos Hugo Escobar Gómez y Héctor Jordin Adolfo García Coyoy.
 
+## Shell and entity labels (2026-11-09)
+
+Institution screens render inside `AppShell` (`web/src/components/AppShell.tsx`). The left nav groups patients, agenda, specialty, caja, users, and account. The header shows the institution name, the signed-in email, logout, and "Volver al panel" when the principal is a superadministrador. Login and `/panel` stay full page, without that nav. `/` and `/inicio` are the home dashboard. The patient total is `GET /api/pacientes` (`estado=todos`). Appointments today are `GET /api/agenda?fecha=` using the America/Guatemala calendar day. Pending charges are the sum of `GET /api/pacientes/:id/cargos` totals for patients on that list, at most 20 pages of 50.
+
+`EntitySelect` (`web/src/components/EntitySelect.tsx`) loads active patients from `GET /api/pacientes` and professionals from `GET /api/catalogos`. The visible label is `Nombre Apellido (#id)`. The control still submits the numeric id. Agenda rows, economic result lists, and the clinical ficha resolve the same label from one in-memory directory per browser session.
+
+A later `db:setup:all` can finish after a partial run. The first MySQL bootstrap skips the `reactivacion_audit` grant when the table is absent (errno 1146). The bootstrap after the lane3 migrate applies that grant. Seed treats patients 101 and 103 as done when one closed consult carries the academic banner and `SEED_TIME`, and it still requires patient 102 to have no history. `server/src/adapters/postgres/security.sql` revokes `SELECT` on `usuario`, `rol`, `institucion`, and `auth_session`, and `DELETE` on every public table, from `genki_app` after the grants. Personnel id 1 is still inserted by the charges seed on all four engines when that row is missing.
+
 ## Lane-3 account / users / reactivación (2026-11-09)
 
 Hospital PG identity SoR mounts OP-03 `POST /api/auth/password` and OP-04 `POST /api/usuarios/:id/reset-password` (account) plus OP-05 `POST /api/usuarios` and OP-06 `GET /api/bitacora` (users). Domain checks use central `assertRoles` (superadministrador bypass). OP-19 `POST /api/pacientes/:id/reactivacion` reactivates archived expedientes on all four engines without erasing history. UI: `/cuenta`, `/usuarios`, Historial reactivar. `db:setup:all` runs `server/test/full/lane3/manage.ts` idempotently (PG/MySQL migrations, Mongo index, Firestore ensure) and honors `FIRESTORE_MODE=real`. Postgres bootstrap applies `security.sql` on the hospital database (not the maintenance DB) so bitácora / permiso / rol_permiso / reactivacion_audit / account column grants land. Mongo `genkiApp` includes lane-1/2 clinical collections plus `reactivacion_audit`. Firestore counters allow `sesion_tratamiento` and `reactivacion_audit`.
