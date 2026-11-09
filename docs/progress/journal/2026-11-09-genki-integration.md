@@ -21,3 +21,7 @@ lint / typecheck / build / auth+HTTP tests including the new superadmin A+B test
 ```bash
 npm run db:setup:all
 ```
+
+## Follow-up
+
+`db:bootstrap` firebase branch and agenda Firebase fixture now honor `FIRESTORE_MODE=real` (ADC + non-demo project) without requiring `FIRESTORE_EMULATOR_HOST`, matching the charges harness.

@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import pg from 'pg';
 import mysql from 'mysql2/promise';
 import { MongoClient } from 'mongodb';
-import { initializeApp, deleteApp } from 'firebase-admin/app';
+import { applicationDefault, initializeApp, deleteApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import {
   PostgresAgendaRepository,
@@ -107,12 +107,21 @@ export async function nativeAgenda(engine: Engine) {
       close: () => client.close(),
     };
   }
-  if (!process.env.FIRESTORE_EMULATOR_HOST)
-    throw new Error(
-      'Los checks de agenda requieren Firestore emulator; no se conectan a producción',
-    );
+  const real = process.env.FIRESTORE_MODE === 'real';
+    projectId =
+      process.env.AGENDA_FIREBASE_PROJECT_ID ??
+      process.env.FIREBASE_PROJECT_ID ??
+      process.env.GCLOUD_PROJECT;
+  if (
+    !projectId ||
+    (real
+      ? projectId.startsWith('demo-') || !!process.env.FIRESTORE_EMULATOR_HOST
+      : !projectId.startsWith('demo-') ||
+        !/^(127\.0\.0\.1|localhost):[0-9]+$/.test(process.env.FIRESTORE_EMULATOR_HOST ?? ''))
+  )
+    throw new Error('Explicit Firestore mode/project configuration required for agenda');
   const app = initializeApp(
-      { projectId: process.env.AGENDA_FIREBASE_PROJECT_ID ?? 'demo-genki-agenda' },
+      real ? { projectId, credential: applicationDefault() } : { projectId },
       `agenda-${Date.now()}-${Math.random()}`,
     ),
     firestore = getFirestore(app);

@@ -75,8 +75,22 @@ export async function bootstrapEngine(engine: DataEngine): Promise<void> {
       return;
     }
     case 'firebase': {
+      const mode = (process.env.FIRESTORE_MODE ?? 'emulator').trim() || 'emulator';
+      if (mode !== 'emulator' && mode !== 'real') {
+        throw new Error('FIRESTORE_MODE must be emulator or real');
+      }
+      const project = requireEnv('GCLOUD_PROJECT');
+      if (mode === 'real') {
+        if (project === 'demo-genki-health' || project.startsWith('demo-')) {
+          throw new Error('FIRESTORE_MODE=real requires a non-demo GCLOUD_PROJECT');
+        }
+        requireEnv('GOOGLE_APPLICATION_CREDENTIALS');
+        return;
+      }
       requireEnv('FIRESTORE_EMULATOR_HOST');
-      requireEnv('GCLOUD_PROJECT');
+      if (project !== 'demo-genki-health') {
+        throw new Error('FIRESTORE_MODE=emulator requires GCLOUD_PROJECT=demo-genki-health');
+      }
       return;
     }
     default: {
