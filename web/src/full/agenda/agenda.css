@@ -1,0 +1,112 @@
+.genki-agenda {
+  max-width: 1120px;
+  margin: auto;
+  padding: 32px;
+  color: #173c37;
+  font-family: system-ui, sans-serif;
+}
+.genki-agenda h1 {
+  margin: 6px 0;
+  font-size: 2.2rem;
+  letter-spacing: -1px;
+}
+.agenda-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+.agenda-filters,
+.agenda-actions {
+  display: flex;
+  gap: 16px;
+  align-items: end;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+.genki-agenda label {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+.genki-agenda input,
+.genki-agenda textarea {
+  padding: 10px;
+  border: 1px solid #b5ccc6;
+  border-radius: 7px;
+  font: inherit;
+  min-width: 0;
+}
+.genki-agenda button {
+  border: 0;
+  border-radius: 7px;
+  padding: 11px 16px;
+  background: #19695c;
+  color: white;
+  cursor: pointer;
+}
+.genki-agenda button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.agenda-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.agenda-card {
+  padding: 24px;
+  border: 1px solid #d0ded9;
+  border-radius: 14px;
+  background: #f6f9f7;
+}
+.genki-agenda h2 {
+  font-size: 1.2rem;
+  margin-top: 0;
+}
+.genki-agenda small {
+  font-size: 0.8rem;
+  font-weight: 400;
+  margin-left: 12px;
+}
+.agenda-list {
+  list-style: none;
+  padding: 0;
+}
+.agenda-list li {
+  display: flex;
+  align-items: start;
+  gap: 18px;
+  padding: 20px 0;
+  border-bottom: 1px solid #d0ded9;
+}
+.agenda-list li div {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.agenda-list p {
+  margin: 6px 0;
+  font-size: 0.9rem;
+}
+.agenda-list span {
+  font-size: 0.8rem;
+  color: #4b6760;
+}
+.agenda-list time {
+  font-weight: 700;
+}
+.genki-agenda .agenda-cancel {
+  background: #974434;
+}
+.agenda-error {
+  color: #9c2f27;
+}
+@media (max-width: 760px) {
+  .agenda-columns {
+    grid-template-columns: 1fr;
+  }
+  .genki-agenda {
+    padding: 18px;
+  }
+}

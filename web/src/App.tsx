@@ -8,6 +8,9 @@ import { Panel } from './screens/Panel';
 import { Pacientes } from './screens/Pacientes';
 import { RegisterPaciente } from './screens/RegisterPaciente';
 import { Historial } from './screens/Historial';
+import { Agenda } from './full/agenda/Agenda';
+import { ChargesPage } from './full/charges';
+import type { EconomicClient } from './full/charges/EconomicPage';
 
 function isSuperadmin(principal: AuthPrincipalDto): boolean {
   return principal.roles.includes('superadministrador');
@@ -87,6 +90,10 @@ export function App() {
               {current !== 'panel' && (
                 <button onClick={() => navigate('/pacientes')}>Pacientes</button>
               )}
+              {current !== 'panel' && <button onClick={() => navigate('/agenda')}>Agenda</button>}
+              {current !== 'panel' && (
+                <button onClick={() => navigate('/economia')}>Economía</button>
+              )}
               <button disabled={busy} onClick={() => void signOut()}>
                 Cerrar sesión
               </button>
@@ -126,13 +133,27 @@ export function App() {
           composing={current === 'consultation'}
           principal={principal}
         />
+      ) : current === 'agenda' ? (
+        <Agenda request={(path, init) => api(path, init)} />
+      ) : current === 'economia' ? (
+        <ChargesPage
+          client={
+            ((path, init) => {
+              const requestInit: RequestInit = {
+                method: init.method,
+                headers: init.headers,
+              };
+              if (init.body !== undefined) requestInit.body = init.body;
+              return api(path, requestInit);
+            }) as EconomicClient
+          }
+        />
       ) : null}
       <details className="out-of-scope">
         <summary>Fuera del alcance de esta entrega</summary>
         <p>
-          Agenda; procedimientos hospitalarios con cargos (OP37); cargos/inventario/honorarios
-          odontológicos (FS-19); facturación y caja; gestión de usuarios y contraseñas; reactivación
-          de expediente.
+          Procedimientos hospitalarios con cargos (OP37); cargos/inventario/honorarios odontológicos
+          (FS-19); gestión de usuarios y contraseñas; reactivación de expediente.
         </p>
       </details>
     </main>

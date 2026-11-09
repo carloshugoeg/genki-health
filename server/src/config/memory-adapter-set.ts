@@ -59,7 +59,7 @@ export function openMemoryAdapterSet(
     ),
     catalogos: new MemoryCatalogoRepository(state),
   };
-  return { set: attachMemoryFullModules(set, state), state };
+  return { set: attachMemoryFullModules(set, state, institutionId), state };
 }
 
 export function buildMemoryAdapterSet(

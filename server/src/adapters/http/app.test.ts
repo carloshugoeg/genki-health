@@ -712,4 +712,87 @@ describe('HTTP patient search detail catalog archive', () => {
     expect(denied.statusCode).toBe(403);
     expect((denied.json() as ErrorDto).error).toBe('forbidden');
   });
+
+  it('superadmin_selected_institution_passes_agenda_and_charges_unauthorized_forbidden', async () => {
+    const hospital = createTestMemoryAdapterSet('hospital_general', 1);
+    const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
+    seedHospitalCatalogs(hospital);
+    const auth = await authWithHospitalRoles();
+    const app = buildHttpApp({ registry: clinicalRegistry(hospital, pediatric), auth });
+    const { password } = testCredentials();
+
+    const login = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        email: 'superadmin@example.invalid',
+        password,
+        institution_kind: 'hospital_general',
+      },
+    });
+    expect(login.statusCode).toBe(200);
+    const homeTokens = login.json() as AuthTokensDto;
+
+    const selected = await app.inject({
+      method: 'POST',
+      url: '/api/auth/select-institution',
+      headers: { authorization: `Bearer ${homeTokens.access_token}` },
+      payload: {
+        institution_kind: 'hospital_general',
+        refresh_token: homeTokens.refresh_token,
+      },
+    });
+    expect(selected.statusCode).toBe(200);
+    const active = selected.json() as AuthTokensDto;
+
+    const agenda = await app.inject({
+      method: 'GET',
+      url: '/api/agenda?fecha=2026-11-09',
+      headers: { authorization: `Bearer ${active.access_token}` },
+    });
+    expect(agenda.statusCode).toBe(200);
+    expect(Array.isArray(agenda.json())).toBe(true);
+
+    const tarifario = await app.inject({
+      method: 'GET',
+      url: '/api/tarifario',
+      headers: { authorization: `Bearer ${active.access_token}` },
+    });
+    expect(tarifario.statusCode).toBe(200);
+    expect((tarifario.json() as { items: unknown[] }).items).toEqual([]);
+
+    const demos = await buildDemoUsers(password);
+    const hash = demos[0]!.hash_contrasena;
+    const lockedAuth = await createPhase0Auth(testCredentials().jwtSecret, [
+      ...demos,
+      {
+        id_usuario: 13,
+        email: 'laboratorista@genki.local',
+        hash_contrasena: hash,
+        id_institucion: 1,
+        institution_kind: 'hospital_general',
+        roles: ['laboratorista'],
+        estado: 'activo',
+      },
+    ]);
+    const lockedApp = buildHttpApp({
+      registry: clinicalRegistry(hospital, pediatric),
+      auth: lockedAuth,
+    });
+    const deniedToken = await loginAs(lockedApp, 'laboratorista@genki.local');
+    const deniedAgenda = await lockedApp.inject({
+      method: 'GET',
+      url: '/api/agenda?fecha=2026-11-09',
+      headers: { authorization: `Bearer ${deniedToken}` },
+    });
+    expect(deniedAgenda.statusCode).toBe(403);
+    expect((deniedAgenda.json() as ErrorDto).error).toBe('forbidden');
+    const deniedTarifario = await lockedApp.inject({
+      method: 'GET',
+      url: '/api/tarifario',
+      headers: { authorization: `Bearer ${deniedToken}` },
+    });
+    expect(deniedTarifario.statusCode).toBe(403);
+    expect((deniedTarifario.json() as ErrorDto).error).toBe('forbidden');
+  });
 });

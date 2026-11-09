@@ -2,6 +2,10 @@
 
 Plataforma compartida de historiales clínicos para cuatro instituciones médicas independientes. Proyecto final de Bases de Datos II, Universidad Rafael Landívar. Integrantes: Carlos Hugo Escobar Gómez y Héctor Jordin Adolfo García Coyoy.
 
+## Lane A+B integration (2026-11-09)
+
+Merge of Codex lanes A (caja/inventario/honorarios/facturación OP61–77) and B (agenda OP20–25) onto `cursor/genki-fixes-1`. HTTP mounts `GET /api/agenda` and `GET /api/tarifario` from `server/src/adapters/http/lane-ab-routes.ts` with central `assertRoles` (superadministrador bypass; audit keeps `id_usuario`). PG/MySQL `security.sql` grants cover `lane_a_*` and `agenda_*` tables. Combined setup: `npm run db:setup:all` (bootstrap → migrate → module migrate → bootstrap GRANTs → seeds). UI routes `/agenda` and `/economia`. Standalone lane plugins and manage.ts harnesses remain.
+
 ## Lane-2 specialty modules (2026-11-09)
 
 Institution-scoped specialty ops on their assigned engines only: hospitalización OP34–36/38 on PostgreSQL (`admission`/`procedure`/`discharge`); pediatría OP40–47 on MySQL (`growth`/`vaccines`/`milestones`); laboratorio OP48–54 on MongoDB (`lab-intake`/`lab-results`); odontología OP55–58 on Firestore (`dental-chart`/`dental-plan`). OP37 and FS-19 (OP59–60) stay deferred for the billing/charges lane. HTTP mounts from `server/src/adapters/http/specialty-routes.ts`. UI panels: `web/src/full/SpecialtyPanels.tsx`. Migrations: `postgres/migrations/0005-hospital-seed-beds.sql`, `mysql/migrations/0003-pediatrics.sql`, `0004-pediatrics-seed.sql`. Growth curves store measurements without WHO percentiles when `referencia_oms` is empty (`version_referencia = none`).

@@ -22,6 +22,7 @@ import {
   toErrorDto,
 } from './errors.js';
 import { archiveViaOp18, registerFullClinicalRoutes } from './full-routes.js';
+import { registerLaneABRoutes } from './lane-ab-routes.js';
 import { registerSpecialtyRoutes } from './specialty-routes.js';
 import {
   archiveSchema,
@@ -460,6 +461,7 @@ export function buildHttpApp(options: HttpAppOptions) {
 
   registerFullClinicalRoutes(app, { registry: options.registry, requirePrincipal });
   registerSpecialtyRoutes(app, { registry: options.registry, requirePrincipal });
+  registerLaneABRoutes(app, { registry: options.registry, requirePrincipal });
 
   return app;
 }
