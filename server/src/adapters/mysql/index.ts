@@ -6,11 +6,17 @@ import type { ClockPort } from '../../ports/clock.js';
 import { MysqlCatalogoRepository } from './catalogo-repository.js';
 import { MysqlConsultaRepository } from './consulta-repository.js';
 import { createMysqlAttachmentsRepository } from './full/attachments.js';
+import { MysqlAgendaRepository } from './full/agenda.js';
+import { MysqlEconomicStore } from './full/charges.js';
 import { createMysqlConsultationRepository } from './full/consultation.js';
 import { createMysqlGrowthRepository } from './full/growth.js';
 import { createMysqlMilestonesRepository } from './full/milestones.js';
 import { createMysqlRecordRepository } from './full/record.js';
 import { createMysqlVaccinesRepository } from './full/vaccines.js';
+import {
+  clinicalEconomicReferences,
+  laneABModulesFrom,
+} from '../../config/lane-ab-modules.js';
 import { MysqlIdPort } from './id.js';
 import { MysqlPacienteRepository } from './paciente-repository.js';
 import { MysqlUnitOfWork } from './unit-of-work.js';
@@ -74,6 +80,10 @@ export async function createMysqlAdapterSet(options: EngineOptions): Promise<Ada
     afterWrite,
   );
   const fullDeps = { id_institucion, pacientes, unitOfWork, clock };
+  const laneAB = laneABModulesFrom(
+    new MysqlEconomicStore(pool, id_institucion, clinicalEconomicReferences(pacientes)),
+    new MysqlAgendaRepository(pool),
+  );
   const set = {
     engine: engineForKind(options.kind),
     clock,
@@ -89,6 +99,7 @@ export async function createMysqlAdapterSet(options: EngineOptions): Promise<Ada
       growth: createMysqlGrowthRepository(fullDeps),
       vaccines: createMysqlVaccinesRepository(fullDeps),
       milestones: createMysqlMilestonesRepository(fullDeps),
+      ...laneAB,
     },
   };
 

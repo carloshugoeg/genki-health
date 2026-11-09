@@ -4,8 +4,14 @@ import type { AdapterResource, ClockPort, EngineOptions } from '../../ports/inde
 import { MongoCatalogoRepository } from './catalogo-repository.js';
 import { MongoConsultaRepository } from './consulta-repository.js';
 import { createMongoLane1Repositories } from './full/lane1.js';
+import { MongodbAgendaRepository } from './full/agenda.js';
+import { MongodbEconomicStore } from './full/charges.js';
 import { createMongoLabIntakeRepository } from './full/lab-intake.js';
 import { createMongoLabResultsRepository } from './full/lab-results.js';
+import {
+  clinicalEconomicReferences,
+  laneABModulesFrom,
+} from '../../config/lane-ab-modules.js';
 import { MongoIdPort } from './id.js';
 import { MongoPacienteRepository } from './paciente-repository.js';
 import { assertMongoPrimaryReady } from './schema.js';
@@ -60,10 +66,20 @@ export async function createMongoAdapterSet(options: EngineOptions): Promise<Ada
     clock,
   });
   const labDeps = { db, id_institucion: options.id_institucion, ids, unitOfWork, clock };
+  const laneAB = laneABModulesFrom(
+    new MongodbEconomicStore(
+      client,
+      db,
+      options.id_institucion,
+      clinicalEconomicReferences(pacientes),
+    ),
+    new MongodbAgendaRepository(client, db),
+  );
   const full = {
     ...lane1,
     labIntake: createMongoLabIntakeRepository(labDeps),
     labResults: createMongoLabResultsRepository(labDeps),
+    ...laneAB,
   };
   const set = {
     engine: engineForKind(options.kind),

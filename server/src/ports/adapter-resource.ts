@@ -8,11 +8,17 @@ import type { ChargesRepositoryPort } from './full/charges.js';
 import type { ConsultationRepositoryPort } from './full/consultation.js';
 import type { DentalChartRepositoryPort } from './full/dental-chart.js';
 import type { DentalPlanRepositoryPort } from './full/dental-plan.js';
+import type { DentalSessionRepositoryPort } from './full/dental-session.js';
 import type { DischargeRepositoryPort } from './full/discharge.js';
 import type { GrowthRepositoryPort } from './full/growth.js';
+import type { HonorariaRepositoryPort } from './full/honoraria.js';
+import type { InventoryRepositoryPort } from './full/inventory.js';
+import type { InvoicingRepositoryPort } from './full/invoicing.js';
 import type { LabIntakeRepositoryPort } from './full/lab-intake.js';
 import type { LabResultsRepositoryPort } from './full/lab-results.js';
 import type { MilestonesRepositoryPort } from './full/milestones.js';
+import type { PaymentsRepositoryPort } from './full/payments.js';
+import type { PersonnelRepositoryPort } from './full/personnel.js';
 import type { ProcedureRepositoryPort } from './full/procedure.js';
 import type { RecordRepositoryPort } from './full/record.js';
 import type { VaccinesRepositoryPort } from './full/vaccines.js';
@@ -33,8 +39,14 @@ export interface Lane1FullModules {
   readonly labResults?: LabResultsRepositoryPort;
   readonly dentalChart?: DentalChartRepositoryPort;
   readonly dentalPlan?: DentalPlanRepositoryPort;
+  readonly dentalSession?: DentalSessionRepositoryPort;
   readonly agenda?: AgendaRepositoryPort;
   readonly charges?: ChargesRepositoryPort;
+  readonly personnel?: PersonnelRepositoryPort;
+  readonly honoraria?: HonorariaRepositoryPort;
+  readonly inventory?: InventoryRepositoryPort;
+  readonly invoicing?: InvoicingRepositoryPort;
+  readonly payments?: PaymentsRepositoryPort;
 }
 
 export interface EngineAdapterSet extends ClinicalContext {

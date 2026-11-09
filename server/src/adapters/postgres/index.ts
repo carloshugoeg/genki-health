@@ -4,10 +4,16 @@ import { PostgresCatalogoRepository } from './catalogo-repository.js';
 import { PostgresConsultaRepository } from './consulta-repository.js';
 import { createPostgresAdmissionRepository } from './full/admission.js';
 import { createPostgresAttachmentsRepository } from './full/attachments.js';
+import { PostgresAgendaRepository } from './full/agenda.js';
+import { PostgresEconomicStore } from './full/charges.js';
 import { createPostgresConsultationRepository } from './full/consultation.js';
 import { createPostgresDischargeRepository } from './full/discharge.js';
 import { createPostgresProcedureRepository } from './full/procedure.js';
 import { createPostgresRecordRepository } from './full/record.js';
+import {
+  clinicalEconomicReferences,
+  laneABModulesFrom,
+} from '../../config/lane-ab-modules.js';
 import { PostgresIdPort } from './id.js';
 import { PostgresPacienteRepository } from './paciente-repository.js';
 import { PostgresUnitOfWork } from './unit-of-work.js';
@@ -46,6 +52,14 @@ export async function createPostgresAdapterSet(options: EngineOptions): Promise<
     unitOfWork,
     clock,
   };
+  const laneAB = laneABModulesFrom(
+    new PostgresEconomicStore(
+      pool,
+      options.id_institucion,
+      clinicalEconomicReferences(pacientes),
+    ),
+    new PostgresAgendaRepository(pool),
+  );
 
   return {
     set: {
@@ -63,6 +77,7 @@ export async function createPostgresAdapterSet(options: EngineOptions): Promise<
         admission: createPostgresAdmissionRepository(fullDeps),
         procedure: createPostgresProcedureRepository(fullDeps),
         discharge: createPostgresDischargeRepository(fullDeps),
+        ...laneAB,
       },
     },
     async close(): Promise<void> {

@@ -1,4 +1,9 @@
-import { clean, registerEconomicRoute, type EconomicHttpContext } from './charges.js';
+import {
+  clean,
+  registerEconomicRoute,
+  resolveEconomicRepository,
+  type EconomicPluginOptions,
+} from './charges.js';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type {
@@ -8,6 +13,7 @@ import type {
   Op76Request,
   Op77Request,
 } from '../../../ports/full/payments.js';
+
 const txt = z.string().trim().min(1).max(500);
 const pageQuery = z
   .object({
@@ -15,9 +21,10 @@ const pageQuery = z
     page_size: z.coerce.number().int().min(1).max(50).optional(),
   })
   .strict();
+
 export async function paymentsPlugin(
   app: FastifyInstance,
-  options: { repository: PaymentsRepositoryPort; context: EconomicHttpContext },
+  options: EconomicPluginOptions<PaymentsRepositoryPort>,
 ): Promise<void> {
   registerEconomicRoute(
     app,
@@ -31,11 +38,13 @@ export async function paymentsPlugin(
       })
       .strict(),
     options.context,
-    async (input, ctx) =>
-      options.repository.op74(
+    async (input, ctx, request) => {
+      const repository = await resolveEconomicRepository(options, request);
+      return repository.op74(
         { params: input.params, query: {}, body: clean<Op74Request['body']>(input.body) },
         ctx,
-      ),
+      );
+    },
   );
   registerEconomicRoute(
     app,
@@ -43,11 +52,13 @@ export async function paymentsPlugin(
     '/api/facturas/:id/anulacion',
     z.object({ motivo: txt }).strict(),
     options.context,
-    async (input, ctx) =>
-      options.repository.op75(
+    async (input, ctx, request) => {
+      const repository = await resolveEconomicRepository(options, request);
+      return repository.op75(
         { params: input.params, query: {}, body: clean<Op75Request['body']>(input.body) },
         ctx,
-      ),
+      );
+    },
   );
   registerEconomicRoute(
     app,
@@ -55,11 +66,13 @@ export async function paymentsPlugin(
     '/api/pacientes/:id/cuenta',
     pageQuery,
     options.context,
-    async (input, ctx) =>
-      options.repository.op76(
+    async (input, ctx, request) => {
+      const repository = await resolveEconomicRepository(options, request);
+      return repository.op76(
         { params: input.params, query: clean<Op76Request['query']>(input.query), body: {} },
         ctx,
-      ),
+      );
+    },
   );
   registerEconomicRoute(
     app,
@@ -67,10 +80,12 @@ export async function paymentsPlugin(
     '/api/caja/cierre',
     z.object({ fecha: txt }).strict(),
     options.context,
-    async (input, ctx) =>
-      options.repository.op77(
+    async (input, ctx, request) => {
+      const repository = await resolveEconomicRepository(options, request);
+      return repository.op77(
         { params: {}, query: clean<Op77Request['query']>(input.query), body: {} },
         ctx,
-      ),
+      );
+    },
   );
 }

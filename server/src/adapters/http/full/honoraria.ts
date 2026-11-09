@@ -1,4 +1,9 @@
-import { clean, registerEconomicRoute, type EconomicHttpContext } from './charges.js';
+import {
+  clean,
+  registerEconomicRoute,
+  resolveEconomicRepository,
+  type EconomicPluginOptions,
+} from './charges.js';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type {
@@ -7,11 +12,13 @@ import type {
   Op64Request,
   Op65Request,
 } from '../../../ports/full/honoraria.js';
+
 const id = z.number().int().positive();
 const txt = z.string().trim().min(1).max(500);
+
 export async function honorariaPlugin(
   app: FastifyInstance,
-  options: { repository: HonorariaRepositoryPort; context: EconomicHttpContext },
+  options: EconomicPluginOptions<HonorariaRepositoryPort>,
 ): Promise<void> {
   registerEconomicRoute(
     app,
@@ -29,11 +36,13 @@ export async function honorariaPlugin(
       })
       .strict(),
     options.context,
-    async (input, ctx) =>
-      options.repository.op63(
+    async (input, ctx, request) => {
+      const repository = await resolveEconomicRepository(options, request);
+      return repository.op63(
         { params: {}, query: {}, body: clean<Op63Request['body']>(input.body) },
         ctx,
-      ),
+      );
+    },
   );
   registerEconomicRoute(
     app,
@@ -41,11 +50,13 @@ export async function honorariaPlugin(
     '/api/actos/honorarios',
     z.object({ id_consulta: id.optional(), id_procedimiento: id.optional() }).strict(),
     options.context,
-    async (input, ctx) =>
-      options.repository.op64(
+    async (input, ctx, request) => {
+      const repository = await resolveEconomicRepository(options, request);
+      return repository.op64(
         { params: {}, query: {}, body: clean<Op64Request['body']>(input.body) },
         ctx,
-      ),
+      );
+    },
   );
   registerEconomicRoute(
     app,
@@ -59,10 +70,12 @@ export async function honorariaPlugin(
       })
       .strict(),
     options.context,
-    async (input, ctx) =>
-      options.repository.op65(
+    async (input, ctx, request) => {
+      const repository = await resolveEconomicRepository(options, request);
+      return repository.op65(
         { params: {}, query: clean<Op65Request['query']>(input.query), body: {} },
         ctx,
-      ),
+      );
+    },
   );
 }

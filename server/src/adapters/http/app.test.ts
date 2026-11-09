@@ -761,6 +761,22 @@ describe('HTTP patient search detail catalog archive', () => {
     expect(tarifario.statusCode).toBe(200);
     expect((tarifario.json() as { items: unknown[] }).items).toEqual([]);
 
+    const disponibilidad = await app.inject({
+      method: 'GET',
+      url: '/api/agenda/disponibilidad?id_profesional=1&desde=2026-11-09T14:00:00.000Z&hasta=2026-11-09T23:00:00.000Z',
+      headers: { authorization: `Bearer ${active.access_token}` },
+    });
+    expect(disponibilidad.statusCode).toBe(200);
+    expect(Array.isArray(disponibilidad.json())).toBe(true);
+
+    const insumos = await app.inject({
+      method: 'GET',
+      url: '/api/insumos',
+      headers: { authorization: `Bearer ${active.access_token}` },
+    });
+    expect(insumos.statusCode).toBe(200);
+    expect(typeof (insumos.json() as { total: number }).total).toBe('number');
+
     const demos = await buildDemoUsers(password);
     const hash = demos[0]!.hash_contrasena;
     const lockedAuth = await createPhase0Auth(testCredentials().jwtSecret, [

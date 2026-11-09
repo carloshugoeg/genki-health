@@ -13,11 +13,12 @@ import { createMemoryProcedureRepository } from '../adapters/memory/full/procedu
 import { createMemoryRecordRepository } from '../adapters/memory/full/record.js';
 import { createMemoryVaccinesRepository } from '../adapters/memory/full/vaccines.js';
 import { MemoryAgendaRepository } from '../adapters/memory/full/agenda.js';
-import { MemoryChargesRepository, MemoryEconomicStore } from '../adapters/memory/full/charges.js';
+import { MemoryEconomicStore } from '../adapters/memory/full/charges.js';
 import { registerExtensionNamespace } from '../adapters/memory/full-state.js';
 import type { FullModulePorts } from '../ports/full/context.js';
 import { FULL_MODULE_SLUGS } from '../ports/full/context.js';
 import type { AdapterSet, Lane1FullModules } from './adapter-registry.js';
+import { clinicalEconomicReferences, laneABModulesFrom } from './lane-ab-modules.js';
 
 export type { Lane1FullModules };
 
@@ -137,12 +138,9 @@ export function attachMemoryFullModules(
     }),
     dentalChart: createMemoryDentalChartRepository(common),
     dentalPlan: createMemoryDentalPlanRepository(common),
-    agenda: new MemoryAgendaRepository(),
-    charges: new MemoryChargesRepository(
-      new MemoryEconomicStore(institutionId, {
-        patient: async () => null,
-        act: async () => null,
-      }),
+    ...laneABModulesFrom(
+      new MemoryEconomicStore(institutionId, clinicalEconomicReferences(set.pacientes)),
+      new MemoryAgendaRepository(),
     ),
   };
   return Object.assign(set, { full });

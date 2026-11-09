@@ -6,7 +6,13 @@ import { FirebaseId } from './id.js';
 import { FirebaseCatalogoRepository } from './catalogo-repository.js';
 import { createFirebaseDentalChartRepository } from './full/dental-chart.js';
 import { createFirebaseDentalPlanRepository } from './full/dental-plan.js';
+import { FirebaseAgendaRepository } from './full/agenda.js';
+import { FirebaseEconomicStore } from './full/charges.js';
 import { createFirebaseLane1Repositories } from './full/lane1.js';
+import {
+  clinicalEconomicReferences,
+  laneABModulesFrom,
+} from '../../config/lane-ab-modules.js';
 import { FirebasePacienteRepository } from './paciente-repository.js';
 import { FirebaseConsultaRepository } from './consulta-repository.js';
 
@@ -48,10 +54,20 @@ export async function createFirebaseAdapterSet(
       clock,
     };
     const lane1 = createFirebaseLane1Repositories(dentalDeps);
+    const firestore = unitOfWork.firestore();
+    const laneAB = laneABModulesFrom(
+      new FirebaseEconomicStore(
+        firestore,
+        scoped.id_institucion,
+        clinicalEconomicReferences(pacientes),
+      ),
+      new FirebaseAgendaRepository(firestore),
+    );
     const full = {
       ...lane1,
       dentalChart: createFirebaseDentalChartRepository(dentalDeps),
       dentalPlan: createFirebaseDentalPlanRepository(dentalDeps),
+      ...laneAB,
     };
     return {
       set: {

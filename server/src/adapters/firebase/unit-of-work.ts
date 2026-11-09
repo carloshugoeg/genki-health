@@ -85,6 +85,11 @@ export class FirebaseUnitOfWork implements UnitOfWorkPort {
     this.db.settings({ host: emulatorHost, ssl: false });
   }
 
+  /** Exposed for lane A/B composition (economic + agenda stores). */
+  firestore(): Firestore {
+    return this.db;
+  }
+
   async close(): Promise<void> {
     await this.db.terminate();
     await deleteApp(this.app);
