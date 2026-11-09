@@ -2,7 +2,9 @@ import type { DataEngine, InstitutionId, InstitutionKind } from '@genki/shared';
 import type { ClinicalContext } from './clinical-context.js';
 import type { ClockPort } from './clock.js';
 import type { AdmissionRepositoryPort } from './full/admission.js';
+import type { AgendaRepositoryPort } from './full/agenda.js';
 import type { AttachmentsRepositoryPort } from './full/attachments.js';
+import type { ChargesRepositoryPort } from './full/charges.js';
 import type { ConsultationRepositoryPort } from './full/consultation.js';
 import type { DentalChartRepositoryPort } from './full/dental-chart.js';
 import type { DentalPlanRepositoryPort } from './full/dental-plan.js';
@@ -31,6 +33,8 @@ export interface Lane1FullModules {
   readonly labResults?: LabResultsRepositoryPort;
   readonly dentalChart?: DentalChartRepositoryPort;
   readonly dentalPlan?: DentalPlanRepositoryPort;
+  readonly agenda?: AgendaRepositoryPort;
+  readonly charges?: ChargesRepositoryPort;
 }
 
 export interface EngineAdapterSet extends ClinicalContext {

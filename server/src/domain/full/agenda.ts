@@ -95,8 +95,25 @@ export function lockKeys(
     );
   return keys;
 }
+export const AGENDA_ACCESS_ROLES = [
+  'recepcion',
+  'administrador',
+  'medico',
+  'odontologo',
+  'enfermeria',
+  'auditor',
+] as const;
+
+export const AGENDA_CLINICAL_ROLES = [
+  'medico',
+  'odontologo',
+  'enfermeria',
+  'laboratorista',
+  'superadministrador',
+] as const;
+
 export function clinicalProjection(cita: CITA, roles: readonly string[]): CITA {
-  if (roles.some((r) => ['medico', 'odontologo', 'enfermeria', 'laboratorista'].includes(r)))
+  if (roles.some((r) => (AGENDA_CLINICAL_ROLES as readonly string[]).includes(r)))
     return { ...cita };
   const safe = { ...cita };
   delete safe.motivo;

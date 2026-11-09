@@ -23,7 +23,8 @@
     "firebase:start": "firebase emulators:start --only firestore --project demo-genki-health --config infra/firebase/firebase.json",
     "depcruise": "dependency-cruiser --config .dependency-cruiser.cjs server/src",
     "validate": "bash scripts/validate.sh",
-    "db:seed": "tsx --import dotenv/config scripts/seed.ts"
+    "db:seed": "tsx --import dotenv/config scripts/seed.ts",
+    "db:setup:all": "tsx --import dotenv/config scripts/db-setup-all.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.12.0",

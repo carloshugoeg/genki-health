@@ -35,3 +35,27 @@ GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`dosis_vacuna` TO `genki_app`;
 GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`seguimiento_hito` TO `genki_app`;
 
 GRANT SELECT ON `__DATABASE__`.`reporte_pacientes` TO `genki_report`;
+
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_locks` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_charges` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_services` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_charge_events` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_audit` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_counters` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_commands` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_participations` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_roles` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_honoraria_snapshots` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_supplies` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_consumptions` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_metadata` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_invoices` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_invoice_lines` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_payments` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_professionals` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_contracts` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_personnel_types` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`lane_a_tariffs` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`agenda_cita` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`agenda_lock` TO `genki_app`;
+GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`agenda_cita_id` TO `genki_app`;

@@ -12,6 +12,7 @@ import type {
 import type { OperationContext } from '../../ports/full/context.js';
 import {
   active,
+  AGENDA_ACCESS_ROLES,
   assertFree,
   clinicalProjection,
   dayBounds,
@@ -26,6 +27,7 @@ import {
   validateBooking,
   type AgendaHours,
 } from '../../domain/full/agenda.js';
+import { assertRoles } from '../../domain/full/specialty-common.js';
 
 export interface AgendaOptions {
   hours?: AgendaHours;
@@ -52,7 +54,11 @@ export class AgendaApplication implements AgendaRepositoryPort {
     )
       throw new Error('Horario académico inválido');
   }
+  private authorize(ctx: OperationContext): void {
+    assertRoles(ctx.roles, AGENDA_ACCESS_ROLES);
+  }
   async op20(input: Op20Request, ctx: OperationContext) {
+    this.authorize(ctx);
     const { id_profesional, desde, hasta } = input.query;
     positiveId(id_profesional, 'invalid_query');
     const start = instant(desde, 'invalid_query'),
@@ -89,6 +95,7 @@ export class AgendaApplication implements AgendaRepositoryPort {
     return slots;
   }
   async op21(input: Op21Request, ctx: OperationContext) {
+    this.authorize(ctx);
     validateBooking(input.body);
     return this.store.transaction(
       ctx.id_institucion,
@@ -115,6 +122,7 @@ export class AgendaApplication implements AgendaRepositoryPort {
     update: (cita: CITA, rows: CITA[]) => CITA,
     target?: { fecha_hora: string; duracion_minutos: number },
   ) {
+    this.authorize(ctx);
     positiveId(id);
     const prior = (await this.store.list(ctx.id_institucion)).find((c) => c.id_cita === id);
     if (!prior) invalid();
@@ -177,6 +185,7 @@ export class AgendaApplication implements AgendaRepositoryPort {
     });
   }
   async op25(input: Op25Request, ctx: OperationContext) {
+    this.authorize(ctx);
     const [start, end] = dayBounds(input.query.fecha);
     if (input.query.id_profesional !== undefined)
       positiveId(input.query.id_profesional, 'invalid_query');

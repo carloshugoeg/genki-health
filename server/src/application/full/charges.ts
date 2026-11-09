@@ -21,6 +21,33 @@ import {
   scoped,
   text,
 } from '../../domain/full/charges.js';
+import { ClinicalError } from '../../domain/clinical-error.js';
+import { assertRoles } from '../../domain/full/specialty-common.js';
+
+export const CHARGES_ACCESS_ROLES = ['administrador', 'recepcion', 'medico', 'rrhh'] as const;
+
+function requireChargesAccess(ctx: OperationContext): void {
+  try {
+    assertRoles(ctx.roles, CHARGES_ACCESS_ROLES);
+  } catch (error) {
+    if (error instanceof ClinicalError && error.code === 'forbidden') {
+      ensure(false, error.message, 'forbidden');
+    }
+    throw error;
+  }
+}
+
+function requireCargoAutorizar(ctx: OperationContext): void {
+  if (ctx.permissions.includes('cargo.autorizar')) return;
+  try {
+    assertRoles(ctx.roles, ['administrador']);
+  } catch (error) {
+    if (error instanceof ClinicalError && error.code === 'forbidden') {
+      ensure(false, 'Requiere cargo.autorizar', 'forbidden');
+    }
+    throw error;
+  }
+}
 
 export const caja = (row: CARGO): CargoCaja => ({
   id_cargo: row.id_cargo,
@@ -156,9 +183,11 @@ export async function generateCharge(
 export class ChargesService implements ChargesRepositoryPort {
   constructor(protected readonly store: EconomicStore) {}
   op68(input: Op68Request, ctx: OperationContext) {
+    requireChargesAccess(ctx);
     return scoped(this.store, ctx, (tx) => generateCharge(tx, input.body, ctx));
   }
   op69(input: Op69Request, ctx: OperationContext) {
+    requireChargesAccess(ctx);
     return scoped(this.store, ctx, async (tx) => {
       const p = await patient(tx, input.params.id);
       return page(
@@ -171,8 +200,9 @@ export class ChargesService implements ChargesRepositoryPort {
     });
   }
   op70(input: Op70Request, ctx: OperationContext) {
+    requireChargesAccess(ctx);
     return scoped(this.store, ctx, async (tx) => {
-      ensure(ctx.permissions.includes('cargo.autorizar'), 'Requiere cargo.autorizar', 'forbidden');
+      requireCargoAutorizar(ctx);
       text(input.body.motivo);
       ensure(['anulado', 'cortesia'].includes(input.body.estado), 'Disposición inválida');
       const row = await tx.get<CARGO>('charges', input.params.id);
@@ -190,6 +220,7 @@ export class ChargesService implements ChargesRepositoryPort {
     });
   }
   op71(input: Op71Request, ctx: OperationContext) {
+    requireChargesAccess(ctx);
     return scoped(this.store, ctx, async (tx) =>
       page(
         (await tx.list<SERVICIO_FACTURABLE>('services'))

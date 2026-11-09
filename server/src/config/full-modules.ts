@@ -12,6 +12,11 @@ import { createMemoryMilestonesRepository } from '../adapters/memory/full/milest
 import { createMemoryProcedureRepository } from '../adapters/memory/full/procedure.js';
 import { createMemoryRecordRepository } from '../adapters/memory/full/record.js';
 import { createMemoryVaccinesRepository } from '../adapters/memory/full/vaccines.js';
+import { MemoryAgendaRepository } from '../adapters/memory/full/agenda.js';
+import {
+  MemoryChargesRepository,
+  MemoryEconomicStore,
+} from '../adapters/memory/full/charges.js';
 import { registerExtensionNamespace } from '../adapters/memory/full-state.js';
 import type { FullModulePorts } from '../ports/full/context.js';
 import { FULL_MODULE_SLUGS } from '../ports/full/context.js';
@@ -83,6 +88,7 @@ function stubModules(partial: Lane1FullModules): FullModulePorts {
 export function attachMemoryFullModules(
   set: AdapterSet,
   state: MemoryInstitutionState,
+  institutionId = 1,
 ): AdapterSetWithFull {
   ensureLane1MemoryExtensions();
   const afterWrite = (): void => undefined;
@@ -134,6 +140,13 @@ export function attachMemoryFullModules(
     }),
     dentalChart: createMemoryDentalChartRepository(common),
     dentalPlan: createMemoryDentalPlanRepository(common),
+    agenda: new MemoryAgendaRepository(),
+    charges: new MemoryChargesRepository(
+      new MemoryEconomicStore(institutionId, {
+        patient: async () => null,
+        act: async () => null,
+      }),
+    ),
   };
   return Object.assign(set, { full });
 }

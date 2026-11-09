@@ -20,7 +20,21 @@ import {
   timestamp,
 } from '../../domain/full/charges.js';
 import { actKey } from '../../domain/full/honoraria.js';
+import { ClinicalError } from '../../domain/clinical-error.js';
+import { assertRoles } from '../../domain/full/specialty-common.js';
 import { generateCharge } from './charges.js';
+
+function hasRrhhLiquidacion(ctx: OperationContext): boolean {
+  if (ctx.permissions.includes('honorarios.liquidacion.todos')) return true;
+  try {
+    assertRoles(ctx.roles, ['rrhh']);
+    return true;
+  } catch (error) {
+    if (error instanceof ClinicalError && error.code === 'forbidden') return false;
+    throw error;
+  }
+}
+
 export class HonorariaService implements HonorariaRepositoryPort {
   constructor(protected readonly store: EconomicStore) {}
   op63(input: Op63Request, ctx: OperationContext) {
@@ -127,8 +141,7 @@ export class HonorariaService implements HonorariaRepositoryPort {
       date(q.desde);
       date(q.hasta);
       ensure(q.desde < q.hasta, 'Período inválido', 'invalid_query');
-      const hr =
-        ctx.roles.includes('rrhh') || ctx.permissions.includes('honorarios.liquidacion.todos');
+      const hr = hasRrhhLiquidacion(ctx);
       ensure(
         hr ||
           (ctx.id_profesional != null &&

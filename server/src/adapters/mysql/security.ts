@@ -79,7 +79,23 @@ export async function installMysqlSecurity(
   }
   const database = assertAllowlistedDatabase(secrets.database);
   const sql = readFileSync(SECURITY_SQL_PATH, 'utf8').replaceAll('__DATABASE__', database);
-  await connection.query(sql);
+  const statements = sql
+    .split(';')
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+  for (const statement of statements) {
+    try {
+      await connection.query(statement);
+    } catch (error) {
+      const errno =
+        typeof error === 'object' && error !== null && 'errno' in error
+          ? Number((error as { errno: number }).errno)
+          : 0;
+      const optionalModule =
+        /\b(lane_a_|agenda_cita|agenda_lock|agenda_cita_id)\b/.test(statement) && errno === 1146;
+      if (!optionalModule) throw error;
+    }
+  }
   await upsertLogin(connection, MYSQL_APP_USER, secrets.appPassword, MYSQL_APP_ROLE);
   await upsertLogin(connection, MYSQL_REPORT_USER, secrets.reportPassword, MYSQL_REPORT_ROLE);
   await connection.query('FLUSH PRIVILEGES');

@@ -105,9 +105,9 @@ export function agendaContract(name: string, create: () => Promise<AgendaReposit
         expect((await repo.op25(query, { ...context, roles: [role] }))[0]).not.toHaveProperty(
           'motivo',
         );
-      expect(
-        (await repo.op25(query, { ...context, roles: ['recepcionista'] }))[0],
-      ).not.toHaveProperty('motivo');
+      await expect(repo.op25(query, { ...context, roles: ['recepcionista'] })).rejects.toMatchObject(
+        { code: 'forbidden' },
+      );
       expect((await repo.op25(query, context))[0]?.motivo).toBe('Privado');
       await expect(
         repo.op25({ ...query, query: { fecha: '2026-02-30' } }, context),

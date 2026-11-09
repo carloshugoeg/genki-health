@@ -27,7 +27,7 @@ async function fixture() {
     id_institucion: asInstitutionId(1),
     id_usuario: 1,
     id_profesional: null,
-    roles: [],
+    roles: ['recepcion'],
     permissions: [],
     now: '2026-11-09T01:00:00Z',
   });

@@ -48,3 +48,20 @@ GRANT INSERT ON auth_session TO genki_identity;
 GRANT UPDATE (revoked_at) ON auth_session TO genki_identity;
 
 GRANT SELECT ON reporte_pacientes TO genki_report;
+
+DO $$
+BEGIN
+  GRANT SELECT, INSERT, UPDATE ON lane_a_locks, lane_a_charges, lane_a_services, lane_a_charge_events,
+    lane_a_audit, lane_a_counters, lane_a_commands, lane_a_participations, lane_a_roles,
+    lane_a_honoraria_snapshots, lane_a_supplies, lane_a_consumptions, lane_a_metadata,
+    lane_a_invoices, lane_a_invoice_lines, lane_a_payments, lane_a_professionals, lane_a_contracts,
+    lane_a_personnel_types, lane_a_tariffs, agenda_cita TO genki_app;
+EXCEPTION WHEN undefined_table THEN
+  NULL;
+END $$;
+DO $$
+BEGIN
+  GRANT USAGE, SELECT ON SEQUENCE agenda_cita_id_cita_seq TO genki_app;
+EXCEPTION WHEN undefined_table THEN
+  NULL;
+END $$;

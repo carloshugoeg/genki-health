@@ -98,6 +98,8 @@ it('router_has_exact_mvp_paths', () => {
     '/pacientes/nuevo',
     '/pacientes/:id',
     '/pacientes/:id/consulta/nueva',
+    '/agenda',
+    '/economia',
   ]);
   expect(
     [
@@ -107,8 +109,19 @@ it('router_has_exact_mvp_paths', () => {
       '/pacientes/nuevo',
       '/pacientes/12',
       '/pacientes/12/consulta/nueva',
+      '/agenda',
+      '/economia',
     ].map(route),
-  ).toEqual(['login', 'panel', 'patients', 'register', 'record', 'consultation']);
+  ).toEqual([
+    'login',
+    'panel',
+    'patients',
+    'register',
+    'record',
+    'consultation',
+    'agenda',
+    'economia',
+  ]);
   expect(route('/pacientes/0')).toBe('unknown');
   expect(route('/other')).toBe('unknown');
 });
