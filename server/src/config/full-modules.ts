@@ -13,10 +13,7 @@ import { createMemoryProcedureRepository } from '../adapters/memory/full/procedu
 import { createMemoryRecordRepository } from '../adapters/memory/full/record.js';
 import { createMemoryVaccinesRepository } from '../adapters/memory/full/vaccines.js';
 import { MemoryAgendaRepository } from '../adapters/memory/full/agenda.js';
-import {
-  MemoryChargesRepository,
-  MemoryEconomicStore,
-} from '../adapters/memory/full/charges.js';
+import { MemoryChargesRepository, MemoryEconomicStore } from '../adapters/memory/full/charges.js';
 import { registerExtensionNamespace } from '../adapters/memory/full-state.js';
 import type { FullModulePorts } from '../ports/full/context.js';
 import { FULL_MODULE_SLUGS } from '../ports/full/context.js';

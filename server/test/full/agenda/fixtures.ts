@@ -108,10 +108,10 @@ export async function nativeAgenda(engine: Engine) {
     };
   }
   const real = process.env.FIRESTORE_MODE === 'real';
-    projectId =
-      process.env.AGENDA_FIREBASE_PROJECT_ID ??
-      process.env.FIREBASE_PROJECT_ID ??
-      process.env.GCLOUD_PROJECT;
+  projectId =
+    process.env.AGENDA_FIREBASE_PROJECT_ID ??
+    process.env.FIREBASE_PROJECT_ID ??
+    process.env.GCLOUD_PROJECT;
   if (
     !projectId ||
     (real

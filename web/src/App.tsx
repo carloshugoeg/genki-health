@@ -90,9 +90,7 @@ export function App() {
               {current !== 'panel' && (
                 <button onClick={() => navigate('/pacientes')}>Pacientes</button>
               )}
-              {current !== 'panel' && (
-                <button onClick={() => navigate('/agenda')}>Agenda</button>
-              )}
+              {current !== 'panel' && <button onClick={() => navigate('/agenda')}>Agenda</button>}
               {current !== 'panel' && (
                 <button onClick={() => navigate('/economia')}>Economía</button>
               )}
@@ -139,14 +137,16 @@ export function App() {
         <Agenda request={(path, init) => api(path, init)} />
       ) : current === 'economia' ? (
         <ChargesPage
-          client={((path, init) => {
-            const requestInit: RequestInit = {
-              method: init.method,
-              headers: init.headers,
-            };
-            if (init.body !== undefined) requestInit.body = init.body;
-            return api(path, requestInit);
-          }) as EconomicClient}
+          client={
+            ((path, init) => {
+              const requestInit: RequestInit = {
+                method: init.method,
+                headers: init.headers,
+              };
+              if (init.body !== undefined) requestInit.body = init.body;
+              return api(path, requestInit);
+            }) as EconomicClient
+          }
         />
       ) : null}
       <details className="out-of-scope">
