@@ -188,3 +188,54 @@ select {
   outline: 3px solid #125da6;
   outline-offset: 3px;
 }
+
+.clinical-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.6rem 1.5rem;
+}
+.clinical-fields dt {
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+.clinical-fields dd {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.clinical-entry {
+  border-top: 1px solid #9bb5b0;
+  margin-top: 1.5rem;
+  padding-top: 0.5rem;
+}
+.clinical-entry details {
+  margin: 0.75rem 0;
+  padding: 0.5rem;
+  background: #ffffff70;
+}
+.clinical-entry summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+textarea {
+  font: inherit;
+  width: 100%;
+  min-height: 5rem;
+  padding: 0.55rem;
+  resize: vertical;
+  border: 1px solid #9bb5b0;
+}
+dialog {
+  width: min(36rem, 95vw);
+  max-height: 90vh;
+  overflow: auto;
+  border: 2px solid var(--accent);
+  color: var(--ink);
+  background: #f3f7f6;
+}
+dialog::backdrop {
+  background: #102c2a99;
+}
+[hidden] {
+  display: none !important;
+}

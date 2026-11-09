@@ -6,6 +6,7 @@ import { navigate, route } from './router';
 import { Login } from './screens/Login';
 import { Pacientes } from './screens/Pacientes';
 import { RegisterPaciente } from './screens/RegisterPaciente';
+import { Historial } from './screens/Historial';
 export function App() {
   const [location, setLocation] = useState(() => window.location.pathname + window.location.search);
   const [principal, setPrincipal] = useState<AuthPrincipalDto | null>(null);
@@ -99,16 +100,14 @@ export function App() {
         <Pacientes search={location.includes('?') ? location.slice(location.indexOf('?')) : ''} />
       ) : current === 'register' ? (
         <RegisterPaciente />
-      ) : (
-        <section>
-          <h2>{current === 'consultation' ? 'Nueva consulta' : 'Ficha del paciente'}</h2>
-          <p role="status">
-            Pantalla pendiente de E2-P5-04. No se muestra historia ni atención clínica en esta
-            entrega de interfaz.
-          </p>
-          <button onClick={() => navigate('/pacientes')}>Volver a pacientes</button>
-        </section>
-      )}
+      ) : current === 'record' || current === 'consultation' ? (
+        <Historial
+          key={`${principal.id_institucion}:${location.split('?')[0]?.split('/')[2]}`}
+          patientId={Number(location.split('?')[0]?.split('/')[2])}
+          composing={current === 'consultation'}
+          principal={principal}
+        />
+      ) : null}
       <details className="out-of-scope">
         <summary>Fuera del alcance de esta entrega</summary>
         <p>
