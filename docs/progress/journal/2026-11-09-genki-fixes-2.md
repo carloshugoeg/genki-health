@@ -13,6 +13,7 @@ Mac smoke hotfixes from `cursor/genki-wire-ab` real 4-engine run:
 3. Agenda firebase migrate: declare `projectId` in fixtures.
 4. Mongo `genkiApp` privileges for lane 1/2 clinical collections + `reactivacion_audit`.
 5. Idempotent `lane_a_professionals` id=1 (+ contract) in personnel seed for inventario consumo.
+6. Lane3 Firestore ensure path `instituciones` → `institutions` (matches UoW root).
 
 ## Verification
 
