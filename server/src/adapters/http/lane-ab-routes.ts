@@ -4,18 +4,29 @@ import type { InstitutionAdapterRegistry } from '../../config/adapter-registry.j
 import type { AdapterSetWithFull } from '../../config/full-modules.js';
 import type { OperationContext } from '../../ports/full/context.js';
 import { ClinicalError } from '../../domain/clinical-error.js';
-import { EconomicError } from '../../domain/full/charges.js';
-import { toErrorDto } from './errors.js';
+import { agendaPlugin } from './full/agenda.js';
+import { chargesPlugin } from './full/charges.js';
+import { honorariaPlugin } from './full/honoraria.js';
+import { inventoryPlugin } from './full/inventory.js';
+import { invoicingPlugin } from './full/invoicing.js';
+import { paymentsPlugin } from './full/payments.js';
+import { personnelPlugin } from './full/personnel.js';
 
 function actorFrom(
   principal: AuthPrincipalDto,
   adapters: AdapterSetWithFull,
   idempotency_key?: string,
 ): OperationContext {
+  const clinical =
+    principal.roles.includes('superadministrador') ||
+    principal.roles.includes('medico') ||
+    principal.roles.includes('enfermeria') ||
+    principal.roles.includes('odontologo') ||
+    principal.roles.includes('laboratorista');
   return {
     id_institucion: principal.id_institucion,
     id_usuario: principal.id_usuario,
-    id_profesional: null,
+    id_profesional: clinical ? 1 : null,
     roles: principal.roles,
     permissions: [],
     now: adapters.clock.nowIso(),
@@ -23,24 +34,9 @@ function actorFrom(
   };
 }
 
-function idempotencyKey(request: FastifyRequest): string | undefined {
-  const raw = request.headers['idempotency-key'];
-  return typeof raw === 'string' ? raw : undefined;
-}
-
-async function sendMapped(reply: FastifyReply, error: unknown) {
-  if (error instanceof EconomicError) {
-    const status = {
-      conflict: 409,
-      not_found: 404,
-      reference_not_found: 404,
-      forbidden: 403,
-      invalid_query: 400,
-    }[error.code];
-    return reply.code(status).send({ error: error.code, message: error.message });
-  }
-  const mapped = toErrorDto(error);
-  return reply.code(mapped.status).send(mapped.body);
+function requireModule<T>(value: T | undefined, label: string): T {
+  if (!value) throw new ClinicalError('misconfigured', `Módulo ${label} no cableado`);
+  return value;
 }
 
 export function registerLaneABRoutes(
@@ -59,49 +55,62 @@ export function registerLaneABRoutes(
       principal.id_institucion,
     ) as AdapterSetWithFull;
 
-  app.get('/api/agenda', async (request, reply) => {
-    const principal = await options.requirePrincipal(request, reply);
-    if (!principal) return;
-    try {
-      const adapters = resolveSet(principal);
-      if (!adapters.full?.agenda) {
-        throw new ClinicalError('misconfigured', 'Módulo agenda no cableado');
-      }
-      const query = request.query as { fecha?: string; id_profesional?: string };
-      if (typeof query.fecha !== 'string') {
-        throw new ClinicalError('invalid_query', 'Parámetros de agenda inválidos');
-      }
-      const parsed: { fecha: string; id_profesional?: number } = { fecha: query.fecha };
-      if (query.id_profesional !== undefined) {
-        parsed.id_profesional = Number(query.id_profesional);
-      }
-      return await adapters.full.agenda.op25(
-        { params: {}, query: parsed, body: {} },
-        actorFrom(principal, adapters, idempotencyKey(request)),
-      );
-    } catch (error) {
-      return sendMapped(reply, error);
-    }
-  });
+  void app.register(async (scope) => {
+    scope.addHook('preHandler', async (request, reply) => {
+      await options.requirePrincipal(request, reply);
+    });
 
-  app.get('/api/tarifario', async (request, reply) => {
-    const principal = await options.requirePrincipal(request, reply);
-    if (!principal) return;
-    try {
+    const context = async (request: FastifyRequest): Promise<OperationContext> => {
+      const principal = request.principal;
+      if (!principal) throw new ClinicalError('forbidden', 'No autorizado');
       const adapters = resolveSet(principal);
-      if (!adapters.full?.charges) {
-        throw new ClinicalError('misconfigured', 'Módulo cargos no cableado');
-      }
-      const query = request.query as { page?: string; page_size?: string };
-      const parsed: { page?: number; page_size?: number } = {};
-      if (query.page !== undefined) parsed.page = Number(query.page);
-      if (query.page_size !== undefined) parsed.page_size = Number(query.page_size);
-      return await adapters.full.charges.op71(
-        { params: {}, query: parsed, body: {} },
-        actorFrom(principal, adapters, idempotencyKey(request)),
+      const header = request.headers['idempotency-key'];
+      return actorFrom(
+        principal,
+        adapters,
+        typeof header === 'string' ? header : undefined,
       );
-    } catch (error) {
-      return sendMapped(reply, error);
-    }
+    };
+
+    const fullOf = (request: FastifyRequest) => {
+      const principal = request.principal;
+      if (!principal) throw new ClinicalError('forbidden', 'No autorizado');
+      return requireModule(resolveSet(principal).full, 'A/B');
+    };
+
+    await scope.register(agendaPlugin, {
+      resolve: async (request) => {
+        const full = fullOf(request);
+        return {
+          repository: requireModule(full.agenda, 'agenda'),
+          context: await context(request),
+        };
+      },
+    });
+
+    await scope.register(chargesPlugin, {
+      context,
+      getRepository: (request) => requireModule(fullOf(request).charges, 'cargos'),
+    });
+    await scope.register(personnelPlugin, {
+      context,
+      getRepository: (request) => requireModule(fullOf(request).personnel, 'personal'),
+    });
+    await scope.register(inventoryPlugin, {
+      context,
+      getRepository: (request) => requireModule(fullOf(request).inventory, 'inventario'),
+    });
+    await scope.register(honorariaPlugin, {
+      context,
+      getRepository: (request) => requireModule(fullOf(request).honoraria, 'honorarios'),
+    });
+    await scope.register(invoicingPlugin, {
+      context,
+      getRepository: (request) => requireModule(fullOf(request).invoicing, 'facturación'),
+    });
+    await scope.register(paymentsPlugin, {
+      context,
+      getRepository: (request) => requireModule(fullOf(request).payments, 'caja'),
+    });
   });
 }

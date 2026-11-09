@@ -1,5 +1,5 @@
 /**
- * Idempotent full local DB setup across core + lane A (charges) + lane B (agenda).
+ * Idempotent full local DB setup across core + lane A/B + OP37 procedure + FS-19 dental-session.
  * Order: bootstrap → core migrate → module migrate → bootstrap (GRANTs) → seeds.
  * Honors FIRESTORE_MODE=real; does not force the emulator.
  */
@@ -39,6 +39,8 @@ async function main(): Promise<void> {
     await run('npx', ['tsx', 'server/test/full/charges/manage.ts', 'migrate', engine]);
   }
   await run('npx', ['tsx', 'server/test/full/agenda/manage.ts', 'migrate']);
+  await run('npx', ['tsx', 'server/test/full/procedure/manage.ts', 'migrate', 'postgres']);
+  await run('npx', ['tsx', 'server/test/full/dental-session/manage.ts', 'migrate']);
 
   await run('npm', ['run', 'db:bootstrap']);
 
@@ -47,6 +49,8 @@ async function main(): Promise<void> {
     await run('npx', ['tsx', 'server/test/full/charges/manage.ts', 'seed', engine]);
   }
   await run('npx', ['tsx', 'server/test/full/agenda/manage.ts', 'seed']);
+  await run('npx', ['tsx', 'server/test/full/procedure/manage.ts', 'seed', 'postgres']);
+  await run('npx', ['tsx', 'server/test/full/dental-session/manage.ts', 'seed']);
 
   console.log('db:setup:all OK');
 }

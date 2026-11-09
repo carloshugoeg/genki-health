@@ -31,6 +31,7 @@ const collections = new Set([
   'odontogramas',
   'piezas_dentales',
   'planes_tratamiento',
+  'sesiones_tratamiento',
 ]);
 type Row = DocumentData;
 interface Intent {
@@ -83,6 +84,11 @@ export class FirebaseUnitOfWork implements UnitOfWorkPort {
     this.app = initializeApp({ projectId }, `genki-firestore-${randomUUID()}`);
     this.db = getFirestore(this.app);
     this.db.settings({ host: emulatorHost, ssl: false });
+  }
+
+  /** Exposed for lane A/B composition (economic + agenda stores). */
+  firestore(): Firestore {
+    return this.db;
   }
 
   async close(): Promise<void> {

@@ -4,6 +4,7 @@ import { createMemoryAdmissionRepository } from '../adapters/memory/full/admissi
 import { createMemoryConsultationRepository } from '../adapters/memory/full/consultation.js';
 import { createMemoryDentalChartRepository } from '../adapters/memory/full/dental-chart.js';
 import { createMemoryDentalPlanRepository } from '../adapters/memory/full/dental-plan.js';
+import { createMemoryDentalSessionRepository } from '../adapters/memory/full/dental-session.js';
 import { createMemoryDischargeRepository } from '../adapters/memory/full/discharge.js';
 import { createMemoryGrowthRepository } from '../adapters/memory/full/growth.js';
 import { createMemoryLabIntakeRepository } from '../adapters/memory/full/lab-intake.js';
@@ -13,11 +14,12 @@ import { createMemoryProcedureRepository } from '../adapters/memory/full/procedu
 import { createMemoryRecordRepository } from '../adapters/memory/full/record.js';
 import { createMemoryVaccinesRepository } from '../adapters/memory/full/vaccines.js';
 import { MemoryAgendaRepository } from '../adapters/memory/full/agenda.js';
-import { MemoryChargesRepository, MemoryEconomicStore } from '../adapters/memory/full/charges.js';
+import { MemoryEconomicStore } from '../adapters/memory/full/charges.js';
 import { registerExtensionNamespace } from '../adapters/memory/full-state.js';
 import type { FullModulePorts } from '../ports/full/context.js';
 import { FULL_MODULE_SLUGS } from '../ports/full/context.js';
 import type { AdapterSet, Lane1FullModules } from './adapter-registry.js';
+import { clinicalEconomicReferences, laneABModulesFrom } from './lane-ab-modules.js';
 
 export type { Lane1FullModules };
 
@@ -37,6 +39,7 @@ const SPECIALTY_MEMORY_SLUGS = [
   'lab-results',
   'dental-chart',
   'dental-plan',
+  'dental-session',
 ] as const;
 
 export function ensureLane1MemoryExtensions(): void {
@@ -137,12 +140,15 @@ export function attachMemoryFullModules(
     }),
     dentalChart: createMemoryDentalChartRepository(common),
     dentalPlan: createMemoryDentalPlanRepository(common),
-    agenda: new MemoryAgendaRepository(),
-    charges: new MemoryChargesRepository(
-      new MemoryEconomicStore(institutionId, {
-        patient: async () => null,
-        act: async () => null,
-      }),
+    dentalSession: createMemoryDentalSessionRepository({
+      state,
+      ids: set.ids,
+      unitOfWork: set.unitOfWork,
+      clock: set.clock,
+    }),
+    ...laneABModulesFrom(
+      new MemoryEconomicStore(institutionId, clinicalEconomicReferences(set.pacientes)),
+      new MemoryAgendaRepository(),
     ),
   };
   return Object.assign(set, { full });

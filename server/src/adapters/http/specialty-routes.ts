@@ -1,8 +1,9 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { AuthPrincipalDto, InstitutionKind } from '@genki/shared';
 import { executeOp34, executeOp35 } from '../../application/full/admission.js';
-import { executeOp36 } from '../../application/full/procedure.js';
+import { executeOp36, executeOp37 } from '../../application/full/procedure.js';
 import { executeOp38 } from '../../application/full/discharge.js';
+import { executeOp59, executeOp60 } from '../../application/full/dental-session.js';
 import { executeOp40, executeOp41, executeOp42 } from '../../application/full/growth.js';
 import {
   executeOp43,
@@ -170,6 +171,75 @@ export function registerSpecialtyRoutes(
         actorFrom(principal, adapters, idempotencyKey(request)),
       );
       return reply.code(201).send(result);
+    } catch (error) {
+      return sendMapped(reply, error);
+    }
+  });
+
+  app.post('/api/procedimientos', async (request, reply) => {
+    const principal = await options.requirePrincipal(request, reply);
+    if (!principal) return;
+    if (!requireKind(principal, ['hospital_general'])) {
+      const mapped = forbiddenError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    try {
+      const adapters = resolve(principal);
+      const result = await executeOp37(
+        fullContext(adapters),
+        { params: {}, query: {}, body: request.body as never },
+        actorFrom(principal, adapters, idempotencyKey(request)),
+      );
+      return reply.code(201).send(result);
+    } catch (error) {
+      return sendMapped(reply, error);
+    }
+  });
+
+  app.post('/api/planes/:id/sesiones', async (request, reply) => {
+    const principal = await options.requirePrincipal(request, reply);
+    if (!principal) return;
+    if (!requireKind(principal, ['clinica_odontologica'])) {
+      const mapped = forbiddenError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    const params = paramsSchema.safeParse(request.params);
+    if (!params.success) {
+      const mapped = invalidQueryError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    try {
+      const adapters = resolve(principal);
+      const result = await executeOp59(
+        fullContext(adapters),
+        { params: { id: params.data.id }, query: {}, body: request.body as never },
+        actorFrom(principal, adapters, idempotencyKey(request)),
+      );
+      return reply.code(201).send(result);
+    } catch (error) {
+      return sendMapped(reply, error);
+    }
+  });
+
+  app.get('/api/pacientes/:id/saldo-dental', async (request, reply) => {
+    const principal = await options.requirePrincipal(request, reply);
+    if (!principal) return;
+    if (!requireKind(principal, ['clinica_odontologica'])) {
+      const mapped = forbiddenError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    const params = paramsSchema.safeParse(request.params);
+    if (!params.success) {
+      const mapped = invalidQueryError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    try {
+      const adapters = resolve(principal);
+      return await executeOp60(
+        fullContext(adapters),
+        { params: { id: params.data.id }, query: {}, body: {} },
+        actorFrom(principal, adapters),
+      );
     } catch (error) {
       return sendMapped(reply, error);
     }

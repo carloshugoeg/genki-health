@@ -10,10 +10,28 @@ import { RegisterPaciente } from './screens/RegisterPaciente';
 import { Historial } from './screens/Historial';
 import { Agenda } from './full/agenda/Agenda';
 import { ChargesPage } from './full/charges';
+import { InventoryPage } from './full/inventory';
+import { HonorariaPage } from './full/honoraria';
+import { InvoicingPage } from './full/invoicing';
+import { PaymentsPage } from './full/payments';
+import { PersonnelPage } from './full/personnel';
+import { ProcedurePage } from './full/procedure';
+import { DentalSessionPage } from './full/dental-session';
 import type { EconomicClient } from './full/charges/EconomicPage';
 
 function isSuperadmin(principal: AuthPrincipalDto): boolean {
   return principal.roles.includes('superadministrador');
+}
+
+function economicClient(): EconomicClient {
+  return ((path, init) => {
+    const requestInit: RequestInit = {
+      method: init.method,
+      headers: init.headers,
+    };
+    if (init.body !== undefined) requestInit.body = init.body;
+    return api(path, requestInit);
+  }) as EconomicClient;
 }
 
 export function App() {
@@ -70,6 +88,7 @@ export function App() {
   const institution = INSTITUTION_ENGINE_ASSIGNMENTS.find(
     (i) => i.kind === principal?.institution_kind,
   );
+  const client = economicClient();
   return (
     <main className="shell">
       <header className="brand">
@@ -92,7 +111,26 @@ export function App() {
               )}
               {current !== 'panel' && <button onClick={() => navigate('/agenda')}>Agenda</button>}
               {current !== 'panel' && (
-                <button onClick={() => navigate('/economia')}>Economía</button>
+                <button onClick={() => navigate('/economia')}>Cargos</button>
+              )}
+              {current !== 'panel' && (
+                <button onClick={() => navigate('/inventario')}>Inventario</button>
+              )}
+              {current !== 'panel' && (
+                <button onClick={() => navigate('/honorarios')}>Honorarios</button>
+              )}
+              {current !== 'panel' && (
+                <button onClick={() => navigate('/facturacion')}>Facturación</button>
+              )}
+              {current !== 'panel' && <button onClick={() => navigate('/caja')}>Caja</button>}
+              {current !== 'panel' && (
+                <button onClick={() => navigate('/personal')}>Personal</button>
+              )}
+              {current !== 'panel' && (
+                <button onClick={() => navigate('/procedimientos')}>Procedimientos</button>
+              )}
+              {current !== 'panel' && (
+                <button onClick={() => navigate('/sesiones-dentales')}>Sesiones dentales</button>
               )}
               <button disabled={busy} onClick={() => void signOut()}>
                 Cerrar sesión
@@ -136,25 +174,25 @@ export function App() {
       ) : current === 'agenda' ? (
         <Agenda request={(path, init) => api(path, init)} />
       ) : current === 'economia' ? (
-        <ChargesPage
-          client={
-            ((path, init) => {
-              const requestInit: RequestInit = {
-                method: init.method,
-                headers: init.headers,
-              };
-              if (init.body !== undefined) requestInit.body = init.body;
-              return api(path, requestInit);
-            }) as EconomicClient
-          }
-        />
+        <ChargesPage client={client} />
+      ) : current === 'inventario' ? (
+        <InventoryPage client={client} />
+      ) : current === 'honorarios' ? (
+        <HonorariaPage client={client} />
+      ) : current === 'facturacion' ? (
+        <InvoicingPage client={client} />
+      ) : current === 'caja' ? (
+        <PaymentsPage client={client} />
+      ) : current === 'personal' ? (
+        <PersonnelPage client={client} />
+      ) : current === 'procedimientos' ? (
+        <ProcedurePage client={client} />
+      ) : current === 'sesiones-dentales' ? (
+        <DentalSessionPage client={client} />
       ) : null}
       <details className="out-of-scope">
         <summary>Fuera del alcance de esta entrega</summary>
-        <p>
-          Procedimientos hospitalarios con cargos (OP37); cargos/inventario/honorarios odontológicos
-          (FS-19); gestión de usuarios y contraseñas; reactivación de expediente.
-        </p>
+        <p>Gestión de usuarios y contraseñas; reactivación de expediente.</p>
       </details>
     </main>
   );

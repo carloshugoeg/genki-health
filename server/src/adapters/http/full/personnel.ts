@@ -1,4 +1,9 @@
-import { clean, registerEconomicRoute, type EconomicHttpContext } from './charges.js';
+import {
+  clean,
+  registerEconomicRoute,
+  resolveEconomicRepository,
+  type EconomicPluginOptions,
+} from './charges.js';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type {
@@ -6,11 +11,13 @@ import type {
   Op61Request,
   Op62Request,
 } from '../../../ports/full/personnel.js';
+
 const id = z.number().int().positive();
 const txt = z.string().trim().min(1).max(500);
+
 export async function personnelPlugin(
   app: FastifyInstance,
-  options: { repository: PersonnelRepositoryPort; context: EconomicHttpContext },
+  options: EconomicPluginOptions<PersonnelRepositoryPort>,
 ): Promise<void> {
   registerEconomicRoute(
     app,
@@ -32,11 +39,13 @@ export async function personnelPlugin(
       })
       .strict(),
     options.context,
-    async (input, ctx) =>
-      options.repository.op61(
+    async (input, ctx, request) => {
+      const repository = await resolveEconomicRepository(options, request);
+      return repository.op61(
         { params: {}, query: {}, body: clean<Op61Request['body']>(input.body) },
         ctx,
-      ),
+      );
+    },
   );
   registerEconomicRoute(
     app,
@@ -53,10 +62,12 @@ export async function personnelPlugin(
       })
       .strict(),
     options.context,
-    async (input, ctx) =>
-      options.repository.op62(
+    async (input, ctx, request) => {
+      const repository = await resolveEconomicRepository(options, request);
+      return repository.op62(
         { params: input.params, query: {}, body: clean<Op62Request['body']>(input.body) },
         ctx,
-      ),
+      );
+    },
   );
 }
