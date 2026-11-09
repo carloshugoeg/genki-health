@@ -194,7 +194,13 @@ export function parseAuditQuery(query: Record<string, unknown>): {
   }
   const page = query.page === undefined ? 1 : Number(query.page);
   const page_size = query.page_size === undefined ? 20 : Number(query.page_size);
-  if (!Number.isInteger(page) || page < 1 || !Number.isInteger(page_size) || page_size < 1 || page_size > 50) {
+  if (
+    !Number.isInteger(page) ||
+    page < 1 ||
+    !Number.isInteger(page_size) ||
+    page_size < 1 ||
+    page_size > 50
+  ) {
     throw new ClinicalError('invalid_query', 'Parámetros inválidos');
   }
   const out: {
@@ -207,24 +213,29 @@ export function parseAuditQuery(query: Record<string, unknown>): {
     id_usuario?: number;
   } = { page, page_size };
   if (query.desde !== undefined) {
-    if (typeof query.desde !== 'string') throw new ClinicalError('invalid_query', 'Parámetros inválidos');
+    if (typeof query.desde !== 'string')
+      throw new ClinicalError('invalid_query', 'Parámetros inválidos');
     out.desde = query.desde;
   }
   if (query.hasta !== undefined) {
-    if (typeof query.hasta !== 'string') throw new ClinicalError('invalid_query', 'Parámetros inválidos');
+    if (typeof query.hasta !== 'string')
+      throw new ClinicalError('invalid_query', 'Parámetros inválidos');
     out.hasta = query.hasta;
   }
   if (query.entidad !== undefined) {
-    if (typeof query.entidad !== 'string') throw new ClinicalError('invalid_query', 'Parámetros inválidos');
+    if (typeof query.entidad !== 'string')
+      throw new ClinicalError('invalid_query', 'Parámetros inválidos');
     out.entidad = query.entidad;
   }
   if (query.id_registro !== undefined) {
-    if (typeof query.id_registro !== 'string') throw new ClinicalError('invalid_query', 'Parámetros inválidos');
+    if (typeof query.id_registro !== 'string')
+      throw new ClinicalError('invalid_query', 'Parámetros inválidos');
     out.id_registro = query.id_registro;
   }
   if (query.id_usuario !== undefined) {
     const id = Number(query.id_usuario);
-    if (!Number.isInteger(id) || id < 1) throw new ClinicalError('invalid_query', 'Parámetros inválidos');
+    if (!Number.isInteger(id) || id < 1)
+      throw new ClinicalError('invalid_query', 'Parámetros inválidos');
     out.id_usuario = id;
   }
   return out;

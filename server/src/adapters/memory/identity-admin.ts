@@ -163,8 +163,7 @@ export function createMemoryIdentityAdmin(users: IdentityUser[]): MemoryIdentity
       if (input.hasta) items = items.filter((r) => r.fecha_hora <= input.hasta!);
       items.sort(
         (a, b) =>
-          a.fecha_hora.localeCompare(b.fecha_hora) ||
-          Number(a.id_bitacora) - Number(b.id_bitacora),
+          a.fecha_hora.localeCompare(b.fecha_hora) || Number(a.id_bitacora) - Number(b.id_bitacora),
       );
       const total = items.length;
       const start = (input.page - 1) * input.page_size;

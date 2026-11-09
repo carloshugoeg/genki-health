@@ -112,9 +112,7 @@ export function App() {
                 <button onClick={() => navigate('/pacientes')}>Pacientes</button>
               )}
               {current !== 'panel' && <button onClick={() => navigate('/agenda')}>Agenda</button>}
-              {current !== 'panel' && (
-                <button onClick={() => navigate('/economia')}>Cargos</button>
-              )}
+              {current !== 'panel' && <button onClick={() => navigate('/economia')}>Cargos</button>}
               {current !== 'panel' && (
                 <button onClick={() => navigate('/inventario')}>Inventario</button>
               )}

@@ -6,11 +6,7 @@ import { ClinicalError } from '../../../domain/clinical-error.js';
 import { generateTemporalPassword } from '../../../domain/full/account.js';
 import { assertLastActiveAdminGuard } from '../../../domain/full/users.js';
 import type { OperationContext } from '../../../ports/full/context.js';
-import type {
-  Op05Request,
-  Op06Request,
-  UsersRepositoryPort,
-} from '../../../ports/full/users.js';
+import type { Op05Request, Op06Request, UsersRepositoryPort } from '../../../ports/full/users.js';
 import {
   createMemoryIdentityAdmin,
   institutionKindForId,
@@ -70,7 +66,8 @@ export function createMemoryUsersRepository(admin: MemoryIdentityAdmin): UsersRe
       if (!target || target.id_institucion !== context.id_institucion) {
         throw new ClinicalError('not_found', 'Recurso no encontrado');
       }
-      const nextRol = body.action === 'deactivate' ? target.roles[0]! : (body.rol ?? target.roles[0]!);
+      const nextRol =
+        body.action === 'deactivate' ? target.roles[0]! : (body.rol ?? target.roles[0]!);
       const nextEstado = body.action === 'deactivate' ? 'inactivo' : (body.estado ?? target.estado);
       assertLastActiveAdminGuard({
         targetRol: target.roles[0] ?? '',
@@ -114,8 +111,7 @@ export function createMemoryUsersRepository(admin: MemoryIdentityAdmin): UsersRe
       ) {
         throw new ClinicalError('conflict', 'Conflicto de recurso');
       }
-      const idProfesional =
-        body.vinculo_profesional?.id_profesional ?? body.id_profesional;
+      const idProfesional = body.vinculo_profesional?.id_profesional ?? body.id_profesional;
       const updated = admin.updateUser(target.id_usuario, {
         ...(body.nombre_usuario !== undefined ? { nombre_usuario: body.nombre_usuario } : {}),
         ...(body.correo !== undefined ? { email: body.correo } : {}),
