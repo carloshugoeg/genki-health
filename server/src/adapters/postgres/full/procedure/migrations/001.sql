@@ -30,5 +30,7 @@ CREATE INDEX IF NOT EXISTS ix_procedimiento_consulta ON procedimiento(id_consult
 INSERT INTO catalogo_procedimiento (codigo_procedimiento, nombre, categoria, duracion_estimada_min)
 VALUES
   ('PROC-DEMO', 'Procedimiento académico demo', 'general', 30),
-  ('PROC-QX', 'Procedimiento quirúrgico demo', 'quirurgico', 90)
+  ('PROC-QX', 'Procedimiento quirúrgico demo', 'quirurgico', 90),
+  ('PROC-CUR', 'Curación académica demo', 'ambulatorio', 20),
+  ('PROC-BIO', 'Biopsia académica demo', 'diagnostico', 45)
 ON CONFLICT (codigo_procedimiento) DO NOTHING;

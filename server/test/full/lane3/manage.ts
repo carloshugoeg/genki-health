@@ -115,7 +115,7 @@ async function migrateFirebase(): Promise<void> {
   try {
     const db = getFirestore(app);
     const marker = db
-      .collection('instituciones')
+      .collection('institutions')
       .doc('4')
       .collection('reactivacion_audit')
       .doc('_ensure');

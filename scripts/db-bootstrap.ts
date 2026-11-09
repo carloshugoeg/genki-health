@@ -109,11 +109,6 @@ async function bootstrapPostgres(): Promise<void> {
   const client = new pg.default.Client({ connectionString: adminUrl });
   await client.connect();
   try {
-    const securitySql = readFileSync(
-      join(ROOT, 'server', 'src', 'adapters', 'postgres', 'security.sql'),
-      'utf8',
-    );
-    await client.query(securitySql);
     for (const [login, meta] of Object.entries(PG_LOGINS)) {
       const password = requireEnv(meta.passwordEnv);
       const passwordLiteral = client.escapeLiteral(password);
@@ -128,6 +123,25 @@ async function bootstrapPostgres(): Promise<void> {
     }
   } finally {
     await client.end();
+  }
+
+  // Table GRANTs must run on the hospital database, not the maintenance DB.
+  const hospitalUrl = (() => {
+    if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+    const url = new URL(adminUrl);
+    url.pathname = `/${process.env.POSTGRES_DB ?? 'genki_hospital'}`;
+    return url.toString();
+  })();
+  const hospital = new pg.default.Client({ connectionString: hospitalUrl });
+  await hospital.connect();
+  try {
+    const securitySql = readFileSync(
+      join(ROOT, 'server', 'src', 'adapters', 'postgres', 'security.sql'),
+      'utf8',
+    );
+    await hospital.query(securitySql);
+  } finally {
+    await hospital.end();
   }
 }
 

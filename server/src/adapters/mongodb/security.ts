@@ -16,6 +16,19 @@ const CATALOG_COLLECTIONS = [
   'catalogo_cie10',
 ] as const;
 
+/** Lane 1/2 clinical collections plus OP-19 audit. Keep in sync with schema.json + adapters. */
+const CLINICAL_COLLECTIONS = [
+  'antecedentes',
+  'alergias',
+  'documentos_adjuntos',
+  'signos_vitales',
+  'consulta_borradores',
+  'ordenes_examen',
+  'muestras',
+  'resultados',
+  'reactivacion_audit',
+] as const;
+
 const REPORT_PIPELINE = [
   {
     $group: {
@@ -75,9 +88,8 @@ function appPrivileges(dbName: string) {
     privilege(dbName, 'expedientes', ['find', 'insert', 'update']),
     privilege(dbName, 'counters', ['find', 'insert', 'update']),
     ...CATALOG_COLLECTIONS.map((name) => privilege(dbName, name, ['find'])),
-    ...LANE_AB_COLLECTIONS.map((name) =>
-      privilege(dbName, name, ['find', 'insert', 'update']),
-    ),
+    ...CLINICAL_COLLECTIONS.map((name) => privilege(dbName, name, ['find', 'insert', 'update'])),
+    ...LANE_AB_COLLECTIONS.map((name) => privilege(dbName, name, ['find', 'insert', 'update'])),
   ];
 }
 

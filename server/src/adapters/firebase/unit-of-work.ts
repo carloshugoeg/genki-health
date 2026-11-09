@@ -32,6 +32,7 @@ const collections = new Set([
   'piezas_dentales',
   'planes_tratamiento',
   'sesiones_tratamiento',
+  'reactivacion_audit',
 ]);
 type Row = DocumentData;
 interface Intent {
