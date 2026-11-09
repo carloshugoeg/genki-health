@@ -1,5 +1,10 @@
 import { asPacienteId } from '@genki/shared';
-import type { DOSIS_VACUNA, DosisPendiente, DosisSchedule, Page } from '@genki/shared/full/vaccines';
+import type {
+  DOSIS_VACUNA,
+  DosisPendiente,
+  DosisSchedule,
+  Page,
+} from '@genki/shared/full/vaccines';
 import { ClinicalError } from '../../../domain/clinical-error.js';
 import type { ClockPort } from '../../../ports/clock.js';
 import type { IdPort } from '../../../ports/id.js';
@@ -41,7 +46,9 @@ export function createMemoryVaccinesRepository(deps: MemoryVaccinesDeps): Vaccin
     async op43(input: Op43Request, _context: OperationContext): Promise<Op43Response> {
       return deps.unitOfWork.runInTransaction(async () => {
         const ns = getExtensionNamespace(activeMemoryMaps(deps.state), 'vaccines');
-        const expediente = await deps.pacientes.findExpedienteByPaciente(asPacienteId(input.params.id));
+        const expediente = await deps.pacientes.findExpedienteByPaciente(
+          asPacienteId(input.params.id),
+        );
         if (!expediente) throw new ClinicalError('not_found', NOT_FOUND);
         const today = (deps.clock.nowIso() || '').slice(0, 10);
         const rows = [...(ns.get('dosis')?.values() ?? [])] as DOSIS_VACUNA[];

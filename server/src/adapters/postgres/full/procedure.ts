@@ -96,7 +96,8 @@ export function createPostgresProcedureRepository(deps: {
             `SELECT id_admision, estado FROM admision WHERE id_admision = $1 FOR UPDATE`,
             [input.body.id_admision],
           );
-          if (!adm.rows[0]) throw new ClinicalError('reference_not_found', 'Referencia no encontrada');
+          if (!adm.rows[0])
+            throw new ClinicalError('reference_not_found', 'Referencia no encontrada');
           if (adm.rows[0].estado !== 'activa') throw new ClinicalError('conflict', CONFLICT);
         }
         if (input.body.id_consulta != null) {
@@ -104,7 +105,8 @@ export function createPostgresProcedureRepository(deps: {
             `SELECT id_consulta FROM consulta WHERE id_consulta = $1`,
             [input.body.id_consulta],
           );
-          if (!cons.rows[0]) throw new ClinicalError('reference_not_found', 'Referencia no encontrada');
+          if (!cons.rows[0])
+            throw new ClinicalError('reference_not_found', 'Referencia no encontrada');
         }
 
         const inserted = await postgresQuery<{

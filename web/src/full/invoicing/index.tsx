@@ -2,8 +2,10 @@ import { useRef, useState, type FormEvent } from 'react';
 import type { EconomicClient } from '../charges/EconomicPage';
 import type { InvoicePreview } from '@genki/shared/full/charges';
 import type { FacturaCompleta } from '@genki/shared/full/invoicing';
+import { EntitySelect } from '../../components/EntitySelect';
 /** Preview is kept with its immutable input; changing selection invalidates it. */
 export function InvoicingPage({ client }: { client: EconomicClient }) {
+  const [patient, setPatient] = useState<number | ''>('');
   const [preview, setPreview] = useState<InvoicePreview | null>(null),
     [invoice, setInvoice] = useState<FacturaCompleta | null>(null),
     [error, setError] = useState(''),
@@ -60,7 +62,15 @@ export function InvoicingPage({ client }: { client: EconomicClient }) {
           <>
             <p>
               <label>
-                Paciente <input name="patient" type="number" min="1" required />
+                Paciente{' '}
+                <EntitySelect
+                  kind="paciente"
+                  name="patient"
+                  value={patient}
+                  onChange={setPatient}
+                  required
+                  disabled={busy}
+                />
               </label>
             </p>
             <p>

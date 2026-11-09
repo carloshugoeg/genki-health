@@ -42,10 +42,7 @@ export async function executeOp60(
   assertDentalSessionRole(actor.roles);
   const id = parsePatientIdParam(input.params);
   try {
-    return await context.modules.dentalSession.op60(
-      { params: { id }, query: {}, body: {} },
-      actor,
-    );
+    return await context.modules.dentalSession.op60({ params: { id }, query: {}, body: {} }, actor);
   } catch (err) {
     rethrow(err);
   }

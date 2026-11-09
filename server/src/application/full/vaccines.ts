@@ -1,13 +1,25 @@
-import type { DOSIS_VACUNA, DosisPendiente, DosisSchedule, Page } from '@genki/shared/full/vaccines';
+import type {
+  DOSIS_VACUNA,
+  DosisPendiente,
+  DosisSchedule,
+  Page,
+} from '@genki/shared/full/vaccines';
 import { ClinicalError } from '../../domain/clinical-error.js';
+import { PROFESIONAL_NO_VINCULADO } from '../../domain/full/clinical-maintenance.js';
 import {
   assertVaccineRole,
   parseDosisAplicacion,
+  parsePendientesQuery,
   parseReaccion,
 } from '../../domain/full/vaccines.js';
 import { assertPositiveId, requireIdempotencyKey } from '../../domain/full/specialty-common.js';
 import type { FullContext, OperationContext } from '../../ports/full/context.js';
-import type { Op43Request, Op44Request, Op45Request, Op47Request } from '../../ports/full/vaccines.js';
+import type {
+  Op43Request,
+  Op44Request,
+  Op45Request,
+  Op47Request,
+} from '../../ports/full/vaccines.js';
 
 function rethrow(err: unknown): never {
   if (err instanceof ClinicalError) throw err;
@@ -38,7 +50,12 @@ export async function executeOp44(
 ): Promise<DOSIS_VACUNA> {
   assertVaccineRole(actor.roles);
   const id = assertPositiveId(input.params.id);
-  const body = parseDosisAplicacion(input.body);
+  const parsed = parseDosisAplicacion(input.body);
+  const id_profesional = parsed.id_profesional ?? actor.id_profesional;
+  if (id_profesional == null) {
+    throw new ClinicalError('forbidden', PROFESIONAL_NO_VINCULADO);
+  }
+  const body = { ...parsed, id_profesional };
   const idempotency_key = requireIdempotencyKey(actor.idempotency_key);
   try {
     return await context.modules.vaccines.op44(
@@ -75,12 +92,11 @@ export async function executeOp47(
   actor: OperationContext,
 ): Promise<Page<DosisPendiente>> {
   assertVaccineRole(actor.roles);
-  if (typeof input.query.hasta !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(input.query.hasta)) {
-    throw new ClinicalError('invalid_query', 'Solicitud inválida');
-  }
+  const today = (actor.now || context.clock.nowIso()).slice(0, 10);
+  const query = parsePendientesQuery(input.query, today);
   try {
     return await context.modules.vaccines.op47(
-      { params: {}, query: input.query, body: {} },
+      { params: {}, query, body: {} },
       { ...actor, now: actor.now },
     );
   } catch (err) {

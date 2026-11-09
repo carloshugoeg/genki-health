@@ -68,7 +68,7 @@ function mapReferenceFailure(error: unknown): never {
   throw error;
 }
 
-function consultaFromRow(row: RowDataPacket): ConsultaDto {
+export function consultaFromRow(row: RowDataPacket): ConsultaDto {
   return {
     id_consulta: asConsultaId(Number(row.id_consulta)),
     id_expediente: Number(row.id_expediente) as ExpedienteId,
@@ -85,7 +85,7 @@ function consultaFromRow(row: RowDataPacket): ConsultaDto {
   };
 }
 
-function diagnosticoFromRow(row: RowDataPacket): DiagnosticoDto {
+export function diagnosticoFromRow(row: RowDataPacket): DiagnosticoDto {
   return {
     id_diagnostico: asDiagnosticoId(Number(row.id_diagnostico)),
     id_consulta: asConsultaId(Number(row.id_consulta)),
@@ -97,7 +97,7 @@ function diagnosticoFromRow(row: RowDataPacket): DiagnosticoDto {
   };
 }
 
-function tratamientoFromRow(row: RowDataPacket): TratamientoDto {
+export function tratamientoFromRow(row: RowDataPacket): TratamientoDto {
   return {
     id_tratamiento: asTratamientoId(Number(row.id_tratamiento)),
     id_diagnostico: asDiagnosticoId(Number(row.id_diagnostico)),
@@ -111,7 +111,7 @@ function tratamientoFromRow(row: RowDataPacket): TratamientoDto {
   };
 }
 
-function recetaFromRow(row: RowDataPacket): RecetaDto {
+export function recetaFromRow(row: RowDataPacket): RecetaDto {
   return {
     id_receta: asRecetaId(Number(row.id_receta)),
     id_consulta: asConsultaId(Number(row.id_consulta)),
@@ -123,7 +123,7 @@ function recetaFromRow(row: RowDataPacket): RecetaDto {
   };
 }
 
-function detalleFromRow(row: RowDataPacket): DetalleRecetaDto {
+export function detalleFromRow(row: RowDataPacket): DetalleRecetaDto {
   return {
     id_receta: asRecetaId(Number(row.id_receta)),
     id_medicamento: Number(row.id_medicamento),

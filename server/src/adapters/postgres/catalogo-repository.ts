@@ -10,7 +10,7 @@ export class PostgresCatalogoRepository implements CatalogoRepositoryPort {
   constructor(private readonly institutionId: number) {}
 
   async list(): Promise<CatalogosDto> {
-    const [municipios, profesionales, medicamentos] = await Promise.all([
+    const [municipios, profesionales, medicamentos, cie10] = await Promise.all([
       postgresQuery<{ id_municipio: number; nombre: string }>(
         `SELECT id_municipio, nombre FROM municipio ORDER BY id_municipio ASC`,
       ),
@@ -27,6 +27,9 @@ export class PostgresCatalogoRepository implements CatalogoRepositoryPort {
           WHERE activo = TRUE
           ORDER BY id_medicamento ASC`,
       ),
+      postgresQuery<{ codigo_cie10: string; descripcion: string }>(
+        `SELECT codigo_cie10, descripcion FROM catalogo_cie10 ORDER BY codigo_cie10 ASC`,
+      ),
     ]);
 
     return {
@@ -42,6 +45,10 @@ export class PostgresCatalogoRepository implements CatalogoRepositoryPort {
       medicamentos: medicamentos.rows.map((row) => ({
         id_medicamento: row.id_medicamento,
         nombre_generico: row.nombre_generico,
+      })),
+      cie10: cie10.rows.map((row) => ({
+        codigo_cie10: row.codigo_cie10,
+        descripcion: row.descripcion,
       })),
     };
   }

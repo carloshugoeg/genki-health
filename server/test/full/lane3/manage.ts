@@ -13,9 +13,7 @@ if (command !== 'migrate') {
   throw new Error('Uso: manage.ts migrate [postgres|mysql|mongodb|firebase]');
 }
 
-const engines = (engineArg
-  ? [engineArg]
-  : ['postgres', 'mysql', 'mongodb', 'firebase']) as const;
+const engines = (engineArg ? [engineArg] : ['postgres', 'mysql', 'mongodb', 'firebase']) as const;
 
 async function migratePostgres(): Promise<void> {
   const url = process.env.DATABASE_URL ?? process.env.PG_ADMIN_URL;
@@ -71,10 +69,9 @@ async function migrateMongodb(): Promise<void> {
   await client.connect();
   try {
     const db = client.db(process.env.MONGO_DATABASE ?? 'genki_laboratorio');
-    await db.collection('reactivacion_audit').createIndex(
-      { institution_id: 1, id: 1 },
-      { unique: true, name: 'uq_reactivacion_audit' },
-    );
+    await db
+      .collection('reactivacion_audit')
+      .createIndex({ institution_id: 1, id: 1 }, { unique: true, name: 'uq_reactivacion_audit' });
     console.log('mongodb: ensured reactivacion_audit');
   } finally {
     await client.close();
@@ -102,9 +99,8 @@ async function migrateFirebase(): Promise<void> {
       return;
     }
   }
-  const { applicationDefault, initializeApp, getApps, deleteApp } = await import(
-    'firebase-admin/app'
-  );
+  const { applicationDefault, initializeApp, getApps, deleteApp } =
+    await import('firebase-admin/app');
   const { getFirestore } = await import('firebase-admin/firestore');
   const app =
     getApps()[0] ??

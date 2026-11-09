@@ -125,11 +125,16 @@ async function bootstrapPostgres(): Promise<void> {
     await client.end();
   }
 
-  // Table GRANTs must run on the hospital database, not the maintenance DB.
+  // Table GRANTs must run on the hospital database, not the maintenance DB, and always
+  // as the owner/admin principal. DATABASE_URL is the least-privilege runtime login
+  // (genki_app_login), which cannot CREATE ROLE / GRANT; only its database name is reused.
   const hospitalUrl = (() => {
-    if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
     const url = new URL(adminUrl);
-    url.pathname = `/${process.env.POSTGRES_DB ?? 'genki_hospital'}`;
+    if (process.env.DATABASE_URL) {
+      url.pathname = new URL(process.env.DATABASE_URL).pathname;
+    } else {
+      url.pathname = `/${process.env.POSTGRES_DB ?? 'genki_hospital'}`;
+    }
     return url.toString();
   })();
   const hospital = new pg.default.Client({ connectionString: hospitalUrl });
@@ -197,7 +202,11 @@ async function bootstrapMongo(): Promise<void> {
   const client = new MongoClient(adminUri);
   await client.connect();
   try {
-    const db = client.db('genki_laboratorio');
+    // Install validators/roles/users in the database the runtime login actually uses.
+    const runtimeDb =
+      process.env.MONGO_DATABASE ??
+      (process.env.MONGODB_URI ? new URL(process.env.MONGODB_URI).pathname.slice(1) : '');
+    const db = client.db(runtimeDb || 'genki_laboratorio');
     await db.command({ ping: 1 });
     await installMongoSchema(db);
     await installMongoSecurity(db, { appPassword, reportPassword });

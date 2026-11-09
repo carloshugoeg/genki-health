@@ -368,7 +368,8 @@
                 "bsonType": "string",
                 "enum": [
                   "presuntivo",
-                  "definitivo"
+                  "definitivo",
+                  "descartado"
                 ]
               },
               "es_principal": {
@@ -435,7 +436,9 @@
               "estado": {
                 "bsonType": "string",
                 "enum": [
-                  "activo"
+                  "activo",
+                  "finalizado",
+                  "suspendido"
                 ]
               }
             }
@@ -480,7 +483,8 @@
                 "estado": {
                   "bsonType": "string",
                   "enum": [
-                    "emitida"
+                    "emitida",
+                    "anulada"
                   ]
                 }
               }
@@ -692,6 +696,68 @@
         },
         "next": {
           "bsonType": "int"
+        }
+      }
+    }
+  },
+  "bitacora": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_bitacora",
+        "id_usuario",
+        "entidad",
+        "id_registro",
+        "accion",
+        "fecha_hora",
+        "direccion_ip",
+        "detalle"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_bitacora": {
+          "bsonType": "int"
+        },
+        "id_usuario": {
+          "bsonType": "int"
+        },
+        "entidad": {
+          "bsonType": "string",
+          "enum": [
+            "consulta",
+            "diagnostico",
+            "tratamiento",
+            "receta"
+          ]
+        },
+        "id_registro": {
+          "bsonType": "string"
+        },
+        "accion": {
+          "bsonType": "string",
+          "enum": [
+            "modificacion"
+          ]
+        },
+        "fecha_hora": {
+          "bsonType": "date"
+        },
+        "direccion_ip": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "detalle": {
+          "bsonType": "object"
         }
       }
     }

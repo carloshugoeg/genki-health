@@ -28,6 +28,7 @@ import type { FullContext, OperationContext } from '../../ports/full/context.js'
 import { ClinicalError } from '../../domain/clinical-error.js';
 import { forbiddenError, invalidQueryError, toErrorDto } from './errors.js';
 import { paramsSchema } from './schemas.js';
+import { profesionalOf } from './actor.js';
 
 function hasAnyRole(principal: AuthPrincipalDto, roles: readonly string[]): boolean {
   if (principal.roles.includes('superadministrador')) return true;
@@ -42,14 +43,8 @@ function actorFrom(
   return {
     id_institucion: principal.id_institucion,
     id_usuario: principal.id_usuario,
-    id_profesional:
-      principal.roles.includes('superadministrador') ||
-      principal.roles.includes('medico') ||
-      principal.roles.includes('enfermeria') ||
-      principal.roles.includes('odontologo') ||
-      principal.roles.includes('laboratorista')
-        ? 1
-        : null,
+    // USUARIO.id_profesional of the authenticated user (null for non-clinical users).
+    id_profesional: profesionalOf(principal),
     roles: principal.roles,
     permissions: [],
     now: adapters.clock.nowIso(),

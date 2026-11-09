@@ -1,0 +1,163 @@
+{
+  "summary": {
+    "run": "20261109D",
+    "mode": "verify",
+    "total": 17,
+    "pass": 17,
+    "fail": 0,
+    "http5xx": 0
+  },
+  "fails": [],
+  "http5xx": [],
+  "results": [
+    {
+      "area": "persistencia",
+      "name": "API arriba tras reinicio",
+      "ok": true,
+      "severity": "info",
+      "detail": {
+        "status": 200,
+        "json": {
+          "ok": true,
+          "phase": "e2-01-auth"
+        }
+      }
+    },
+    {
+      "area": "persistencia",
+      "name": "postgres: paciente E2E sigue tras reinicio",
+      "ok": true,
+      "severity": "critica",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "persistencia",
+      "name": "postgres: consulta+diagnóstico siguen",
+      "ok": true,
+      "severity": "critica",
+      "detail": {}
+    },
+    {
+      "area": "persistencia",
+      "name": "postgres: alergia sigue en ficha",
+      "ok": true,
+      "severity": "alta",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "persistencia",
+      "name": "postgres: cita sigue en agenda",
+      "ok": true,
+      "severity": "alta",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "persistencia",
+      "name": "mysql: paciente E2E sigue tras reinicio",
+      "ok": true,
+      "severity": "critica",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "persistencia",
+      "name": "mysql: consulta+diagnóstico siguen",
+      "ok": true,
+      "severity": "critica",
+      "detail": {}
+    },
+    {
+      "area": "persistencia",
+      "name": "mysql: alergia sigue en ficha",
+      "ok": true,
+      "severity": "alta",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "persistencia",
+      "name": "mysql: cita sigue en agenda",
+      "ok": true,
+      "severity": "alta",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "persistencia",
+      "name": "mongodb: paciente E2E sigue tras reinicio",
+      "ok": true,
+      "severity": "critica",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "persistencia",
+      "name": "mongodb: consulta+diagnóstico siguen",
+      "ok": true,
+      "severity": "critica",
+      "detail": {}
+    },
+    {
+      "area": "persistencia",
+      "name": "mongodb: alergia sigue en ficha",
+      "ok": true,
+      "severity": "alta",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "persistencia",
+      "name": "mongodb: cita sigue en agenda",
+      "ok": true,
+      "severity": "alta",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "persistencia",
+      "name": "firebase: paciente E2E sigue tras reinicio",
+      "ok": true,
+      "severity": "critica",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "persistencia",
+      "name": "firebase: consulta+diagnóstico siguen",
+      "ok": true,
+      "severity": "critica",
+      "detail": {}
+    },
+    {
+      "area": "persistencia",
+      "name": "firebase: alergia sigue en ficha",
+      "ok": true,
+      "severity": "alta",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "persistencia",
+      "name": "firebase: cita sigue en agenda",
+      "ok": true,
+      "severity": "alta",
+      "detail": {
+        "status": 200
+      }
+    }
+  ]
+}

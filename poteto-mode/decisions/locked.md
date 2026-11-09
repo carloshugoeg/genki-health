@@ -66,6 +66,13 @@ Carlos Hugo Escobar Gómez locked Entrega II authentication. Agents do not reope
 
 5. **Superadministrador de calificación (Carlos, 2026-11-09).** Exception for the grading engineer only: identity `superadmin@example.invalid` with role `superadministrador` lives on Hospital PostgreSQL (institution 1). After login, `POST /api/auth/select-institution` may reissue tokens whose `institucion_id` / `institucion_kind` / `motor` match any of the four locked institutions. Claim set stays the same. Normal users remain unable to change institution after login.
 
+## Handoff decisions (2026-11-09, owner accepted the coordinator recommendation)
+
+1. **Administrador clinical writes (handoff #12).** The brief does not require separating clinical from administrative writes, so `administrador` keeps permission to create a consultation with diagnosis and prescription. No role grant changes.
+2. **Access token after logout (handoff #14).** No `jti` denylist. The access token stays valid until it expires (30 min) and the refresh token is revoked. This is documented in `docs/ARCHITECTURE.md`.
+3. **`usuario.id_profesional` across engines.** The PostgreSQL FK stays. For institutions 2–4 the id refers to the professional in that institution's own engine (demo users link to `id_profesional = 1`, which is seeded in every engine). This is documented in the seed. No schema change.
+4. **Protocol changes from the handoff fixes are accepted.** They are 5 new `ConsultationRepositoryPort` methods, the additive migrations `full-05-01-clinical-maintenance.sql` (PG, MySQL) and `full-13-vaccine-intervals.sql` (MySQL), the Mongo enum and `bitacora` validator changes, the new column GRANTs, the ROL rows `enfermeria`, `laboratorista` and `odontologo`, and the demo user `demo-4-odontologo@example.invalid`.
+
 ## How the pair works
 
 - Humans own design. Cursor codes for Carlos. Claude codes for Jordin.

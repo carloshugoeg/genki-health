@@ -48,7 +48,12 @@ export async function honorariaPlugin(
     app,
     'post',
     '/api/actos/honorarios',
-    z.object({ id_consulta: id.optional(), id_procedimiento: id.optional() }).strict(),
+    z
+      .object({ id_consulta: id.optional(), id_procedimiento: id.optional() })
+      .strict()
+      .refine((b) => (b.id_consulta === undefined) !== (b.id_procedimiento === undefined), {
+        message: 'Exactamente un acto requerido',
+      }),
     options.context,
     async (input, ctx, request) => {
       const repository = await resolveEconomicRepository(options, request);

@@ -70,11 +70,7 @@ export function createFirebaseDentalSessionRepository(deps: {
           ...plan,
           detalle: lines,
           revision: revision + 1,
-          estado: allDone
-            ? 'finalizado'
-            : plan.estado === 'propuesto'
-              ? 'en_proceso'
-              : plan.estado,
+          estado: allDone ? 'finalizado' : plan.estado === 'propuesto' ? 'en_proceso' : plan.estado,
         };
         uow.set('planes_tratamiento', plan.id_plan, { ...updated });
 

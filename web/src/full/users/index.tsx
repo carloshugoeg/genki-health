@@ -31,6 +31,7 @@ const operations: Operation[] = [
         type: 'number',
         optional: true,
         nullable: true,
+        entity: 'profesional',
       },
       { name: 'rol', label: 'Rol', options: ROLE_OPTIONS, optional: true },
       {

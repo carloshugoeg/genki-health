@@ -44,7 +44,9 @@ export function createPostgresAdmissionRepository(deps: {
       return deps.unitOfWork.runInTransaction(async () => {
         const paciente = await deps.pacientes.findById(asPacienteId(input.params.id));
         if (!paciente) throw new ClinicalError('not_found', NOT_FOUND);
-        const expediente = await deps.pacientes.findExpedienteByPaciente(asPacienteId(input.params.id));
+        const expediente = await deps.pacientes.findExpedienteByPaciente(
+          asPacienteId(input.params.id),
+        );
         if (!expediente) throw new ClinicalError('not_found', NOT_FOUND);
         if (expediente.estado === 'archivado') {
           throw new ClinicalError('expediente_archived', 'Expediente archivado');

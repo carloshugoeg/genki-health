@@ -1,112 +1,189 @@
+/* Agenda — uses the shared design tokens from styles.css (accent follows the institution). */
+
 .genki-agenda {
-  max-width: 1120px;
-  margin: auto;
-  padding: 32px;
-  color: #173c37;
-  font-family: system-ui, sans-serif;
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+.genki-agenda > header {
+  margin-bottom: var(--s-5);
 }
 .genki-agenda h1 {
-  margin: 6px 0;
-  font-size: 2.2rem;
-  letter-spacing: -1px;
-}
-.agenda-eyebrow {
-  font-size: 0.75rem;
+  margin: 0 0 var(--s-2);
+  font-size: var(--text-2xl);
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: -0.02em;
+}
+.genki-agenda > header > p {
+  margin: 0;
+  color: var(--ink-2);
 }
 .agenda-filters,
 .agenda-actions {
   display: flex;
-  gap: 16px;
+  gap: var(--s-3) var(--s-4);
   align-items: end;
   flex-wrap: wrap;
-  margin: 24px 0;
+}
+.agenda-filters {
+  margin: 0 0 var(--s-5);
+  padding: var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--e-1);
+}
+.agenda-filters > label {
+  flex: 1 1 12rem;
+  max-width: 22rem;
+  margin: 0;
+}
+.agenda-actions {
+  margin: var(--s-4) 0;
 }
 .genki-agenda label {
   display: grid;
-  gap: 8px;
-  margin-bottom: 16px;
-  font-size: 0.9rem;
+  gap: var(--s-1);
+  margin-bottom: var(--s-4);
 }
-.genki-agenda input,
-.genki-agenda textarea {
-  padding: 10px;
-  border: 1px solid #b5ccc6;
-  border-radius: 7px;
-  font: inherit;
-  min-width: 0;
+.genki-agenda .agenda-filters label {
+  margin-bottom: 0;
 }
-.genki-agenda button {
-  border: 0;
-  border-radius: 7px;
-  padding: 11px 16px;
-  background: #19695c;
-  color: white;
-  cursor: pointer;
+
+.agenda-error {
+  margin: 0 0 var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--danger-line);
+  border-left: 4px solid var(--danger);
+  border-radius: var(--r-sm);
+  background: var(--danger-soft);
+  color: var(--danger-strong);
 }
-.genki-agenda button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
+
 .agenda-columns {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr);
-  gap: 28px;
+  grid-template-columns: minmax(0, 1.7fr) minmax(16rem, 1fr);
+  gap: var(--s-5);
   align-items: start;
 }
 .agenda-card {
-  padding: 24px;
-  border: 1px solid #d0ded9;
-  border-radius: 14px;
-  background: #f6f9f7;
+  padding: var(--s-5);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--e-1);
+}
+.agenda-card + .agenda-card {
+  margin-top: var(--s-4);
 }
 .genki-agenda h2 {
-  font-size: 1.2rem;
-  margin-top: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  font-size: var(--text-lg);
+  margin: 0 0 var(--s-4);
 }
-.genki-agenda small {
-  font-size: 0.8rem;
-  font-weight: 400;
-  margin-left: 12px;
+.genki-agenda h2 small {
+  padding: 0.1rem 0.6rem;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
+
 .agenda-list {
   list-style: none;
   padding: 0;
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--e-1);
+  overflow: hidden;
 }
 .agenda-list li {
   display: flex;
   align-items: start;
-  gap: 18px;
-  padding: 20px 0;
-  border-bottom: 1px solid #d0ded9;
+  gap: var(--s-4);
+  margin: 0;
+  padding: var(--s-4);
+  border-bottom: 1px solid var(--line);
+}
+.agenda-list li:last-child {
+  border-bottom: 0;
+}
+.agenda-list li:hover {
+  background: var(--surface-sunk);
 }
 .agenda-list li div {
   flex: 1;
+  min-width: 0;
   overflow-wrap: anywhere;
 }
 .agenda-list p {
-  margin: 6px 0;
-  font-size: 0.9rem;
+  margin: var(--s-1) 0;
+  font-size: var(--text-sm);
+  color: var(--ink-2);
 }
 .agenda-list span {
-  font-size: 0.8rem;
-  color: #4b6760;
-}
-.agenda-list time {
+  display: inline-block;
+  margin-top: var(--s-1);
+  padding: 0.05rem 0.55rem;
+  border-radius: var(--r-pill);
+  background: var(--surface-sunk);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: var(--text-xs);
   font-weight: 700;
 }
+.agenda-list time {
+  flex: none;
+  min-width: 6.5rem;
+  font-weight: 700;
+  color: var(--accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+.agenda-list button {
+  flex: none;
+  background: var(--surface);
+  color: var(--accent-strong);
+  border-color: var(--line-strong);
+}
+.agenda-list button:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
 .genki-agenda .agenda-cancel {
-  background: #974434;
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
 }
-.agenda-error {
-  color: #9c2f27;
+.genki-agenda .agenda-cancel:hover:not(:disabled) {
+  background: var(--danger-strong);
+  border-color: var(--danger-strong);
 }
-@media (max-width: 760px) {
+
+@media (max-width: 960px) {
   .agenda-columns {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
-  .genki-agenda {
-    padding: 18px;
+}
+@media (max-width: 640px) {
+  .agenda-list li {
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-3);
+  }
+  .agenda-list li div {
+    flex-basis: 100%;
+    order: 2;
+  }
+  .agenda-list button {
+    margin-left: auto;
+  }
+  .agenda-card {
+    padding: var(--s-4);
   }
 }

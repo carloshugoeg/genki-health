@@ -56,8 +56,7 @@ export function createMemoryDentalSessionRepository(deps: {
         const sessionNs = getExtensionNamespace(activeMemoryMaps(deps.state), 'dental-session');
         const idemKey = `sesion59:${context.id_usuario}:${context.idempotency_key}`;
         const prior = sessionNs.get('idempotency')?.get(idemKey) as
-          | { hash: string; response: SESION_TRATAMIENTO }
-          | undefined;
+          { hash: string; response: SESION_TRATAMIENTO } | undefined;
         if (prior) {
           if (prior.hash !== payloadHash(input.body)) throw new ClinicalError('conflict', CONFLICT);
           return cloneDto(prior.response);

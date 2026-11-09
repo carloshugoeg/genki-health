@@ -9,6 +9,7 @@ import type {
   RegisterPacienteRequest,
 } from '@genki/shared';
 import { closeConsulta } from '../../application/close-consulta.js';
+import { registerPaciente } from '../../application/register-paciente.js';
 import { InstitutionAdapterRegistry } from '../../config/adapter-registry.js';
 import {
   createPhase0Auth,
@@ -29,6 +30,7 @@ import {
 } from '../../testing/catalog-seeds.js';
 import { buildDemoUsers } from '../memory/auth.js';
 import { buildHttpApp } from './app.js';
+import { DOCUMENT_BODY_LIMIT_BYTES } from './full-routes.js';
 
 function adult(numero_documento: string, name = 'Ana'): RegisterPacienteRequest {
   return {
@@ -1147,5 +1149,296 @@ describe('HTTP account users lane3', () => {
       },
     });
     expect(denied.statusCode).toBe(403);
+  });
+});
+
+/** Regression tests for transport/validation hardening (QA round 2026-11-09). */
+
+async function makeHardeningApp() {
+  const { password, jwtSecret } = testCredentials();
+  const demos = await buildDemoUsers(password);
+  const users: IdentityUser[] = [
+    ...demos,
+    {
+      id_usuario: 12,
+      email: 'medico-h@genki.local',
+      hash_contrasena: demos[0]!.hash_contrasena,
+      id_institucion: 1,
+      institution_kind: 'hospital_general',
+      roles: ['medico'],
+      estado: 'activo',
+    },
+  ];
+  const identity = await createPhase0Identity(jwtSecret, users);
+  const hospital = createTestMemoryAdapterSet('hospital_general', 1);
+  const registry = new InstitutionAdapterRegistry();
+  registry.register('hospital_general', () => hospital);
+  registry.register('centro_pediatrico', () => createTestMemoryAdapterSet('centro_pediatrico', 2));
+  registry.register('laboratorio_clinico', () =>
+    createTestMemoryAdapterSet('laboratorio_clinico', 3),
+  );
+  registry.register('clinica_odontologica', () =>
+    createTestMemoryAdapterSet('clinica_odontologica', 4),
+  );
+  const app = buildHttpApp({
+    registry,
+    auth: identity.auth,
+    account: identity.account,
+    users: identity.users,
+  });
+  return { app, hospital };
+}
+
+type HardeningApp = Awaited<ReturnType<typeof makeHardeningApp>>['app'];
+
+async function hardeningToken(app: HardeningApp, email = 'hospital@genki.local'): Promise<string> {
+  const { password } = testCredentials();
+  const res = await app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { email, password, institution_kind: 'hospital_general' },
+  });
+  expect(res.statusCode).toBe(200);
+  return (res.json() as AuthTokensDto).access_token;
+}
+
+function hardeningPatient(
+  fecha_nacimiento: string,
+  numero_documento = 'HARD-1',
+): RegisterPacienteRequest {
+  return {
+    tipo_documento: 'DPI',
+    numero_documento,
+    primer_nombre: 'Ana',
+    primer_apellido: 'Lopez',
+    fecha_nacimiento,
+    sexo: 'F',
+  };
+}
+
+const PDF_BASE64 = Buffer.from('%PDF-1.4\n%%EOF\n').toString('base64');
+
+describe('transport errors never surface as 500', () => {
+  it('malformed JSON on login is 400 invalid_body', async () => {
+    const { app } = await makeHardeningApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      headers: { 'content-type': 'application/json' },
+      payload: '{"a":',
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toEqual({ error: 'invalid_body', message: 'Solicitud inválida' });
+  });
+
+  it('empty JSON body is 400 invalid_body', async () => {
+    const { app } = await makeHardeningApp();
+    const auth = { authorization: `Bearer ${await hardeningToken(app)}` };
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/pacientes',
+      headers: { ...auth, 'content-type': 'application/json' },
+      payload: '',
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error).toBe('invalid_body');
+  });
+
+  it('unsupported media types are 415, including multipart', async () => {
+    const { app } = await makeHardeningApp();
+    const xml = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      headers: { 'content-type': 'application/xml' },
+      payload: '<a/>',
+    });
+    expect(xml.statusCode).toBe(415);
+    expect(xml.json().error).toBe('unsupported_media_type');
+
+    const auth = { authorization: `Bearer ${await hardeningToken(app, 'medico-h@genki.local')}` };
+    const multipart = await app.inject({
+      method: 'POST',
+      url: '/api/pacientes/1/documentos',
+      headers: {
+        ...auth,
+        'idempotency-key': 'exe-1',
+        'content-type': 'multipart/form-data; boundary=x',
+      },
+      payload:
+        '--x\r\nContent-Disposition: form-data; name="archivo"; filename="a.exe"\r\n' +
+        'Content-Type: application/x-msdownload\r\n\r\nMZ\r\n--x--\r\n',
+    });
+    expect(multipart.statusCode).toBe(415);
+    expect(multipart.json().error).toBe('unsupported_media_type');
+  });
+
+  it('a body over the global limit is 413 payload_too_large', async () => {
+    const { app } = await makeHardeningApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      headers: { 'content-type': 'application/json' },
+      payload: JSON.stringify({ x: 'a'.repeat(1_100_000) }),
+    });
+    expect(res.statusCode).toBe(413);
+    expect(res.json()).toEqual({
+      error: 'payload_too_large',
+      message: 'La solicitud excede el tamaño permitido',
+    });
+  });
+
+  it('the documentos route has its own larger limit sized for base64 of 10 MiB', async () => {
+    expect(DOCUMENT_BODY_LIMIT_BYTES).toBeGreaterThan(Math.ceil((10 * 1024 * 1024 * 4) / 3));
+    const { app } = await makeHardeningApp();
+    const auth = { authorization: `Bearer ${await hardeningToken(app, 'medico-h@genki.local')}` };
+    const bigButAllowed = await app.inject({
+      method: 'POST',
+      url: '/api/pacientes/1/documentos',
+      headers: { ...auth, 'content-type': 'application/json', 'idempotency-key': 'big-1' },
+      payload: JSON.stringify({
+        archivo_base64: Buffer.from('%PDF' + '0'.repeat(1_000_000)).toString('base64'),
+        tipo_mime: 'application/pdf',
+      }),
+    });
+    expect(bigButAllowed.statusCode).not.toBe(413);
+    const tooBig = await app.inject({
+      method: 'POST',
+      url: '/api/pacientes/1/documentos',
+      headers: { ...auth, 'content-type': 'application/json', 'idempotency-key': 'big-2' },
+      payload: JSON.stringify({ archivo_base64: 'A'.repeat(DOCUMENT_BODY_LIMIT_BYTES + 10) }),
+    });
+    expect(tooBig.statusCode).toBe(413);
+  });
+});
+
+describe('documentos JSON contract', () => {
+  it('accepts archivo_base64 without nombre_archivo and rejects non-whitelisted input', async () => {
+    const { app } = await makeHardeningApp();
+    const admin = { authorization: `Bearer ${await hardeningToken(app)}` };
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/pacientes',
+      headers: admin,
+      payload: hardeningPatient('1990-01-15', 'DOC-1'),
+    });
+    expect(created.statusCode).toBe(201);
+    const id = (created.json() as { paciente: { id_paciente: number } }).paciente.id_paciente;
+    const medico = { authorization: `Bearer ${await hardeningToken(app, 'medico-h@genki.local')}` };
+    const post = (key: string, payload: unknown) =>
+      app.inject({
+        method: 'POST',
+        url: `/api/pacientes/${id}/documentos`,
+        headers: { ...medico, 'idempotency-key': key },
+        payload: payload as Record<string, unknown>,
+      });
+
+    const ok = await post('doc-ok', { archivo_base64: PDF_BASE64, tipo_mime: 'application/pdf' });
+    expect(ok.statusCode).toBe(201);
+    expect(ok.json().tipo_mime).toBe('application/pdf');
+
+    const dataUrl = await post('doc-data-url', {
+      archivo_base64: `data:application/pdf;base64,${PDF_BASE64}`,
+      nombre_archivo: 'informe.pdf',
+    });
+    expect(dataUrl.statusCode).toBe(201);
+
+    const exe = await post('doc-exe', {
+      archivo_base64: Buffer.from('MZ\x90\x00').toString('base64'),
+      tipo_mime: 'application/x-msdownload',
+      nombre_archivo: 'a.exe',
+    });
+    expect(exe.statusCode).toBe(400);
+
+    const notBase64 = await post('doc-b64', {
+      archivo_base64: '!!no',
+      tipo_mime: 'application/pdf',
+    });
+    expect(notBase64.statusCode).toBe(400);
+
+    const unknownKey = await post('doc-key', {
+      archivo_base64: PDF_BASE64,
+      tipo_mime: 'application/pdf',
+      ruta: '/etc/passwd',
+    });
+    expect(unknownKey.statusCode).toBe(400);
+  });
+});
+
+describe('query and body validation', () => {
+  it('bitácora rejects malformed or inverted date ranges with 400 invalid_query', async () => {
+    const { app } = await makeHardeningApp();
+    const auth = { authorization: `Bearer ${await hardeningToken(app)}` };
+    for (const qs of [
+      'desde=zzz',
+      'hasta=2026-02-30',
+      'desde=2026-11-09&hasta=2026-11-01',
+      'desde=2026-11-01T25:00:00Z',
+      'page_size=51',
+      'page=0',
+      `entidad=${'x'.repeat(200)}`,
+    ]) {
+      const res = await app.inject({ method: 'GET', url: `/api/bitacora?${qs}`, headers: auth });
+      expect(res.statusCode, qs).toBe(400);
+      expect(res.json().error, qs).toBe('invalid_query');
+    }
+    const ok = await app.inject({
+      method: 'GET',
+      url: '/api/bitacora?desde=2026-11-01&hasta=2026-11-10T23:59:59Z',
+      headers: auth,
+    });
+    expect(ok.statusCode).toBe(200);
+  });
+
+  it('patient registration rejects a future birth date', async () => {
+    const { app, hospital } = await makeHardeningApp();
+    const auth = { authorization: `Bearer ${await hardeningToken(app)}` };
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/pacientes',
+      headers: auth,
+      payload: hardeningPatient('2099-01-01'),
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error).toBe('invalid_body');
+    await expect(
+      registerPaciente(hospital.pacientes, hardeningPatient('2099-01-01', 'HARD-2')),
+    ).rejects.toMatchObject({ code: 'invalid_body' });
+    const ok = await app.inject({
+      method: 'POST',
+      url: '/api/pacientes',
+      headers: auth,
+      payload: hardeningPatient('1990-01-15', 'HARD-3'),
+    });
+    expect(ok.statusCode).toBe(201);
+  });
+
+  it('login answers a generic 401 for a short wrong password', async () => {
+    const { app } = await makeHardeningApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        email: 'hospital@genki.local',
+        password: 'abc',
+        institution_kind: 'hospital_general',
+      },
+    });
+    expect(res.statusCode).toBe(401);
+    expect(res.json().error).toBe('invalid_credentials');
+  });
+
+  it('honorarios with an empty body is 400 invalid_body, not 409', async () => {
+    const { app } = await makeHardeningApp();
+    const auth = { authorization: `Bearer ${await hardeningToken(app)}` };
+    for (const payload of [{}, { id_consulta: 1, id_procedimiento: 1 }]) {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/actos/honorarios',
+        headers: auth,
+        payload,
+      });
+      expect(res.statusCode).toBe(400);
+      expect(res.json().error).toBe('invalid_body');
+    }
   });
 });

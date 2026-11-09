@@ -84,7 +84,11 @@ function appPrivileges(dbName: string) {
   return [
     privilege(dbName, 'pacientes', ['find', 'insert']),
     privilege(dbName, 'responsables', ['find', 'insert']),
-    privilege(dbName, 'consultas', ['find', 'insert']),
+    // update: OP-31 closes an open consulta and corrections change status/annotation fields
+    // of embedded diagnosticos/tratamientos/receta (clinical documents are never deleted).
+    privilege(dbName, 'consultas', ['find', 'insert', 'update']),
+    // BITACORA (Entrega I): append-only audit of clinical corrections.
+    privilege(dbName, 'bitacora', ['find', 'insert']),
     privilege(dbName, 'expedientes', ['find', 'insert', 'update']),
     privilege(dbName, 'counters', ['find', 'insert', 'update']),
     ...CATALOG_COLLECTIONS.map((name) => privilege(dbName, name, ['find'])),

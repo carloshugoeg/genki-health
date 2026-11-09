@@ -309,9 +309,11 @@ export function createAuthService(options: AuthServiceOptions): AuthPort {
 
   return {
     async login(input: LoginRequestDto): Promise<AuthTokensDto> {
-      const policyError = validatePasswordPolicy(input.password);
-      if (policyError) {
-        throw new AuthError(policyError, 'password_policy');
+      // Password policy applies only when a password is set or changed. On login a
+      // non-compliant password is simply a wrong credential: answering `password_policy`
+      // here would reveal the policy and let callers tell bad input from bad credentials.
+      if (validatePasswordPolicy(input.password)) {
+        throw new AuthError('Invalid email, password, or institution', 'invalid_credentials');
       }
 
       const email = input.email.trim().toLowerCase();

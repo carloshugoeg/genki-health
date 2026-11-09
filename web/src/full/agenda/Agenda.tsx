@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import type { CITA, CITAInput, Slot } from '@genki/shared/full/agenda';
+import { EntitySelect, entityLabel, loadEntityDirectory } from '../../components/EntitySelect';
 import './agenda.css';
 
 /** Host supplies the existing authenticated client; no auth or router wiring. */
@@ -24,7 +25,7 @@ const display = (iso: string) =>
   }).format(new Date(iso));
 export function Agenda({ request }: AgendaProps) {
   const [day, setDay] = useState(today),
-    [professional, setProfessional] = useState('');
+    [professional, setProfessional] = useState<number | ''>('');
   const [rows, setRows] = useState<CITA[]>([]),
     [slots, setSlots] = useState<Slot[] | null>(null);
   const [selected, setSelected] = useState<CITA | null>(null),
@@ -34,18 +35,24 @@ export function Agenda({ request }: AgendaProps) {
   const [error, setError] = useState(''),
     [notice, setNotice] = useState(''),
     [busy, setBusy] = useState(false);
-  const [patient, setPatient] = useState(''),
-    [bookProfessional, setBookProfessional] = useState(''),
+  const [, setNamesReady] = useState(false);
+  const [patient, setPatient] = useState<number | ''>(''),
+    [bookProfessional, setBookProfessional] = useState<number | ''>(''),
     [bookTime, setBookTime] = useState(''),
     [bookDuration, setBookDuration] = useState(30),
     [motive, setMotive] = useState('');
   const load = useCallback(async () => {
     const query = new URLSearchParams({
       fecha: day,
-      ...(professional ? { id_profesional: professional } : {}),
+      ...(professional !== '' ? { id_profesional: String(professional) } : {}),
     });
     setRows(await request<CITA[]>(`/api/agenda?${query}`));
   }, [request, day, professional]);
+  useEffect(() => {
+    void loadEntityDirectory()
+      .then(() => setNamesReady(true))
+      .catch(() => undefined);
+  }, []);
   useEffect(() => {
     let active = true;
     setError('');
@@ -53,7 +60,7 @@ export function Agenda({ request }: AgendaProps) {
     setSelected(null);
     const query = new URLSearchParams({
       fecha: day,
-      ...(professional ? { id_profesional: professional } : {}),
+      ...(professional !== '' ? { id_profesional: String(professional) } : {}),
     });
     request<CITA[]>(`/api/agenda?${query}`)
       .then((data) => {
@@ -117,7 +124,7 @@ export function Agenda({ request }: AgendaProps) {
       async () => {
         setSlots(
           await request<Slot[]>(
-            `/api/agenda/disponibilidad?${new URLSearchParams({ id_profesional: professional, desde: `${day}T06:00:00Z`, hasta: new Date(Date.parse(`${day}T06:00:00Z`) + 86400000).toISOString() })}`,
+            `/api/agenda/disponibilidad?${new URLSearchParams({ id_profesional: String(professional), desde: `${day}T06:00:00Z`, hasta: new Date(Date.parse(`${day}T06:00:00Z`) + 86400000).toISOString() })}`,
           ),
         );
       },
@@ -128,7 +135,6 @@ export function Agenda({ request }: AgendaProps) {
   return (
     <section className="genki-agenda" aria-label="Agenda de citas">
       <header>
-        <p className="agenda-eyebrow">GENKI · AGENDA</p>
         <h1>Tu día, organizado</h1>
         <p>Horarios de Guatemala · UTC−6</p>
       </header>
@@ -145,16 +151,16 @@ export function Agenda({ request }: AgendaProps) {
         </label>
         <label>
           Profesional (opcional)
-          <input
-            type="number"
-            min="1"
-            step="1"
+          <EntitySelect
+            kind="profesional"
+            name="id_profesional"
             value={professional}
+            onChange={setProfessional}
+            optional
             disabled={busy}
-            onChange={(e) => setProfessional(e.target.value)}
           />
         </label>
-        <button disabled={busy || !professional || !day} onClick={() => void availability()}>
+        <button disabled={busy || professional === '' || !day} onClick={() => void availability()}>
           Consultar disponibilidad
         </button>
       </div>
@@ -185,9 +191,10 @@ export function Agenda({ request }: AgendaProps) {
                 <li key={cita.id_cita}>
                   <time>{display(cita.fecha_hora)}</time>
                   <div>
-                    <strong>Paciente {cita.id_paciente}</strong>
+                    <strong>{entityLabel('paciente', cita.id_paciente)}</strong>
                     <p>
-                      Profesional {cita.id_profesional} · {cita.duracion_minutos} min
+                      {entityLabel('profesional', cita.id_profesional)} · {cita.duracion_minutos}{' '}
+                      min
                     </p>
                     {cita.motivo && <p>{cita.motivo}</p>}
                     <span>{cita.estado}</span>
@@ -281,22 +288,24 @@ export function Agenda({ request }: AgendaProps) {
           <h2>Agendar cita</h2>
           <label>
             Paciente
-            <input
-              type="number"
-              min="1"
-              required
+            <EntitySelect
+              kind="paciente"
+              name="id_paciente"
               value={patient}
-              onChange={(e) => setPatient(e.target.value)}
+              onChange={setPatient}
+              required
+              disabled={busy}
             />
           </label>
           <label>
             Profesional
-            <input
-              type="number"
-              min="1"
-              required
+            <EntitySelect
+              kind="profesional"
+              name="id_profesional_cita"
               value={bookProfessional}
-              onChange={(e) => setBookProfessional(e.target.value)}
+              onChange={setBookProfessional}
+              required
+              disabled={busy}
             />
           </label>
           <label>

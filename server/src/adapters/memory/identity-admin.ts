@@ -57,7 +57,8 @@ export function createMemoryIdentityAdmin(users: IdentityUser[]): MemoryIdentity
   const rows: AdminUserRow[] = users.map((u, index) => ({
     ...u,
     nombre_usuario: u.email.split('@')[0] ?? `user${index + 1}`,
-    id_profesional: null,
+    // Optional link USUARIO.id_profesional for tests/demo identities that carry one.
+    id_profesional: (u as IdentityUser & { id_profesional?: number | null }).id_profesional ?? null,
     debe_cambiar_contrasena: false,
     auth_version: 0,
     intentos_fallidos: 0,
@@ -163,8 +164,7 @@ export function createMemoryIdentityAdmin(users: IdentityUser[]): MemoryIdentity
       if (input.hasta) items = items.filter((r) => r.fecha_hora <= input.hasta!);
       items.sort(
         (a, b) =>
-          a.fecha_hora.localeCompare(b.fecha_hora) ||
-          Number(a.id_bitacora) - Number(b.id_bitacora),
+          a.fecha_hora.localeCompare(b.fecha_hora) || Number(a.id_bitacora) - Number(b.id_bitacora),
       );
       const total = items.length;
       const start = (input.page - 1) * input.page_size;

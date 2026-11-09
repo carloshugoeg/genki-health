@@ -34,7 +34,9 @@ function payloadHash(body: unknown): string {
   return createHash('sha256').update(JSON.stringify(body)).digest('hex');
 }
 
-export function createMemoryProcedureRepository(deps: MemoryProcedureDeps): ProcedureRepositoryPort {
+export function createMemoryProcedureRepository(
+  deps: MemoryProcedureDeps,
+): ProcedureRepositoryPort {
   return {
     async op36(input: Op36Request, context: OperationContext): Promise<Op36Response> {
       return deps.unitOfWork.runInTransaction(async () => {
@@ -42,8 +44,7 @@ export function createMemoryProcedureRepository(deps: MemoryProcedureDeps): Proc
         const key = context.idempotency_key!;
         const idemKey = `proc36:${context.id_usuario}:${key}`;
         const prior = ns.get('idempotency')?.get(idemKey) as
-          | { hash: string; response: NOTA_EVOLUCION }
-          | undefined;
+          { hash: string; response: NOTA_EVOLUCION } | undefined;
         if (prior) {
           if (prior.hash !== payloadHash(input.body)) throw new ClinicalError('conflict', CONFLICT);
           return cloneDto(prior.response);
@@ -58,8 +59,7 @@ export function createMemoryProcedureRepository(deps: MemoryProcedureDeps): Proc
 
         if (input.body.id_nota_anterior) {
           const prev = ns.get('nota_evolucion')?.get(input.body.id_nota_anterior) as
-            | NOTA_EVOLUCION
-            | undefined;
+            NOTA_EVOLUCION | undefined;
           if (!prev || prev.id_admision !== adm.id_admision) {
             throw new ClinicalError('conflict', CONFLICT);
           }
@@ -80,7 +80,10 @@ export function createMemoryProcedureRepository(deps: MemoryProcedureDeps): Proc
         if (!ns.has('nota_evolucion')) ns.set('nota_evolucion', new Map());
         ns.get('nota_evolucion')!.set(id_nota, nota);
         if (!ns.has('idempotency')) ns.set('idempotency', new Map());
-        ns.get('idempotency')!.set(idemKey, { hash: payloadHash(input.body), response: cloneDto(nota) });
+        ns.get('idempotency')!.set(idemKey, {
+          hash: payloadHash(input.body),
+          response: cloneDto(nota),
+        });
         return cloneDto(nota);
       });
     },
@@ -91,16 +94,14 @@ export function createMemoryProcedureRepository(deps: MemoryProcedureDeps): Proc
         const key = context.idempotency_key!;
         const idemKey = `proc37:${context.id_usuario}:${key}`;
         const prior = ns.get('idempotency')?.get(idemKey) as
-          | { hash: string; response: Op37Response }
-          | undefined;
+          { hash: string; response: Op37Response } | undefined;
         if (prior) {
           if (prior.hash !== payloadHash(input.body)) throw new ClinicalError('conflict', CONFLICT);
           return cloneDto(prior.response);
         }
 
         const catalog = ns.get('catalogo_procedimiento')?.get(input.body.codigo_procedimiento) as
-          | { codigo_procedimiento: string }
-          | undefined;
+          { codigo_procedimiento: string } | undefined;
         if (!catalog) {
           // Seed a demo catalog entry lazily for memory tests/UI.
           if (!ns.has('catalogo_procedimiento')) ns.set('catalogo_procedimiento', new Map());

@@ -9,7 +9,8 @@ export type ConsultaTipo = (typeof CONSULTA_TIPOS)[number];
 
 /** Domain-local. Mirrors OpenConsultaInput without importing @genki/shared. */
 export interface ValidateOpenConsultaInput {
-  id_profesional: number;
+  /** Optional: the acting user's USUARIO.id_profesional wins (see resolveActingProfesional). */
+  id_profesional?: number;
   id_cita?: number | null;
   tipo: ConsultaTipo;
   motivo_consulta: string;
@@ -142,7 +143,10 @@ export function parseOpenConsultaInput(body: unknown): ValidateOpenConsultaInput
   }
   assertNoUnknownKeys(body, OPEN_KEYS);
 
-  const id_profesional = assertPositiveId(body.id_profesional, 'invalid_body');
+  const id_profesional =
+    body.id_profesional === undefined
+      ? undefined
+      : assertPositiveId(body.id_profesional, 'invalid_body');
   const tipo = body.tipo;
   if (typeof tipo !== 'string' || !(CONSULTA_TIPOS as readonly string[]).includes(tipo)) {
     throw new ClinicalError('invalid_body', 'Solicitud inválida');
@@ -160,7 +164,7 @@ export function parseOpenConsultaInput(body: unknown): ValidateOpenConsultaInput
   }
 
   return {
-    id_profesional,
+    ...(id_profesional !== undefined ? { id_profesional } : {}),
     tipo: tipo as ConsultaTipo,
     motivo_consulta,
     fecha_hora_inicio,

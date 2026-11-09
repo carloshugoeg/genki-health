@@ -30,6 +30,7 @@ function fixture() {
         municipios: [{ id_municipio: 1, nombre: 'Prueba' }],
         profesionales: [{ id_profesional: 1, nombres: 'Profesional', apellidos: 'Simulado' }],
         medicamentos: [{ id_medicamento: 1, nombre_generico: 'Simulado' }],
+        cie10: [{ codigo_cie10: 'Z00.0', descripcion: 'Simulado' }],
       });
       resources.push(resource);
       return resource;

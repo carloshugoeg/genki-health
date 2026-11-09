@@ -10,10 +10,7 @@ import { createPostgresConsultationRepository } from './full/consultation.js';
 import { createPostgresDischargeRepository } from './full/discharge.js';
 import { createPostgresProcedureRepository } from './full/procedure.js';
 import { createPostgresRecordRepository } from './full/record.js';
-import {
-  clinicalEconomicReferences,
-  laneABModulesFrom,
-} from '../../config/lane-ab-modules.js';
+import { clinicalEconomicReferences, laneABModulesFrom } from '../../config/lane-ab-modules.js';
 import { PostgresIdPort } from './id.js';
 import { PostgresPacienteRepository } from './paciente-repository.js';
 import { PostgresUnitOfWork } from './unit-of-work.js';
@@ -53,11 +50,7 @@ export async function createPostgresAdapterSet(options: EngineOptions): Promise<
     clock,
   };
   const laneAB = laneABModulesFrom(
-    new PostgresEconomicStore(
-      pool,
-      options.id_institucion,
-      clinicalEconomicReferences(pacientes),
-    ),
+    new PostgresEconomicStore(pool, options.id_institucion, clinicalEconomicReferences(pacientes)),
     new PostgresAgendaRepository(pool),
   );
 

@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import type { EconomicClient } from '../charges/EconomicPage';
+import { EntitySelect } from '../../components/EntitySelect';
 
 export function ProcedurePage({ client }: { client: EconomicClient }) {
   const [busy, setBusy] = useState(false);
+  const [profesional, setProfesional] = useState<number | ''>('');
   const [error, setError] = useState('');
   const [result, setResult] = useState<unknown>();
 
@@ -61,7 +63,14 @@ export function ProcedurePage({ client }: { client: EconomicClient }) {
         </label>
         <label>
           Profesional
-          <input name="id_profesional" type="number" required defaultValue={1} />
+          <EntitySelect
+            kind="profesional"
+            name="id_profesional"
+            value={profesional}
+            onChange={setProfesional}
+            required
+            disabled={busy}
+          />
         </label>
         <label>
           Fecha/hora

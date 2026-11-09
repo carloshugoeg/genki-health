@@ -20,9 +20,7 @@ const NOT_FOUND = 'Recurso no encontrado';
 const CONFLICT = 'Conflicto de recurso';
 
 function sessionOpts():
-  | Pick<FindOptions, 'session'>
-  | Pick<InsertOneOptions, 'session'>
-  | Record<string, never> {
+  Pick<FindOptions, 'session'> | Pick<InsertOneOptions, 'session'> | Record<string, never> {
   const session = activeMongoSession();
   return session ? { session } : {};
 }
@@ -74,10 +72,9 @@ export function createMongoLabIntakeRepository(deps: {
     async op49(input: Op49Request, _context: OperationContext): Promise<Op49Response> {
       return deps.unitOfWork.runInTransaction(async () => {
         const opts = sessionOpts();
-        const ordenDoc = await deps.db.collection('ordenes_examen').findOne(
-          { institution_id: inst, id_orden: toBsonInt(input.params.id) },
-          opts,
-        );
+        const ordenDoc = await deps.db
+          .collection('ordenes_examen')
+          .findOne({ institution_id: inst, id_orden: toBsonInt(input.params.id) }, opts);
         if (!ordenDoc) throw new ClinicalError('not_found', NOT_FOUND);
         if (ordenDoc.estado === 'entregada' || ordenDoc.estado === 'anulada') {
           throw new ClinicalError('conflict', CONFLICT);
@@ -99,11 +96,13 @@ export function createMongoLabIntakeRepository(deps: {
           },
           opts,
         );
-        await deps.db.collection('ordenes_examen').updateOne(
-          { institution_id: inst, id_orden: toBsonInt(input.params.id) },
-          { $set: { estado: 'en_proceso' } },
-          opts,
-        );
+        await deps.db
+          .collection('ordenes_examen')
+          .updateOne(
+            { institution_id: inst, id_orden: toBsonInt(input.params.id) },
+            { $set: { estado: 'en_proceso' } },
+            opts,
+          );
         return muestra;
       });
     },

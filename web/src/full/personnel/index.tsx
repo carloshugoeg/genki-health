@@ -11,6 +11,7 @@ const operations: Operation[] = [
         label: 'Profesional (actualizar o desactivar)',
         type: 'number',
         optional: true,
+        entity: 'profesional',
       },
       { name: 'nombres', label: 'Nombres', type: 'text', optional: true },
       { name: 'apellidos', label: 'Apellidos', type: 'text', optional: true },
@@ -37,7 +38,7 @@ const operations: Operation[] = [
     method: 'POST',
     path: '/api/personal/:id/tarifas',
     fields: [
-      { name: 'id', label: 'Profesional', type: 'number' },
+      { name: 'id', label: 'Profesional', type: 'number', entity: 'profesional' },
       { name: 'codigo_servicio', label: 'Servicio' },
       { name: 'modalidad', label: 'Modalidad', options: ['fijo', 'porcentaje'] },
       { name: 'monto_fijo', label: 'Monto fijo Q', type: 'decimal', optional: true },

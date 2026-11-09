@@ -5,7 +5,7 @@ const operations: Operation[] = [
     method: 'POST',
     path: '/api/cargos',
     fields: [
-      { name: 'id_paciente', label: 'Paciente', type: 'number' },
+      { name: 'id_paciente', label: 'Paciente', type: 'number', entity: 'paciente' },
       { name: 'codigo_servicio', label: 'Servicio' },
       {
         name: 'origen',
@@ -34,7 +34,7 @@ const operations: Operation[] = [
     method: 'GET',
     path: '/api/pacientes/:id/cargos',
     fields: [
-      { name: 'id', label: 'Paciente', type: 'number' },
+      { name: 'id', label: 'Paciente', type: 'number', entity: 'paciente' },
       { name: 'page', label: 'Página', type: 'number', optional: true },
       {
         name: 'page_size',

@@ -34,7 +34,9 @@ export function createMemoryMilestonesRepository(
     async op46(input: Op46Request, _context: OperationContext): Promise<Op46Response> {
       return deps.unitOfWork.runInTransaction(async () => {
         const ns = getExtensionNamespace(activeMemoryMaps(deps.state), 'milestones');
-        const expediente = await deps.pacientes.findExpedienteByPaciente(asPacienteId(input.params.id));
+        const expediente = await deps.pacientes.findExpedienteByPaciente(
+          asPacienteId(input.params.id),
+        );
         if (!expediente) throw new ClinicalError('not_found', NOT_FOUND);
         const hitos = ns.get('hito_desarrollo');
         if (!hitos?.has(input.params.hito)) {

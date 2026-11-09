@@ -8,10 +8,7 @@ import { MongodbAgendaRepository } from './full/agenda.js';
 import { MongodbEconomicStore } from './full/charges.js';
 import { createMongoLabIntakeRepository } from './full/lab-intake.js';
 import { createMongoLabResultsRepository } from './full/lab-results.js';
-import {
-  clinicalEconomicReferences,
-  laneABModulesFrom,
-} from '../../config/lane-ab-modules.js';
+import { clinicalEconomicReferences, laneABModulesFrom } from '../../config/lane-ab-modules.js';
 import { MongoIdPort } from './id.js';
 import { MongoPacienteRepository } from './paciente-repository.js';
 import { assertMongoPrimaryReady } from './schema.js';

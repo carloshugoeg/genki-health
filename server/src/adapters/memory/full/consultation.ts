@@ -37,6 +37,7 @@ import {
 } from '../full-state.js';
 import type { MemoryInstitutionState } from '../state.js';
 import { activeMemoryMaps } from '../unit-of-work.js';
+import { createMemoryClinicalMaintenance } from './clinical-maintenance.js';
 
 const NOT_FOUND = 'Recurso no encontrado';
 const ARCHIVED = 'Expediente archivado';
@@ -292,6 +293,7 @@ export function createMemoryConsultationRepository(
     op31: unsupported as (input: Op31Request, context: OperationContext) => Promise<Op31Response>,
     op32: unsupported as (input: Op32Request, context: OperationContext) => Promise<Op32Response>,
     op33: unsupported as (input: Op33Request, context: OperationContext) => Promise<Op33Response>,
+    ...createMemoryClinicalMaintenance({ state: deps.state, ids: deps.ids }),
   };
 
   return repo;

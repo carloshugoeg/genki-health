@@ -1,8 +1,5 @@
 import { asPacienteId, type InstitutionId } from '@genki/shared';
-import type {
-  ANTECEDENTE_PERINATAL,
-  MEDICION_ANTROPOMETRICA,
-} from '@genki/shared/full/growth';
+import type { ANTECEDENTE_PERINATAL, MEDICION_ANTROPOMETRICA } from '@genki/shared/full/growth';
 import { ClinicalError } from '../../../domain/clinical-error.js';
 import type { ClockPort } from '../../../ports/clock.js';
 import type { PacienteRepositoryPort } from '../../../ports/paciente-repository.js';
@@ -70,13 +67,27 @@ export function createMysqlGrowthRepository(deps: {
 
     async op41(input: Op41Request, _context: OperationContext): Promise<Op41Response> {
       return deps.unitOfWork.runInTransaction(async () => {
-        const found = await mysqlQueryResult<{ id_consulta: number; id_expediente: number }>(
-          `SELECT id_consulta, id_expediente FROM consulta
-            WHERE id_institucion = ? AND id_consulta = ?`,
-          [deps.id_institucion, input.params.id],
+        // MySQL `consulta` has no id_institucion column (one institution per database);
+        // tenant scope is enforced through expediente -> paciente.id_institucion.
+        const found = await mysqlQueryResult<{
+          id_consulta: number;
+          id_expediente: number;
+          edad_meses: number | string | null;
+        }>(
+          `SELECT c.id_consulta, c.id_expediente,
+                  TIMESTAMPDIFF(MONTH, p.fecha_nacimiento, ?) AS edad_meses
+             FROM consulta c
+             JOIN expediente e ON e.id_expediente = c.id_expediente
+             JOIN paciente p ON p.id_paciente = e.id_paciente
+            WHERE c.id_consulta = ? AND p.id_institucion = ?`,
+          [toMysqlDate(input.body.fecha_medicion), input.params.id, deps.id_institucion],
         );
         const consulta = found.rows[0];
         if (!consulta) throw new ClinicalError('not_found', NOT_FOUND);
+        const edad_meses = Number(consulta.edad_meses);
+        if (!Number.isInteger(edad_meses) || edad_meses < 0) {
+          throw new ClinicalError('invalid_body', 'Solicitud inválida');
+        }
 
         await mysqlQueryResult(
           `INSERT INTO medicion_antropometrica (
@@ -87,7 +98,7 @@ export function createMysqlGrowthRepository(deps: {
             deps.id_institucion,
             consulta.id_consulta,
             toMysqlDate(input.body.fecha_medicion),
-            0,
+            edad_meses,
             input.body.peso_kg,
             input.body.talla_cm,
             input.body.perimetro_cefalico_cm ?? null,
@@ -100,7 +111,7 @@ export function createMysqlGrowthRepository(deps: {
           id_medicion,
           id_consulta: consulta.id_consulta,
           fecha_medicion: input.body.fecha_medicion,
-          edad_meses: 0,
+          edad_meses,
           peso_kg: input.body.peso_kg,
           talla_cm: input.body.talla_cm,
           version_referencia: 'none',
@@ -130,10 +141,9 @@ export function createMysqlGrowthRepository(deps: {
           version_referencia: string;
         }>(
           `SELECT m.* FROM medicion_antropometrica m
-             INNER JOIN consulta c
-               ON c.id_institucion = m.id_institucion AND c.id_consulta = m.id_consulta
+             INNER JOIN consulta c ON c.id_consulta = m.id_consulta
             WHERE m.id_institucion = ? AND c.id_expediente = ?
-            ORDER BY m.id_medicion ASC`,
+            ORDER BY m.fecha_medicion ASC, m.id_medicion ASC`,
           [deps.id_institucion, expediente.id_expediente],
         );
         return result.rows.map((row): MEDICION_ANTROPOMETRICA => ({

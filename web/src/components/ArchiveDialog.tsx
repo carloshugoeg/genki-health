@@ -8,11 +8,13 @@ export function archiveRequest(reason: MotivoArchivo, observation: string): Arch
 }
 export function ArchiveDialog({
   patientId,
+  patientLabel,
   onClose,
   onSuccess,
   onConflict,
 }: {
   patientId: number;
+  patientLabel?: string;
   onClose: () => void;
   onSuccess: () => void;
   onConflict: () => void;
@@ -66,8 +68,8 @@ export function ArchiveDialog({
         if (!busy) onClose();
       }}
     >
-      <h2 id="archive-title">Archivar expediente del paciente {patientId}</h2>
-      <p>
+      <h2 id="archive-title">Archivar expediente de {patientLabel ?? `paciente ${patientId}`}</h2>
+      <p className="dialog-lede">
         El historial se conserva. El expediente saldrá de la búsqueda de activos y no admitirá
         nuevas consultas. Un administrador puede reactivarlo después.
       </p>
@@ -75,7 +77,9 @@ export function ArchiveDialog({
         <fieldset disabled={busy}>
           <legend>Confirmación de archivo</legend>
           <label>
-            Motivo *
+            <span>
+              Motivo<span className="req"> *</span>
+            </span>
             <select name="reason" data-testid="archive-reason" required defaultValue="">
               <option value="">Seleccione</option>
               <option value="traslado">Traslado</option>
@@ -88,7 +92,7 @@ export function ArchiveDialog({
             Observación
             <textarea name="observation" maxLength={500} />
           </label>
-          <label className="radio">
+          <label className="radio confirm-check">
             <input type="checkbox" name="confirmed" required />
             Confirmo que deseo archivar este expediente
           </label>
@@ -98,12 +102,12 @@ export function ArchiveDialog({
             {error} Los datos del formulario se conservan.
           </p>
         )}
-        <div className="actions">
-          <button data-testid="archive-confirm" disabled={busy}>
-            {busy ? 'Archivando…' : 'Confirmar archivo'}
-          </button>
-          <button type="button" disabled={busy} onClick={onClose}>
+        <div className="actions dialog-actions">
+          <button type="button" className="btn-secondary" disabled={busy} onClick={onClose}>
             Cancelar
+          </button>
+          <button data-testid="archive-confirm" className="btn-danger" disabled={busy}>
+            {busy ? 'Archivando…' : 'Confirmar archivo'}
           </button>
         </div>
       </form>

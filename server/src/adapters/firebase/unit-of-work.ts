@@ -33,6 +33,7 @@ const collections = new Set([
   'planes_tratamiento',
   'sesiones_tratamiento',
   'reactivacion_audit',
+  'bitacora',
 ]);
 type Row = DocumentData;
 interface Intent {

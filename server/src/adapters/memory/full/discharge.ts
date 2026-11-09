@@ -30,7 +30,9 @@ function payloadHash(body: unknown): string {
   return createHash('sha256').update(JSON.stringify(body)).digest('hex');
 }
 
-export function createMemoryDischargeRepository(deps: MemoryDischargeDeps): DischargeRepositoryPort {
+export function createMemoryDischargeRepository(
+  deps: MemoryDischargeDeps,
+): DischargeRepositoryPort {
   return {
     async op38(input: Op38Request, context: OperationContext): Promise<Op38Response> {
       return deps.unitOfWork.runInTransaction(async () => {
@@ -38,8 +40,7 @@ export function createMemoryDischargeRepository(deps: MemoryDischargeDeps): Disc
         const key = context.idempotency_key!;
         const idemKey = `dis38:${context.id_usuario}:${key}`;
         const prior = ns.get('idempotency')?.get(idemKey) as
-          | { hash: string; response: ADMISION }
-          | undefined;
+          { hash: string; response: ADMISION } | undefined;
         if (prior) {
           if (prior.hash !== payloadHash(input.body)) throw new ClinicalError('conflict', CONFLICT);
           return cloneDto(prior.response);
@@ -63,7 +64,10 @@ export function createMemoryDischargeRepository(deps: MemoryDischargeDeps): Disc
         const bed = ns.get('cama')?.get(adm.id_cama) as CAMA | undefined;
         if (bed) ns.get('cama')!.set(bed.id_cama, { ...bed, estado: 'libre' });
         if (!ns.has('idempotency')) ns.set('idempotency', new Map());
-        ns.get('idempotency')!.set(idemKey, { hash: payloadHash(input.body), response: cloneDto(closed) });
+        ns.get('idempotency')!.set(idemKey, {
+          hash: payloadHash(input.body),
+          response: cloneDto(closed),
+        });
         return cloneDto(closed);
       });
     },

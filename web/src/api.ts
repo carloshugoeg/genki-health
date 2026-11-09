@@ -23,6 +23,8 @@ const messages: Record<ClinicalErrorCode, string> = {
   invalid_guardians: 'Debe existir exactamente un responsable principal',
   expediente_archived: 'El expediente está archivado',
   already_archived: 'El expediente ya está archivado',
+  consulta_abierta:
+    'El paciente tiene una consulta abierta; ciérrela antes de archivar el expediente',
   invalid_bundle: 'Atención clínica inconsistente',
   reference_not_found: 'Referencia clínica inválida',
   conflict: 'Operación en conflicto; vuelva a cargar',
@@ -30,20 +32,28 @@ const messages: Record<ClinicalErrorCode, string> = {
   misconfigured: 'Configuración inválida',
   internal_error: 'Error interno',
 };
+/** Transport codes the API emits before a route runs; not part of the shared domain union. */
+export type TransportErrorCode = 'unsupported_media_type' | 'payload_too_large';
+export type ApiErrorCode = ClinicalErrorCode | TransportErrorCode;
+const transportMessages: Record<TransportErrorCode, string> = {
+  unsupported_media_type: 'Tipo de contenido no soportado',
+  payload_too_large: 'El archivo o la solicitud excede el tamaño permitido',
+};
+const allMessages: Record<ApiErrorCode, string> = { ...messages, ...transportMessages };
 export class ApiError extends Error {
   constructor(
-    readonly code: ClinicalErrorCode,
+    readonly code: ApiErrorCode,
     readonly status: number,
   ) {
-    super(messages[code]);
+    super(allMessages[code]);
   }
 }
 async function read<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as { error?: string };
     const code =
-      body.error && Object.hasOwn(messages, body.error)
-        ? (body.error as ClinicalErrorCode)
+      body.error && Object.hasOwn(allMessages, body.error)
+        ? (body.error as ApiErrorCode)
         : 'internal_error';
     throw new ApiError(code, response.status);
   }
@@ -192,4 +202,34 @@ export function errorMessage(error: unknown): string {
   return error instanceof ApiError
     ? error.message
     : 'No se pudo contactar la API. Intente nuevamente.';
+}
+export type DocumentoAdjunto = {
+  id_documento: number;
+  id_expediente: number;
+  id_consulta?: number | null;
+  nombre_archivo: string;
+  tipo_mime: string;
+  ruta: string;
+  hash_sha256: string;
+  fecha_carga: string;
+};
+export function uploadDocumento(
+  patientId: number,
+  input: {
+    archivo_base64: string;
+    tipo_mime: string;
+    nombre_archivo: string;
+    id_consulta?: number;
+  },
+): Promise<DocumentoAdjunto> {
+  return api(`/api/pacientes/${patientId}/documentos`, {
+    method: 'POST',
+    headers: {
+      'Idempotency-Key':
+        typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+          ? crypto.randomUUID()
+          : `doc-${patientId}-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+    },
+    body: JSON.stringify(input),
+  });
 }

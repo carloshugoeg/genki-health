@@ -1,9 +1,6 @@
 import { createHash } from 'node:crypto';
 import { asPacienteId } from '@genki/shared';
-import type {
-  ANTECEDENTE_PERINATAL,
-  MEDICION_ANTROPOMETRICA,
-} from '@genki/shared/full/growth';
+import type { ANTECEDENTE_PERINATAL, MEDICION_ANTROPOMETRICA } from '@genki/shared/full/growth';
 import { ClinicalError } from '../../../domain/clinical-error.js';
 import type { ClockPort } from '../../../ports/clock.js';
 import type { IdPort } from '../../../ports/id.js';
@@ -45,7 +42,9 @@ export function createMemoryGrowthRepository(deps: MemoryGrowthDeps): GrowthRepo
     async op40(input: Op40Request, context: OperationContext): Promise<Op40Response> {
       return deps.unitOfWork.runInTransaction(async () => {
         const ns = getExtensionNamespace(activeMemoryMaps(deps.state), 'growth');
-        const expediente = await deps.pacientes.findExpedienteByPaciente(asPacienteId(input.params.id));
+        const expediente = await deps.pacientes.findExpedienteByPaciente(
+          asPacienteId(input.params.id),
+        );
         if (!expediente) throw new ClinicalError('not_found', NOT_FOUND);
         const row: ANTECEDENTE_PERINATAL = {
           id_expediente: expediente.id_expediente,
@@ -89,7 +88,9 @@ export function createMemoryGrowthRepository(deps: MemoryGrowthDeps): GrowthRepo
     async op42(input: Op42Request, _context: OperationContext): Promise<Op42Response> {
       return deps.unitOfWork.runInTransaction(async () => {
         const ns = getExtensionNamespace(activeMemoryMaps(deps.state), 'growth');
-        const expediente = await deps.pacientes.findExpedienteByPaciente(asPacienteId(input.params.id));
+        const expediente = await deps.pacientes.findExpedienteByPaciente(
+          asPacienteId(input.params.id),
+        );
         if (!expediente) throw new ClinicalError('not_found', NOT_FOUND);
         const rows = [...(ns.get('medicion')?.values() ?? [])] as Array<
           MEDICION_ANTROPOMETRICA & { id_expediente: number }

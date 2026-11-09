@@ -113,7 +113,11 @@ describe.skipIf(!engined)('lane-2 specialty native persistence', () => {
     });
     closers.push(() => resource.close());
     const ctx = contextFrom(resource);
-    const beds = await executeOp34(ctx, { params: {}, query: {}, body: {} }, actor(1, ['medico'], 'beds'));
+    const beds = await executeOp34(
+      ctx,
+      { params: {}, query: {}, body: {} },
+      actor(1, ['medico'], 'beds'),
+    );
     expect(beds.length).toBeGreaterThan(0);
   });
 
@@ -125,7 +129,10 @@ describe.skipIf(!engined)('lane-2 specialty native persistence', () => {
     await admin.query(`CREATE DATABASE \`${db}\``);
     await admin.changeUser({ database: db });
     await applySqlMigrations('mysql', async (sql) => {
-      for (const stmt of sql.split(/;\s*\n/).map((s) => s.trim()).filter(Boolean)) {
+      for (const stmt of sql
+        .split(/;\s*\n/)
+        .map((s) => s.trim())
+        .filter(Boolean)) {
         await admin.query(stmt);
       }
     });

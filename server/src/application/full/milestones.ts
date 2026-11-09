@@ -1,6 +1,10 @@
 import type { SEGUIMIENTO_HITO } from '@genki/shared/full/milestones';
 import { ClinicalError } from '../../domain/clinical-error.js';
-import { assertMilestoneRole, parseHitoBody, parseHitoParams } from '../../domain/full/milestones.js';
+import {
+  assertMilestoneRole,
+  parseHitoBody,
+  parseHitoParams,
+} from '../../domain/full/milestones.js';
 import { requireIdempotencyKey } from '../../domain/full/specialty-common.js';
 import type { FullContext, OperationContext } from '../../ports/full/context.js';
 import type { Op46Request } from '../../ports/full/milestones.js';

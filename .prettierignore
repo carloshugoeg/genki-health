@@ -17,3 +17,4 @@ package-lock.json
 .audit
 # Verbatim C5.1 copy; must match docs/plan/contracts/mongodb-schema.json (E2-P4A-01)
 server/src/adapters/mongodb/schema.json
+tests/e2e-audit/results

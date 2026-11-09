@@ -93,6 +93,17 @@ export class MemoryCatalogoRepository implements CatalogoRepositoryPort {
       .filter((row): row is MemoryMedicamento => row !== null)
       .sort((a, b) => a.id_medicamento - b.id_medicamento)
       .map((row) => ({ id_medicamento: row.id_medicamento, nombre_generico: row.nombre_generico }));
-    return { municipios, profesionales, medicamentos };
+    const cie10 = [...catalogs.cie10.entries()]
+      .map(([key, value]) => {
+        const row = isRecord(value) ? value : {};
+        const codigo = typeof row.codigo_cie10 === 'string' ? row.codigo_cie10 : String(key);
+        const descripcion = typeof row.descripcion === 'string' ? row.descripcion : null;
+        return descripcion === null ? null : { codigo_cie10: codigo, descripcion };
+      })
+      .filter((row): row is { codigo_cie10: string; descripcion: string } => row !== null)
+      .sort((a, b) =>
+        a.codigo_cie10 < b.codigo_cie10 ? -1 : a.codigo_cie10 > b.codigo_cie10 ? 1 : 0,
+      );
+    return { municipios, profesionales, medicamentos, cie10 };
   }
 }

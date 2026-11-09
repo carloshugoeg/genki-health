@@ -34,7 +34,7 @@ const NOT_FOUND = 'Recurso no encontrado';
 const EXPEDIENTE_ARCHIVED = 'El expediente está archivado';
 const REFERENCE_NOT_FOUND = 'Referencia de catálogo no encontrada';
 
-interface ConsultaRow extends Omit<
+export interface ConsultaRow extends Omit<
   ConsultaDto,
   'id_consulta' | 'id_expediente' | 'fecha_hora_inicio' | 'fecha_hora_fin'
 > {
@@ -44,7 +44,7 @@ interface ConsultaRow extends Omit<
   fecha_hora_fin: string | Date | null;
 }
 
-interface DiagnosticoRow extends Omit<
+export interface DiagnosticoRow extends Omit<
   DiagnosticoDto,
   'id_diagnostico' | 'id_consulta' | 'fecha_registro'
 > {
@@ -53,7 +53,7 @@ interface DiagnosticoRow extends Omit<
   fecha_registro: string | Date;
 }
 
-interface TratamientoRow extends Omit<
+export interface TratamientoRow extends Omit<
   TratamientoDto,
   'id_tratamiento' | 'id_diagnostico' | 'fecha_inicio' | 'fecha_fin_estimada'
 > {
@@ -63,13 +63,13 @@ interface TratamientoRow extends Omit<
   fecha_fin_estimada: string | Date | null;
 }
 
-interface RecetaRow extends Omit<RecetaDto, 'id_receta' | 'id_consulta' | 'fecha_emision'> {
+export interface RecetaRow extends Omit<RecetaDto, 'id_receta' | 'id_consulta' | 'fecha_emision'> {
   id_receta: number;
   id_consulta: number;
   fecha_emision: string | Date;
 }
 
-interface DetalleRow extends Omit<DetalleRecetaDto, 'id_receta' | 'cantidad'> {
+export interface DetalleRow extends Omit<DetalleRecetaDto, 'id_receta' | 'cantidad'> {
   id_receta: number;
   cantidad: unknown;
 }
@@ -86,7 +86,7 @@ function asRecetaId(value: number): RecetaId {
   return value as RecetaId;
 }
 
-function mapConsulta(row: ConsultaRow): ConsultaDto {
+export function mapConsulta(row: ConsultaRow): ConsultaDto {
   return {
     ...row,
     id_consulta: asConsultaId(row.id_consulta),
@@ -96,7 +96,7 @@ function mapConsulta(row: ConsultaRow): ConsultaDto {
   };
 }
 
-function mapDiagnostico(row: DiagnosticoRow): DiagnosticoDto {
+export function mapDiagnostico(row: DiagnosticoRow): DiagnosticoDto {
   return {
     ...row,
     id_diagnostico: asDiagnosticoId(row.id_diagnostico),
@@ -105,7 +105,7 @@ function mapDiagnostico(row: DiagnosticoRow): DiagnosticoDto {
   };
 }
 
-function mapTratamiento(row: TratamientoRow): TratamientoDto {
+export function mapTratamiento(row: TratamientoRow): TratamientoDto {
   return {
     ...row,
     id_tratamiento: asTratamientoId(row.id_tratamiento),
@@ -115,7 +115,7 @@ function mapTratamiento(row: TratamientoRow): TratamientoDto {
   };
 }
 
-function mapReceta(row: RecetaRow): RecetaDto {
+export function mapReceta(row: RecetaRow): RecetaDto {
   return {
     ...row,
     id_receta: asRecetaId(row.id_receta),
@@ -124,7 +124,7 @@ function mapReceta(row: RecetaRow): RecetaDto {
   };
 }
 
-function mapDetalle(row: DetalleRow): DetalleRecetaDto {
+export function mapDetalle(row: DetalleRow): DetalleRecetaDto {
   return {
     ...row,
     id_receta: asRecetaId(row.id_receta),
@@ -132,7 +132,7 @@ function mapDetalle(row: DetalleRow): DetalleRecetaDto {
   };
 }
 
-function isForeignKeyError(error: unknown): boolean {
+export function isForeignKeyError(error: unknown): boolean {
   return error instanceof pg.DatabaseError && error.code === '23503';
 }
 

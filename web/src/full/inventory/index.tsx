@@ -5,9 +5,14 @@ const operations: Operation[] = [
     method: 'POST',
     path: '/api/consumos',
     fields: [
-      { name: 'id_paciente', label: 'Paciente', type: 'number' },
+      { name: 'id_paciente', label: 'Paciente', type: 'number', entity: 'paciente' },
       { name: 'consumo.id_insumo', label: 'Insumo', type: 'number' },
-      { name: 'consumo.id_profesional_registra', label: 'Profesional', type: 'number' },
+      {
+        name: 'consumo.id_profesional_registra',
+        label: 'Profesional',
+        type: 'number',
+        entity: 'profesional',
+      },
       { name: 'consumo.cantidad', label: 'Cantidad entera', type: 'number' },
       { name: 'consumo.lote', label: 'Lote', type: 'text', optional: true },
       { name: 'consumo.id_consulta', label: 'Consulta', type: 'number', optional: true },

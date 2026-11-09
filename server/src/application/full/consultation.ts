@@ -9,6 +9,7 @@ import {
   parseSignosVitalesInput,
   requireIdempotencyKey,
 } from '../../domain/full/consultation.js';
+import { resolveActingProfesional } from '../../domain/full/clinical-maintenance.js';
 import type { FullContext, OperationContext } from '../../ports/full/context.js';
 import type { Op26Request, Op27Request } from '../../ports/full/consultation.js';
 
@@ -35,7 +36,10 @@ export async function executeOp26(
 ): Promise<ConsultaDraft> {
   assertConsultationOpenRole(actor.roles);
   const id = parseOp26Params(input.params);
-  const body = parseOpenConsultaInput(input.body);
+  const parsed = parseOpenConsultaInput(input.body);
+  // Attribution: the consultation belongs to the authenticated user's professional.
+  const id_profesional = resolveActingProfesional(actor.id_profesional, parsed.id_profesional);
+  const body = { ...parsed, id_profesional };
   const idempotency_key = requireIdempotencyKey(actor.idempotency_key);
   try {
     return await context.modules.consultation.op26(

@@ -3,11 +3,13 @@ import { api, ApiError, errorMessage } from '../api';
 
 export function ReactivateDialog({
   patientId,
+  patientLabel,
   onClose,
   onSuccess,
   onConflict,
 }: {
   patientId: number;
+  patientLabel?: string;
   onClose: () => void;
   onSuccess: () => void;
   onConflict: () => void;
@@ -43,21 +45,31 @@ export function ReactivateDialog({
   return (
     <dialog open className="modal" aria-labelledby="reactivate-title" onCancel={onClose}>
       <form onSubmit={(e) => void onSubmit(e)}>
-        <h2 id="reactivate-title">Reactivar expediente del paciente {patientId}</h2>
-        <p className="muted">
+        <h2 id="reactivate-title">
+          Reactivar expediente de {patientLabel ?? `paciente ${patientId}`}
+        </h2>
+        <p className="muted dialog-lede">
           Se limpian los metadatos de archivo. El historial clínico se conserva.
         </p>
         <label>
-          Motivo
-          <textarea name="motivo" data-testid="reactivate-motivo" required maxLength={300} rows={3} />
+          <span>
+            Motivo<span className="req"> *</span>
+          </span>
+          <textarea
+            name="motivo"
+            data-testid="reactivate-motivo"
+            required
+            maxLength={300}
+            rows={3}
+          />
         </label>
         {error && (
           <p className="error" role="alert">
             {error}
           </p>
         )}
-        <div className="actions">
-          <button type="button" onClick={onClose} disabled={busy}>
+        <div className="actions dialog-actions">
+          <button type="button" className="btn-secondary" onClick={onClose} disabled={busy}>
             Cancelar
           </button>
           <button data-testid="reactivate-confirm" disabled={busy}>

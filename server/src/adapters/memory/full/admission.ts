@@ -37,7 +37,9 @@ function payloadHash(body: unknown): string {
   return createHash('sha256').update(JSON.stringify(body)).digest('hex');
 }
 
-export function createMemoryAdmissionRepository(deps: MemoryAdmissionDeps): AdmissionRepositoryPort {
+export function createMemoryAdmissionRepository(
+  deps: MemoryAdmissionDeps,
+): AdmissionRepositoryPort {
   return {
     async op34(input: Op34Request, _context: OperationContext): Promise<Op34Response> {
       return deps.unitOfWork.runInTransaction(async () => {
@@ -60,8 +62,7 @@ export function createMemoryAdmissionRepository(deps: MemoryAdmissionDeps): Admi
         const key = context.idempotency_key!;
         const idemKey = `${context.id_usuario}:${key}`;
         const prior = ns.get('idempotency')?.get(idemKey) as
-          | { hash: string; response: ADMISION }
-          | undefined;
+          { hash: string; response: ADMISION } | undefined;
         if (prior) {
           if (prior.hash !== payloadHash(input.body)) {
             throw new ClinicalError('conflict', CONFLICT);
@@ -71,7 +72,9 @@ export function createMemoryAdmissionRepository(deps: MemoryAdmissionDeps): Admi
 
         const paciente = await deps.pacientes.findById(asPacienteId(input.params.id));
         if (!paciente) throw new ClinicalError('not_found', NOT_FOUND);
-        const expediente = await deps.pacientes.findExpedienteByPaciente(asPacienteId(input.params.id));
+        const expediente = await deps.pacientes.findExpedienteByPaciente(
+          asPacienteId(input.params.id),
+        );
         if (!expediente) throw new ClinicalError('not_found', NOT_FOUND);
         if (expediente.estado === 'archivado') {
           throw new ClinicalError('expediente_archived', 'Expediente archivado');
@@ -83,7 +86,10 @@ export function createMemoryAdmissionRepository(deps: MemoryAdmissionDeps): Admi
 
         for (const row of ns.get('admision')?.values() ?? []) {
           const adm = row as ADMISION;
-          if (adm.estado === 'activa' && (adm.id_expediente === expediente.id_expediente || adm.id_cama === bed.id_cama)) {
+          if (
+            adm.estado === 'activa' &&
+            (adm.id_expediente === expediente.id_expediente || adm.id_cama === bed.id_cama)
+          ) {
             throw new ClinicalError('conflict', CONFLICT);
           }
         }
@@ -106,7 +112,10 @@ export function createMemoryAdmissionRepository(deps: MemoryAdmissionDeps): Admi
         ns.get('admision')!.set(id_admision, admision);
         beds.set(bed.id_cama, { ...bed, estado: 'ocupada' });
         if (!ns.has('idempotency')) ns.set('idempotency', new Map());
-        ns.get('idempotency')!.set(idemKey, { hash: payloadHash(input.body), response: cloneDto(admision) });
+        ns.get('idempotency')!.set(idemKey, {
+          hash: payloadHash(input.body),
+          response: cloneDto(admision),
+        });
         return cloneDto(admision);
       });
     },

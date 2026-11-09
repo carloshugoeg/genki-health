@@ -5,7 +5,7 @@ const operations: Operation[] = [
     method: 'POST',
     path: '/api/participaciones',
     fields: [
-      { name: 'id_profesional', label: 'Profesional', type: 'number' },
+      { name: 'id_profesional', label: 'Profesional', type: 'number', entity: 'profesional' },
       { name: 'codigo_rol', label: 'Rol clínico' },
       { name: 'id_consulta', label: 'Consulta', type: 'number', optional: true },
       { name: 'id_procedimiento', label: 'Procedimiento', type: 'number', optional: true },
@@ -29,7 +29,13 @@ const operations: Operation[] = [
     fields: [
       { name: 'desde', label: 'Desde', type: 'date' },
       { name: 'hasta', label: 'Hasta (exclusiva)', type: 'date' },
-      { name: 'id_profesional', label: 'Profesional', type: 'number', optional: true },
+      {
+        name: 'id_profesional',
+        label: 'Profesional',
+        type: 'number',
+        optional: true,
+        entity: 'profesional',
+      },
     ],
   },
 ];
