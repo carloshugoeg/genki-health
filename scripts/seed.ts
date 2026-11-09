@@ -20,6 +20,7 @@ import { seedMongo } from '../server/src/adapters/mongodb/seed.js';
 import { seedFirebase, seedFirebaseReport } from '../server/src/adapters/firebase/seed.js';
 import { closeConsulta } from '../server/src/application/close-consulta.js';
 import { archiveExpediente } from '../server/src/application/archive-expediente.js';
+import { seedHistoryPlan } from './seed-history.js';
 
 export const SEED_TIME = '2026-11-01T14:00:00.000Z';
 export const FAKE_BANNER = 'Contenido académico simulado; no usar para atención';
@@ -388,34 +389,19 @@ export async function runSeed(
           if (!patient || patient.id_paciente !== id) throw new Error('Seed fixed-ID conflict');
           const expediente = await adapters.pacientes.findExpedienteByPaciente(patient.id_paciente);
           if (!expediente) throw new Error('Seed expediente missing');
-          let history = await adapters.consultas.listByExpediente(expediente.id_expediente);
-          if (id !== 102 && history.length === 0) {
-            history = [
-              await closeConsulta(adapters, {
-                id_paciente: patient.id_paciente,
-                body: consultation(),
-              }),
-            ];
-          }
-          if (
-            id === 102
-              ? history.length !== 0
-              : history.length !== 1 ||
-                history.some(
-                  (bundle) =>
-                    bundle.consulta.motivo_consulta !== FAKE_BANNER ||
-                    bundle.consulta.fecha_hora_inicio !== SEED_TIME ||
-                    bundle.diagnosticos.length !== 2 ||
-                    bundle.tratamientos.length !== 2 ||
-                    bundle.detalles.length !== 2 ||
-                    !bundle.receta ||
-                    bundle.diagnosticos.some((row) => row.descripcion !== FAKE_BANNER) ||
-                    bundle.tratamientos.some((row) => row.descripcion !== FAKE_BANNER),
-                )
-          )
+          const history = await adapters.consultas.listByExpediente(expediente.id_expediente);
+          const plan = seedHistoryPlan(id, history, FAKE_BANNER, SEED_TIME);
+          if (plan === 'reject') {
             throw new Error(
               'Seed existing history conflicts with the fixed fixture; preserved without reset',
             );
+          }
+          if (plan === 'create') {
+            await closeConsulta(adapters, {
+              id_paciente: patient.id_paciente,
+              body: consultation(),
+            });
+          }
           if (id === 103 && expediente.estado !== 'archivado')
             await archiveExpediente(adapters.pacientes, adapters.clock, {
               id_paciente: patient.id_paciente,

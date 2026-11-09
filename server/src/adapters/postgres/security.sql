@@ -97,3 +97,8 @@ DO $$ BEGIN GRANT USAGE, SELECT ON SEQUENCE agenda_cita_id_cita_seq TO genki_app
 DO $$ BEGIN GRANT SELECT ON catalogo_procedimiento TO genki_app; EXCEPTION WHEN undefined_table THEN NULL; END $$;
 DO $$ BEGIN GRANT SELECT, INSERT ON procedimiento TO genki_app; EXCEPTION WHEN undefined_table THEN NULL; END $$;
 DO $$ BEGIN GRANT USAGE, SELECT ON SEQUENCE procedimiento_id_procedimiento_seq TO genki_app; EXCEPTION WHEN undefined_table THEN NULL; END $$;
+
+-- Later than the grants so a re-run clears leftovers from earlier privilege sets.
+REVOKE SELECT ON usuario FROM genki_app;
+REVOKE SELECT ON rol, institucion, auth_session FROM genki_app;
+REVOKE DELETE ON ALL TABLES IN SCHEMA public FROM genki_app;
