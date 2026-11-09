@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { AuthPrincipalDto, CatalogosDto, HistorialDto } from '@genki/shared';
 import { api, errorMessage } from '../api';
+import { formatEntityLabel, pacienteLabel } from '../components/EntitySelect';
 import { navigate } from '../router';
 import { ArchiveDialog } from '../components/ArchiveDialog';
 import { ReactivateDialog } from '../components/ReactivateDialog';
@@ -76,7 +77,13 @@ export function displayTime(value: string): string {
     timeZone: 'America/Guatemala',
   }).format(new Date(value));
 }
-function Fields({ value }: { value: object }) {
+function Fields({
+  value,
+  resolve,
+}: {
+  value: object;
+  resolve?: (key: string, value: unknown) => string | null;
+}) {
   const entries = Object.entries(value);
   return (
     <dl className="clinical-fields">
@@ -84,19 +91,22 @@ function Fields({ value }: { value: object }) {
         .filter((key) => Object.hasOwn(value, key))
         .map((key) => {
           const v: unknown = entries.find(([name]) => name === key)?.[1];
+          const named = resolve?.(key, v);
           return (
             <div key={key}>
               <dt>{labels[key]}</dt>
               <dd>
                 {v == null || v === ''
                   ? 'Sin especificar'
-                  : typeof v === 'boolean'
-                    ? v
-                      ? 'Sí'
-                      : 'No'
-                    : timestamps.has(key) && typeof v === 'string'
-                      ? displayTime(v)
-                      : String(v)}
+                  : named
+                    ? named
+                    : typeof v === 'boolean'
+                      ? v
+                        ? 'Sí'
+                        : 'No'
+                      : timestamps.has(key) && typeof v === 'string'
+                        ? displayTime(v)
+                        : String(v)}
               </dd>
             </div>
           );
@@ -121,6 +131,15 @@ export function HistoryContent({
   catalogs: CatalogosDto | null;
   principal: AuthPrincipalDto;
 }) {
+  const nameOf = (key: string, value: unknown): string | null => {
+    if (typeof value !== 'number') return null;
+    if (key === 'id_paciente') return pacienteLabel(history.paciente);
+    if (key === 'id_profesional') {
+      const match = catalogs?.profesionales.find((row) => Number(row.id_profesional) === value);
+      return match ? formatEntityLabel(match.nombres, match.apellidos, value) : null;
+    }
+    return null;
+  };
   const consultations = [...history.consultas].sort(
     (a, b) =>
       b.consulta.fecha_hora_inicio.localeCompare(a.consulta.fecha_hora_inicio) ||
@@ -130,14 +149,14 @@ export function HistoryContent({
     <>
       <section>
         <h3>Identidad y contacto</h3>
-        <Fields value={history.paciente} />
+        <Fields value={history.paciente} resolve={nameOf} />
       </section>
       <section>
         <h3>Expediente</h3>
         <p data-testid="ficha-state">
           <strong>{history.expediente.estado === 'archivado' ? 'Archivado' : 'Activo'}</strong>
         </p>
-        <Fields value={history.expediente} />
+        <Fields value={history.expediente} resolve={nameOf} />
       </section>
       <FichaLane1 patientId={history.paciente.id_paciente} />
       <SpecialtyPanels patientId={history.paciente.id_paciente} principal={principal} />
@@ -154,7 +173,7 @@ export function HistoryContent({
               Consulta {bundle.consulta.id_consulta} ·{' '}
               {displayTime(bundle.consulta.fecha_hora_inicio)}
             </h4>
-            <Fields value={bundle.consulta} />
+            <Fields value={bundle.consulta} resolve={nameOf} />
             <details>
               <summary>Diagnósticos ({bundle.diagnosticos.length})</summary>
               {[...bundle.diagnosticos]
@@ -353,6 +372,7 @@ export function Historial({
       {archiveOpen && (
         <ArchiveDialog
           patientId={patientId}
+          {...(history ? { patientLabel: pacienteLabel(history.paciente) } : {})}
           onClose={() => setArchiveOpen(false)}
           onSuccess={() => {
             setArchiveOpen(false);
@@ -366,14 +386,13 @@ export function Historial({
       {reactivateOpen && (
         <ReactivateDialog
           patientId={patientId}
+          {...(history ? { patientLabel: pacienteLabel(history.paciente) } : {})}
           onClose={() => setReactivateOpen(false)}
           onSuccess={() => {
             setReactivateOpen(false);
             refresh('Expediente reactivado. Metadatos de archivo limpiados; historial conservado.');
           }}
-          onConflict={() =>
-            refresh('El expediente no está archivado. Se actualizó la ficha.')
-          }
+          onConflict={() => refresh('El expediente no está archivado. Se actualizó la ficha.')}
         />
       )}
       <button type="button" onClick={() => navigate('/pacientes')}>

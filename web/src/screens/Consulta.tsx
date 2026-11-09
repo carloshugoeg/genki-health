@@ -7,6 +7,7 @@ import type {
   TratamientoInput,
 } from '@genki/shared';
 import { api, ApiError, errorMessage } from '../api';
+import { formatEntityLabel } from '../components/EntitySelect';
 
 export interface TreatmentRow {
   id: number;
@@ -187,7 +188,7 @@ export function Consulta({
               <option value="">Seleccione</option>
               {catalogs?.profesionales.map((p) => (
                 <option key={p.id_profesional} value={p.id_profesional}>
-                  {p.nombres} {p.apellidos}
+                  {formatEntityLabel(p.nombres, p.apellidos, Number(p.id_profesional))}
                 </option>
               ))}
             </select>

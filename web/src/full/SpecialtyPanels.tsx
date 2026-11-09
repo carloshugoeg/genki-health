@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AuthPrincipalDto } from '@genki/shared';
 import { api, errorMessage } from '../api';
+import { EntitySelect } from '../components/EntitySelect';
 
 function idem() {
   return `lane2-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -15,6 +16,7 @@ export function SpecialtyPanels({
 }) {
   const kind = principal.institution_kind;
   const [msg, setMsg] = useState('');
+  const [profesional, setProfesional] = useState<number | ''>('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -43,12 +45,7 @@ export function SpecialtyPanels({
         )}
         {msg && <p role="status">{msg}</p>}
         <div className="actions">
-          <button
-            disabled={busy}
-            onClick={() =>
-              void run('Camas libres', () => api('/api/camas'))
-            }
-          >
+          <button disabled={busy} onClick={() => void run('Camas libres', () => api('/api/camas'))}>
             Consultar camas
           </button>
           <button
@@ -141,17 +138,13 @@ export function SpecialtyPanels({
           </button>
           <button
             disabled={busy}
-            onClick={() =>
-              void run('Curva', () => api(`/api/pacientes/${patientId}/crecimiento`))
-            }
+            onClick={() => void run('Curva', () => api(`/api/pacientes/${patientId}/crecimiento`))}
           >
             Ver curva
           </button>
           <button
             disabled={busy}
-            onClick={() =>
-              void run('Vacunas', () => api(`/api/pacientes/${patientId}/vacunas`))
-            }
+            onClick={() => void run('Vacunas', () => api(`/api/pacientes/${patientId}/vacunas`))}
           >
             Esquema vacunas
           </button>
@@ -210,9 +203,7 @@ export function SpecialtyPanels({
           </button>
           <button
             disabled={busy}
-            onClick={() =>
-              void run('Historial', () => api(`/api/pacientes/${patientId}/examenes`))
-            }
+            onClick={() => void run('Historial', () => api(`/api/pacientes/${patientId}/examenes`))}
           >
             Historial exámenes
           </button>
@@ -231,15 +222,26 @@ export function SpecialtyPanels({
           </p>
         )}
         {msg && <p role="status">{msg}</p>}
+        <label>
+          Profesional
+          <EntitySelect
+            kind="profesional"
+            name="id_profesional"
+            value={profesional}
+            onChange={setProfesional}
+            required
+            disabled={busy}
+          />
+        </label>
         <div className="actions">
           <button
-            disabled={busy}
+            disabled={busy || profesional === ''}
             onClick={() =>
               void run('Odontograma', () =>
                 api(`/api/pacientes/${patientId}/odontogramas`, {
                   method: 'POST',
                   headers: { 'Idempotency-Key': idem() },
-                  body: JSON.stringify({ id_profesional: 1 }),
+                  body: JSON.stringify({ id_profesional: profesional }),
                 }),
               )
             }
@@ -247,14 +249,14 @@ export function SpecialtyPanels({
             Abrir odontograma
           </button>
           <button
-            disabled={busy}
+            disabled={busy || profesional === ''}
             onClick={() =>
               void run('Plan', () =>
                 api(`/api/pacientes/${patientId}/planes`, {
                   method: 'POST',
                   headers: { 'Idempotency-Key': idem() },
                   body: JSON.stringify({
-                    id_profesional: 1,
+                    id_profesional: profesional,
                     detalle: [
                       {
                         linea: 1,

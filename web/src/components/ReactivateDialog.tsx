@@ -3,11 +3,13 @@ import { api, ApiError, errorMessage } from '../api';
 
 export function ReactivateDialog({
   patientId,
+  patientLabel,
   onClose,
   onSuccess,
   onConflict,
 }: {
   patientId: number;
+  patientLabel?: string;
   onClose: () => void;
   onSuccess: () => void;
   onConflict: () => void;
@@ -43,13 +45,21 @@ export function ReactivateDialog({
   return (
     <dialog open className="modal" aria-labelledby="reactivate-title" onCancel={onClose}>
       <form onSubmit={(e) => void onSubmit(e)}>
-        <h2 id="reactivate-title">Reactivar expediente del paciente {patientId}</h2>
+        <h2 id="reactivate-title">
+          Reactivar expediente de {patientLabel ?? `paciente ${patientId}`}
+        </h2>
         <p className="muted">
           Se limpian los metadatos de archivo. El historial clínico se conserva.
         </p>
         <label>
           Motivo
-          <textarea name="motivo" data-testid="reactivate-motivo" required maxLength={300} rows={3} />
+          <textarea
+            name="motivo"
+            data-testid="reactivate-motivo"
+            required
+            maxLength={300}
+            rows={3}
+          />
         </label>
         {error && (
           <p className="error" role="alert">

@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import type { EconomicClient } from '../charges/EconomicPage';
+import { EntitySelect } from '../../components/EntitySelect';
 
 export function DentalSessionPage({ client }: { client: EconomicClient }) {
   const [busy, setBusy] = useState(false);
+  const [patient, setPatient] = useState<number | ''>('');
   const [error, setError] = useState('');
   const [result, setResult] = useState<unknown>();
 
@@ -96,7 +98,14 @@ export function DentalSessionPage({ client }: { client: EconomicClient }) {
         <h3>Saldo dental</h3>
         <label>
           Paciente
-          <input name="id_paciente" type="number" required />
+          <EntitySelect
+            kind="paciente"
+            name="id_paciente"
+            value={patient}
+            onChange={setPatient}
+            required
+            disabled={busy}
+          />
         </label>
         <button disabled={busy}>Consultar saldo</button>
       </form>

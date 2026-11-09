@@ -8,11 +8,13 @@ export function archiveRequest(reason: MotivoArchivo, observation: string): Arch
 }
 export function ArchiveDialog({
   patientId,
+  patientLabel,
   onClose,
   onSuccess,
   onConflict,
 }: {
   patientId: number;
+  patientLabel?: string;
   onClose: () => void;
   onSuccess: () => void;
   onConflict: () => void;
@@ -66,7 +68,7 @@ export function ArchiveDialog({
         if (!busy) onClose();
       }}
     >
-      <h2 id="archive-title">Archivar expediente del paciente {patientId}</h2>
+      <h2 id="archive-title">Archivar expediente de {patientLabel ?? `paciente ${patientId}`}</h2>
       <p>
         El historial se conserva. El expediente saldrá de la búsqueda de activos y no admitirá
         nuevas consultas. Un administrador puede reactivarlo después.

@@ -30,7 +30,7 @@ const operations: Operation[] = [
     method: 'GET',
     path: '/api/pacientes/:id/cuenta',
     fields: [
-      { name: 'id', label: 'Paciente', type: 'number' },
+      { name: 'id', label: 'Paciente', type: 'number', entity: 'paciente' },
       { name: 'page', label: 'Página', type: 'number', optional: true },
       {
         name: 'page_size',

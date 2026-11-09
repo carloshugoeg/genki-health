@@ -239,3 +239,8 @@ dialog::backdrop {
 [hidden] {
   display: none !important;
 }
+
+.entity-select {
+  display: grid;
+  gap: 0.35rem;
+}
