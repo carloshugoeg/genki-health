@@ -15,6 +15,8 @@ import { HonorariaPage } from './full/honoraria';
 import { InvoicingPage } from './full/invoicing';
 import { PaymentsPage } from './full/payments';
 import { PersonnelPage } from './full/personnel';
+import { ProcedurePage } from './full/procedure';
+import { DentalSessionPage } from './full/dental-session';
 import type { EconomicClient } from './full/charges/EconomicPage';
 
 function isSuperadmin(principal: AuthPrincipalDto): boolean {
@@ -124,6 +126,12 @@ export function App() {
               {current !== 'panel' && (
                 <button onClick={() => navigate('/personal')}>Personal</button>
               )}
+              {current !== 'panel' && (
+                <button onClick={() => navigate('/procedimientos')}>Procedimientos</button>
+              )}
+              {current !== 'panel' && (
+                <button onClick={() => navigate('/sesiones-dentales')}>Sesiones dentales</button>
+              )}
               <button disabled={busy} onClick={() => void signOut()}>
                 Cerrar sesión
               </button>
@@ -177,13 +185,14 @@ export function App() {
         <PaymentsPage client={client} />
       ) : current === 'personal' ? (
         <PersonnelPage client={client} />
+      ) : current === 'procedimientos' ? (
+        <ProcedurePage client={client} />
+      ) : current === 'sesiones-dentales' ? (
+        <DentalSessionPage client={client} />
       ) : null}
       <details className="out-of-scope">
         <summary>Fuera del alcance de esta entrega</summary>
-        <p>
-          Procedimientos hospitalarios con cargos (OP37) y sesiones dentales (FS-19) si aún no están
-          cableados en esta build; gestión de usuarios y contraseñas; reactivación de expediente.
-        </p>
+        <p>Gestión de usuarios y contraseñas; reactivación de expediente.</p>
       </details>
     </main>
   );

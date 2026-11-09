@@ -1,9 +1,15 @@
-import type { NOTA_EVOLUCION } from '@genki/shared/full/schema';
+import type { NOTA_EVOLUCION, PROCEDIMIENTO } from '@genki/shared/full/schema';
 import { ClinicalError } from '../../domain/clinical-error.js';
-import { assertNoteRole, parseAdmissionIdParam, parseOp36Body } from '../../domain/full/procedure.js';
+import {
+  assertNoteRole,
+  assertProcedureRole,
+  parseAdmissionIdParam,
+  parseOp36Body,
+  parseOp37Body,
+} from '../../domain/full/procedure.js';
 import { requireIdempotencyKey } from '../../domain/full/specialty-common.js';
 import type { FullContext, OperationContext } from '../../ports/full/context.js';
-import type { Op36Request } from '../../ports/full/procedure.js';
+import type { Op36Request, Op37Request } from '../../ports/full/procedure.js';
 
 function rethrow(err: unknown): never {
   if (err instanceof ClinicalError) throw err;
@@ -22,6 +28,24 @@ export async function executeOp36(
   try {
     return await context.modules.procedure.op36(
       { params: { id }, query: {}, body },
+      { ...actor, idempotency_key, now: actor.now },
+    );
+  } catch (err) {
+    rethrow(err);
+  }
+}
+
+export async function executeOp37(
+  context: FullContext,
+  input: Op37Request,
+  actor: OperationContext,
+): Promise<PROCEDIMIENTO> {
+  assertProcedureRole(actor.roles);
+  const body = parseOp37Body(input.body);
+  const idempotency_key = requireIdempotencyKey(actor.idempotency_key);
+  try {
+    return await context.modules.procedure.op37(
+      { params: {}, query: {}, body },
       { ...actor, idempotency_key, now: actor.now },
     );
   } catch (err) {

@@ -81,8 +81,75 @@ export function createPostgresProcedureRepository(deps: {
       });
     },
 
-    async op37(_input: Op37Request, _context: OperationContext): Promise<Op37Response> {
-      throw new ClinicalError('misconfigured', 'OP37 diferido (cargos/insumos)');
+    async op37(input: Op37Request, context: OperationContext): Promise<Op37Response> {
+      return deps.unitOfWork.runInTransaction(async () => {
+        const catalog = await postgresQuery<{ codigo_procedimiento: string }>(
+          `SELECT codigo_procedimiento FROM catalogo_procedimiento WHERE codigo_procedimiento = $1`,
+          [input.body.codigo_procedimiento],
+        );
+        if (!catalog.rows[0]) {
+          throw new ClinicalError('reference_not_found', 'Referencia no encontrada');
+        }
+
+        if (input.body.id_admision != null) {
+          const adm = await postgresQuery<{ id_admision: number; estado: string }>(
+            `SELECT id_admision, estado FROM admision WHERE id_admision = $1 FOR UPDATE`,
+            [input.body.id_admision],
+          );
+          if (!adm.rows[0]) throw new ClinicalError('reference_not_found', 'Referencia no encontrada');
+          if (adm.rows[0].estado !== 'activa') throw new ClinicalError('conflict', CONFLICT);
+        }
+        if (input.body.id_consulta != null) {
+          const cons = await postgresQuery<{ id_consulta: number }>(
+            `SELECT id_consulta FROM consulta WHERE id_consulta = $1`,
+            [input.body.id_consulta],
+          );
+          if (!cons.rows[0]) throw new ClinicalError('reference_not_found', 'Referencia no encontrada');
+        }
+
+        const inserted = await postgresQuery<{
+          id_procedimiento: number;
+          id_admision: number | null;
+          id_consulta: number | null;
+          codigo_procedimiento: string;
+          id_profesional: number;
+          fecha_hora: string | Date;
+          sala: string | null;
+          hallazgos: string | null;
+          complicaciones: string | null;
+        }>(
+          `INSERT INTO procedimiento (
+             id_admision, id_consulta, codigo_procedimiento, id_profesional,
+             fecha_hora, sala, hallazgos, complicaciones, equipo, consumos
+           ) VALUES ($1,$2,$3,$4,$5::timestamptz,$6,$7,$8,$9::jsonb,$10::jsonb)
+           RETURNING id_procedimiento, id_admision, id_consulta, codigo_procedimiento,
+             id_profesional, fecha_hora, sala, hallazgos, complicaciones`,
+          [
+            input.body.id_admision ?? null,
+            input.body.id_consulta ?? null,
+            input.body.codigo_procedimiento,
+            input.body.id_profesional,
+            toPgTimestamptz(input.body.fecha_hora || context.now || deps.clock.nowIso()),
+            input.body.sala ?? null,
+            input.body.hallazgos ?? null,
+            input.body.complicaciones ?? null,
+            JSON.stringify(input.body.equipo),
+            JSON.stringify(input.body.consumos),
+          ],
+        );
+        const row = inserted.rows[0]!;
+        return {
+          id_procedimiento: row.id_procedimiento,
+          codigo_procedimiento: row.codigo_procedimiento,
+          id_profesional: row.id_profesional,
+          fecha_hora: fromPgTimestamptz(row.fecha_hora),
+          ...(row.id_admision != null ? { id_admision: row.id_admision } : {}),
+          ...(row.id_consulta != null ? { id_consulta: row.id_consulta } : {}),
+          ...(row.sala != null ? { sala: row.sala } : {}),
+          ...(row.hallazgos != null ? { hallazgos: row.hallazgos } : {}),
+          ...(row.complicaciones != null ? { complicaciones: row.complicaciones } : {}),
+        };
+      });
     },
   };
 }

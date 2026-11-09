@@ -71,3 +71,6 @@ DO $$ BEGIN GRANT SELECT, INSERT, UPDATE ON lane_a_personnel_types TO genki_app;
 DO $$ BEGIN GRANT SELECT, INSERT, UPDATE ON lane_a_tariffs TO genki_app; EXCEPTION WHEN undefined_table THEN NULL; END $$;
 DO $$ BEGIN GRANT SELECT, INSERT, UPDATE ON agenda_cita TO genki_app; EXCEPTION WHEN undefined_table THEN NULL; END $$;
 DO $$ BEGIN GRANT USAGE, SELECT ON SEQUENCE agenda_cita_id_cita_seq TO genki_app; EXCEPTION WHEN undefined_table THEN NULL; END $$;
+DO $$ BEGIN GRANT SELECT ON catalogo_procedimiento TO genki_app; EXCEPTION WHEN undefined_table THEN NULL; END $$;
+DO $$ BEGIN GRANT SELECT, INSERT ON procedimiento TO genki_app; EXCEPTION WHEN undefined_table THEN NULL; END $$;
+DO $$ BEGIN GRANT USAGE, SELECT ON SEQUENCE procedimiento_id_procedimiento_seq TO genki_app; EXCEPTION WHEN undefined_table THEN NULL; END $$;

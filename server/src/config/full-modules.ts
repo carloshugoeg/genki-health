@@ -4,6 +4,7 @@ import { createMemoryAdmissionRepository } from '../adapters/memory/full/admissi
 import { createMemoryConsultationRepository } from '../adapters/memory/full/consultation.js';
 import { createMemoryDentalChartRepository } from '../adapters/memory/full/dental-chart.js';
 import { createMemoryDentalPlanRepository } from '../adapters/memory/full/dental-plan.js';
+import { createMemoryDentalSessionRepository } from '../adapters/memory/full/dental-session.js';
 import { createMemoryDischargeRepository } from '../adapters/memory/full/discharge.js';
 import { createMemoryGrowthRepository } from '../adapters/memory/full/growth.js';
 import { createMemoryLabIntakeRepository } from '../adapters/memory/full/lab-intake.js';
@@ -38,6 +39,7 @@ const SPECIALTY_MEMORY_SLUGS = [
   'lab-results',
   'dental-chart',
   'dental-plan',
+  'dental-session',
 ] as const;
 
 export function ensureLane1MemoryExtensions(): void {
@@ -138,6 +140,12 @@ export function attachMemoryFullModules(
     }),
     dentalChart: createMemoryDentalChartRepository(common),
     dentalPlan: createMemoryDentalPlanRepository(common),
+    dentalSession: createMemoryDentalSessionRepository({
+      state,
+      ids: set.ids,
+      unitOfWork: set.unitOfWork,
+      clock: set.clock,
+    }),
     ...laneABModulesFrom(
       new MemoryEconomicStore(institutionId, clinicalEconomicReferences(set.pacientes)),
       new MemoryAgendaRepository(),

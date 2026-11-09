@@ -811,4 +811,80 @@ describe('HTTP patient search detail catalog archive', () => {
     expect(deniedTarifario.statusCode).toBe(403);
     expect((deniedTarifario.json() as ErrorDto).error).toBe('forbidden');
   });
+
+  it('op37_and_fs19_routes_accept_superadmin_on_institution_engines', async () => {
+    const hospital = createTestMemoryAdapterSet('hospital_general', 1);
+    const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
+    seedHospitalCatalogs(hospital);
+    const auth = await authWithHospitalRoles();
+    const app = buildHttpApp({ registry: clinicalRegistry(hospital, pediatric), auth });
+    const { password } = testCredentials();
+
+    const login = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        email: 'superadmin@example.invalid',
+        password,
+        institution_kind: 'hospital_general',
+      },
+    });
+    expect(login.statusCode).toBe(200);
+    const home = login.json() as AuthTokensDto;
+
+    const procedure = await app.inject({
+      method: 'POST',
+      url: '/api/procedimientos',
+      headers: {
+        authorization: `Bearer ${home.access_token}`,
+        'idempotency-key': 'op37-http-1',
+      },
+      payload: {
+        id_consulta: 1,
+        codigo_procedimiento: 'PROC-DEMO',
+        id_profesional: 1,
+        fecha_hora: '2026-11-09T15:00:00.000Z',
+        equipo: [],
+        consumos: [],
+      },
+    });
+    expect(procedure.statusCode).toBe(201);
+    expect((procedure.json() as { id_procedimiento: number }).id_procedimiento).toBeGreaterThan(0);
+
+    const dentalSelect = await app.inject({
+      method: 'POST',
+      url: '/api/auth/select-institution',
+      headers: { authorization: `Bearer ${home.access_token}` },
+      payload: {
+        institution_kind: 'clinica_odontologica',
+        refresh_token: home.refresh_token,
+      },
+    });
+    expect(dentalSelect.statusCode).toBe(200);
+    const dental = dentalSelect.json() as AuthTokensDto;
+
+    const saldo = await app.inject({
+      method: 'GET',
+      url: '/api/pacientes/1/saldo-dental',
+      headers: { authorization: `Bearer ${dental.access_token}` },
+    });
+    expect(saldo.statusCode).toBe(404);
+    expect((saldo.json() as ErrorDto).error).toBe('not_found');
+
+    const sessionMissing = await app.inject({
+      method: 'POST',
+      url: '/api/planes/99/sesiones',
+      headers: {
+        authorization: `Bearer ${dental.access_token}`,
+        'idempotency-key': 'op59-http-1',
+      },
+      payload: {
+        fecha: '2026-11-09',
+        lineas: [1],
+        expected_revision: 0,
+      },
+    });
+    expect(sessionMissing.statusCode).toBe(404);
+    expect((sessionMissing.json() as ErrorDto).error).toBe('not_found');
+  });
 });

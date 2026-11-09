@@ -12,6 +12,8 @@ export const MVP_PATHS = [
   '/facturacion',
   '/caja',
   '/personal',
+  '/procedimientos',
+  '/sesiones-dentales',
 ] as const;
 
 export type AppRoute =
@@ -28,6 +30,8 @@ export type AppRoute =
   | 'facturacion'
   | 'caja'
   | 'personal'
+  | 'procedimientos'
+  | 'sesiones-dentales'
   | 'unknown';
 
 export function route(path: string): AppRoute {
@@ -42,6 +46,8 @@ export function route(path: string): AppRoute {
   if (path === '/facturacion') return 'facturacion';
   if (path === '/caja') return 'caja';
   if (path === '/personal') return 'personal';
+  if (path === '/procedimientos') return 'procedimientos';
+  if (path === '/sesiones-dentales') return 'sesiones-dentales';
   if (/^\/pacientes\/[1-9]\d*$/.test(path)) return 'record';
   if (/^\/pacientes\/[1-9]\d*\/consulta\/nueva$/.test(path)) return 'consultation';
   return 'unknown';
