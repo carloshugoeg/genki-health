@@ -162,4 +162,15 @@ export class MemoryIdentityStore implements IdentityStorePort {
       }
     });
   }
+
+  /** Concrete helper for OP-03/04 — not part of IdentityStorePort. */
+  async revokeAllForUser(id_usuario: number, nowIso: string): Promise<void> {
+    await this.enqueue(async () => {
+      for (const row of this.sessions.values()) {
+        if (row.id_usuario === id_usuario && row.revoked_at === null) {
+          row.revoked_at = nowIso;
+        }
+      }
+    });
+  }
 }

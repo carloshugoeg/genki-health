@@ -50,6 +50,9 @@ GRANT UPDATE (hash_contrasena, estado, intentos_fallidos, id_rol, id_profesional
   ON usuario TO genki_identity;
 GRANT INSERT ON usuario TO genki_identity;
 DO $$ BEGIN
+  GRANT USAGE, SELECT ON SEQUENCE usuario_id_usuario_seq TO genki_identity;
+EXCEPTION WHEN undefined_table THEN NULL; END $$;
+DO $$ BEGIN
   GRANT UPDATE (debe_cambiar_contrasena, auth_version) ON usuario TO genki_identity;
 EXCEPTION WHEN undefined_column THEN NULL; END $$;
 DO $$ BEGIN

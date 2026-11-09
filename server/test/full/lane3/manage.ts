@@ -122,12 +122,11 @@ async function migrateFirebase(): Promise<void> {
     await marker.set({ ensured_at: new Date().toISOString(), lane: 'lane3' }, { merge: true });
     console.log(`firebase(${mode}): ensured reactivacion_audit`);
   } finally {
-    if (!getApps().length) return;
-    // Leave shared app alive when compose already initialized one.
-    if (existsSync('/tmp') && !process.env.LANE3_DELETE_FIREBASE_APP) {
-      return;
+    const shouldKeep =
+      !getApps().length || (existsSync('/tmp') && !process.env.LANE3_DELETE_FIREBASE_APP);
+    if (!shouldKeep) {
+      await deleteApp(app).catch(() => undefined);
     }
-    await deleteApp(app).catch(() => undefined);
   }
 }
 

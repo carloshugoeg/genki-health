@@ -242,7 +242,7 @@ export function createMongoLane1Repositories(deps: {
               motivo_archivo: expediente.motivo_archivo,
               observacion_archivo: expediente.observacion_archivo,
             },
-          },
+          } as Document,
           sessionOpts(),
         );
         return deps.pacientes.reactivateExpediente({ id_expediente: expediente.id_expediente });

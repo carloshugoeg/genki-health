@@ -201,7 +201,13 @@ export async function composeEngines(env: EnginesEnv, factories = engineFactorie
     stage = 'Hospital PG identity initialization';
     const identity = await factories.auth({ url: env.authDatabaseUrl, jwtSecret: env.jwtSecret });
     owned.push(identity);
-    return { registry, auth: identity.auth, close };
+    return {
+      registry,
+      auth: identity.auth,
+      account: identity.account,
+      users: identity.users,
+      close,
+    };
   } catch (error) {
     let cleanupFailed = false;
     await close().catch(() => {

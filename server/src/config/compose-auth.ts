@@ -1,7 +1,11 @@
 import pg from 'pg';
 import { createAuthService } from '../adapters/auth/service.js';
+import { createPostgresAccountRepository } from '../adapters/postgres/full/account.js';
+import { createPostgresUsersRepository } from '../adapters/postgres/full/users.js';
 import { PostgresIdentityStore } from '../adapters/postgres/identity-store.js';
 import type { AuthPort } from '../ports/auth.js';
+import type { AccountRepositoryPort } from '../ports/full/account.js';
+import type { UsersRepositoryPort } from '../ports/full/users.js';
 
 export interface PostgresAuthOptions {
   url: string;
@@ -10,6 +14,8 @@ export interface PostgresAuthOptions {
 
 export interface PostgresAuthResource {
   auth: AuthPort;
+  account: AccountRepositoryPort;
+  users: UsersRepositoryPort;
   close(): Promise<void>;
 }
 
@@ -43,6 +49,8 @@ export async function createPostgresAuth(
       jwtSecret: options.jwtSecret,
       identities: new PostgresIdentityStore(pool),
     }),
+    account: createPostgresAccountRepository(pool),
+    users: createPostgresUsersRepository(pool),
     async close(): Promise<void> {
       await (closing ??= pool.end());
     },

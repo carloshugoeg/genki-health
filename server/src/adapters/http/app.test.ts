@@ -10,7 +10,11 @@ import type {
 } from '@genki/shared';
 import { closeConsulta } from '../../application/close-consulta.js';
 import { InstitutionAdapterRegistry } from '../../config/adapter-registry.js';
-import { createPhase0Auth, createPhase0Registry } from '../../config/compose-memory.js';
+import {
+  createPhase0Auth,
+  createPhase0Identity,
+  createPhase0Registry,
+} from '../../config/compose-memory.js';
 import {
   createTestMemoryAdapterSet,
   type TestMemoryAdapterSet,
@@ -101,11 +105,11 @@ function closeBody(): CloseConsultaRequest {
   };
 }
 
-async function authWithHospitalRoles() {
-  const { password, jwtSecret } = testCredentials();
+async function hospitalIdentityUsers(): Promise<IdentityUser[]> {
+  const { password } = testCredentials();
   const demos = await buildDemoUsers(password);
   const hash = demos[0]!.hash_contrasena;
-  const users: IdentityUser[] = [
+  return [
     ...demos,
     {
       id_usuario: 10,
@@ -135,7 +139,16 @@ async function authWithHospitalRoles() {
       estado: 'activo',
     },
   ];
-  return createPhase0Auth(jwtSecret, users);
+}
+
+async function authWithHospitalRoles() {
+  const { jwtSecret } = testCredentials();
+  return createPhase0Auth(jwtSecret, await hospitalIdentityUsers());
+}
+
+async function identityWithHospitalRoles() {
+  const { jwtSecret } = testCredentials();
+  return createPhase0Identity(jwtSecret, await hospitalIdentityUsers());
 }
 
 function clinicalRegistry(hospital: TestMemoryAdapterSet, pediatric: TestMemoryAdapterSet) {
@@ -905,5 +918,84 @@ describe('HTTP patient search detail catalog archive', () => {
     });
     expect(sessionMissing.statusCode).toBe(404);
     expect((sessionMissing.json() as ErrorDto).error).toBe('not_found');
+  });
+});
+
+describe('HTTP account users lane3', () => {
+  it('op03_change_password', async () => {
+    const { password } = testCredentials();
+    const identity = await identityWithHospitalRoles();
+    const hospital = createTestMemoryAdapterSet('hospital_general', 1);
+    const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
+    const app = buildHttpApp({
+      registry: clinicalRegistry(hospital, pediatric),
+      auth: identity.auth,
+      account: identity.account,
+      users: identity.users,
+    });
+    const token = await loginAs(app, 'hospital@genki.local');
+    const nueva = `${password}Xtra9`;
+    const changed = await app.inject({
+      method: 'POST',
+      url: '/api/auth/password',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { anterior: password, nueva },
+    });
+    expect(changed.statusCode).toBe(204);
+
+    const oldLogin = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        email: 'hospital@genki.local',
+        password,
+        institution_kind: 'hospital_general',
+      },
+    });
+    expect(oldLogin.statusCode).toBe(401);
+
+    const newLogin = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        email: 'hospital@genki.local',
+        password: nueva,
+        institution_kind: 'hospital_general',
+      },
+    });
+    expect(newLogin.statusCode).toBe(200);
+  });
+
+  it('op05_create_user', async () => {
+    const identity = await identityWithHospitalRoles();
+    const hospital = createTestMemoryAdapterSet('hospital_general', 1);
+    const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
+    const app = buildHttpApp({
+      registry: clinicalRegistry(hospital, pediatric),
+      auth: identity.auth,
+      account: identity.account,
+      users: identity.users,
+    });
+    const token = await loginAs(app, 'hospital@genki.local');
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/usuarios',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        action: 'create',
+        nombre_usuario: 'nuevo_recepcion',
+        correo: 'nuevo-recepcion@genki.local',
+        rol: 'recepcion',
+      },
+    });
+    expect(created.statusCode).toBe(200);
+    const body = created.json() as {
+      usuario: { correo: string; rol: string; estado: string };
+      temporal: string;
+    };
+    expect(body.usuario.correo).toBe('nuevo-recepcion@genki.local');
+    expect(body.usuario.rol).toBe('recepcion');
+    expect(body.usuario.estado).toBe('activo');
+    expect(body.temporal.length).toBe(24);
   });
 });
