@@ -7,7 +7,10 @@ import { MysqlCatalogoRepository } from './catalogo-repository.js';
 import { MysqlConsultaRepository } from './consulta-repository.js';
 import { createMysqlAttachmentsRepository } from './full/attachments.js';
 import { createMysqlConsultationRepository } from './full/consultation.js';
+import { createMysqlGrowthRepository } from './full/growth.js';
+import { createMysqlMilestonesRepository } from './full/milestones.js';
 import { createMysqlRecordRepository } from './full/record.js';
+import { createMysqlVaccinesRepository } from './full/vaccines.js';
 import { MysqlIdPort } from './id.js';
 import { MysqlPacienteRepository } from './paciente-repository.js';
 import { MysqlUnitOfWork } from './unit-of-work.js';
@@ -83,6 +86,9 @@ export async function createMysqlAdapterSet(options: EngineOptions): Promise<Ada
       record: createMysqlRecordRepository(fullDeps),
       attachments: createMysqlAttachmentsRepository(fullDeps),
       consultation: createMysqlConsultationRepository(fullDeps),
+      growth: createMysqlGrowthRepository(fullDeps),
+      vaccines: createMysqlVaccinesRepository(fullDeps),
+      milestones: createMysqlMilestonesRepository(fullDeps),
     },
   };
 

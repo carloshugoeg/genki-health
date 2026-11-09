@@ -4,6 +4,8 @@ import type { AdapterResource, FirestoreOptions } from '../../ports/index.js';
 import { FirebaseUnitOfWork } from './unit-of-work.js';
 import { FirebaseId } from './id.js';
 import { FirebaseCatalogoRepository } from './catalogo-repository.js';
+import { createFirebaseDentalChartRepository } from './full/dental-chart.js';
+import { createFirebaseDentalPlanRepository } from './full/dental-plan.js';
 import { createFirebaseLane1Repositories } from './full/lane1.js';
 import { FirebasePacienteRepository } from './paciente-repository.js';
 import { FirebaseConsultaRepository } from './consulta-repository.js';
@@ -38,13 +40,19 @@ export async function createFirebaseAdapterSet(
       scoped.kind,
       () => clock.nowIso(),
     );
-    const full = createFirebaseLane1Repositories({
+    const dentalDeps = {
       unitOfWork,
       id_institucion: scoped.id_institucion,
       pacientes,
       ids,
       clock,
-    });
+    };
+    const lane1 = createFirebaseLane1Repositories(dentalDeps);
+    const full = {
+      ...lane1,
+      dentalChart: createFirebaseDentalChartRepository(dentalDeps),
+      dentalPlan: createFirebaseDentalPlanRepository(dentalDeps),
+    };
     return {
       set: {
         engine: 'firebase',

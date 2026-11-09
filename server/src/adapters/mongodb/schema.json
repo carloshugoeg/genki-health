@@ -825,5 +825,47 @@
         }
       }
     }
+  },
+  "ordenes_examen": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "institution_id"
+      ],
+      "properties": {
+        "institution_id": {
+          "bsonType": "int"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "muestras": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "institution_id"
+      ],
+      "properties": {
+        "institution_id": {
+          "bsonType": "int"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "resultados": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "institution_id"
+      ],
+      "properties": {
+        "institution_id": {
+          "bsonType": "int"
+        }
+      },
+      "additionalProperties": true
+    }
   }
 }

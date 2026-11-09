@@ -4,6 +4,8 @@ import type { AdapterResource, ClockPort, EngineOptions } from '../../ports/inde
 import { MongoCatalogoRepository } from './catalogo-repository.js';
 import { MongoConsultaRepository } from './consulta-repository.js';
 import { createMongoLane1Repositories } from './full/lane1.js';
+import { createMongoLabIntakeRepository } from './full/lab-intake.js';
+import { createMongoLabResultsRepository } from './full/lab-results.js';
 import { MongoIdPort } from './id.js';
 import { MongoPacienteRepository } from './paciente-repository.js';
 import { assertMongoPrimaryReady } from './schema.js';
@@ -49,7 +51,7 @@ export async function createMongoAdapterSet(options: EngineOptions): Promise<Ada
     () => clock.nowIso(),
     afterWrite,
   );
-  const full = createMongoLane1Repositories({
+  const lane1 = createMongoLane1Repositories({
     db,
     id_institucion: options.id_institucion,
     pacientes,
@@ -57,6 +59,12 @@ export async function createMongoAdapterSet(options: EngineOptions): Promise<Ada
     unitOfWork,
     clock,
   });
+  const labDeps = { db, id_institucion: options.id_institucion, ids, unitOfWork, clock };
+  const full = {
+    ...lane1,
+    labIntake: createMongoLabIntakeRepository(labDeps),
+    labResults: createMongoLabResultsRepository(labDeps),
+  };
   const set = {
     engine: engineForKind(options.kind),
     clock,

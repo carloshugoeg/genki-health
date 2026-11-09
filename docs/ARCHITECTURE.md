@@ -2,6 +2,10 @@
 
 Plataforma compartida de historiales clínicos para cuatro instituciones médicas independientes. Proyecto final de Bases de Datos II, Universidad Rafael Landívar. Integrantes: Carlos Hugo Escobar Gómez y Héctor Jordin Adolfo García Coyoy.
 
+## Lane-2 specialty modules (2026-11-09)
+
+Institution-scoped specialty ops on their assigned engines only: hospitalización OP34–36/38 on PostgreSQL (`admission`/`procedure`/`discharge`); pediatría OP40–47 on MySQL (`growth`/`vaccines`/`milestones`); laboratorio OP48–54 on MongoDB (`lab-intake`/`lab-results`); odontología OP55–58 on Firestore (`dental-chart`/`dental-plan`). OP37 and FS-19 (OP59–60) stay deferred for the billing/charges lane. HTTP mounts from `server/src/adapters/http/specialty-routes.ts`. UI panels: `web/src/full/SpecialtyPanels.tsx`. Migrations: `postgres/migrations/0005-hospital-seed-beds.sql`, `mysql/migrations/0003-pediatrics.sql`, `0004-pediatrics-seed.sql`. Growth curves store measurements without WHO percentiles when `referencia_oms` is empty (`version_referencia = none`).
+
 ## Lane-1 clinical shared (2026-11-09)
 
 Additive full-system modules on the four engines for OP-12/15/16/18 (ficha, antecedentes, alergias, archivo), OP-17 (adjuntos via JSON base64 body), and OP-26/27 (abrir consulta + signos vitales). Ports live under `server/src/ports/full/{record,attachments,consultation}.ts`; adapters under `server/src/adapters/{memory,postgres,mysql,mongodb,firebase}/full/`. HTTP routes register from `server/src/adapters/http/full-routes.ts`. SQL migrations: `postgres/migrations/0004-clinical-shared.sql`, `mysql/migrations/0002-clinical-shared.sql`. Mongo validators/indexes and Firestore collection allowlist extended for the same entities. Baseline atomic close-consultation shortcut remains.
