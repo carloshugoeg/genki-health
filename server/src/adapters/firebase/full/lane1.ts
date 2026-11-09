@@ -185,8 +185,30 @@ export function createFirebaseLane1Repositories(deps: {
         });
       });
     },
-    async op19() {
-      throw new ClinicalError('misconfigured', 'OP19 belongs to a later record chunk');
+    async op19(input, context) {
+      return uow.runInTransaction(async () => {
+        const expediente = await deps.pacientes.findExpedienteByPaciente(
+          asPacienteId(input.params.id),
+        );
+        if (!expediente) throw new ClinicalError('not_found', NOT_FOUND);
+        if (expediente.estado !== 'archivado') {
+          throw new ClinicalError('conflict', CONFLICT);
+        }
+        const auditId = await deps.ids.nextInt('reactivacion_audit');
+        await uow.create('reactivacion_audit', auditId, {
+          id: auditId,
+          id_expediente: expediente.id_expediente,
+          id_usuario: context.id_usuario,
+          motivo: input.body.motivo,
+          fecha_hora: context.now || deps.clock.nowIso(),
+          archivo_previo: {
+            fecha_archivo: expediente.fecha_archivo,
+            motivo_archivo: expediente.motivo_archivo,
+            observacion_archivo: expediente.observacion_archivo,
+          },
+        });
+        return deps.pacientes.reactivateExpediente({ id_expediente: expediente.id_expediente });
+      });
     },
   };
 

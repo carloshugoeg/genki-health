@@ -29,6 +29,7 @@ GRANT SELECT, INSERT ON `__DATABASE__`.`signos_vitales` TO `genki_app`;
 GRANT SELECT, INSERT ON `__DATABASE__`.`consulta_borrador` TO `genki_app`;
 GRANT SELECT, INSERT ON `__DATABASE__`.`medicion_antropometrica` TO `genki_app`;
 GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`expediente` TO `genki_app`;
+GRANT SELECT, INSERT ON `__DATABASE__`.`reactivacion_audit` TO `genki_app`;
 GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`id_counter` TO `genki_app`;
 GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`antecedente_perinatal` TO `genki_app`;
 GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`dosis_vacuna` TO `genki_app`;

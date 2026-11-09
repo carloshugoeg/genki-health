@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { FastifyInstance } from 'fastify';
 import { buildHttpApp } from './adapters/http/app.js';
-import { createPhase0Auth, createPhase0Registry } from './config/compose-memory.js';
+import { createPhase0Identity, createPhase0Registry } from './config/compose-memory.js';
 import { composeEngines } from './config/compose-engines.js';
 import { loadEnv } from './config/env.js';
 
@@ -16,11 +16,16 @@ export async function start(): Promise<FastifyInstance> {
   const composition =
     env.mode === 'engines'
       ? await composeEngines(env)
-      : {
-          registry: createPhase0Registry(),
-          auth: await createPhase0Auth(env.jwtSecret),
-          close: async () => {},
-        };
+      : await (async () => {
+          const identity = await createPhase0Identity(env.jwtSecret);
+          return {
+            registry: createPhase0Registry(),
+            auth: identity.auth,
+            account: identity.account,
+            users: identity.users,
+            close: async () => {},
+          };
+        })();
   let app: FastifyInstance | undefined;
   let stopping: Promise<void> | undefined;
   const shutdown = (): Promise<void> =>
@@ -35,7 +40,12 @@ export async function start(): Promise<FastifyInstance> {
     });
   };
   try {
-    app = buildHttpApp({ registry: composition.registry, auth: composition.auth });
+    app = buildHttpApp({
+      registry: composition.registry,
+      auth: composition.auth,
+      account: composition.account,
+      users: composition.users,
+    });
     app.addHook('onClose', async () => {
       process.off('SIGINT', signal);
       process.off('SIGTERM', signal);

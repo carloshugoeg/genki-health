@@ -139,3 +139,8 @@ export interface ArchiveExpedienteInput {
   observacion_archivo?: string;
   fecha_archivo: string;
 }
+
+/** Clear archive metadata; previous values must be audited by the caller. */
+export interface ReactivateExpedienteInput {
+  id_expediente: ExpedienteId;
+}

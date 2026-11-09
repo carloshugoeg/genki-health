@@ -12,6 +12,7 @@ export type AlergiaSeveridad = (typeof ALERGIA_SEVERIDADES)[number];
 
 export const RECORD_CLINICAL_ROLES = ['medico', 'odontologo', 'enfermeria'] as const;
 export const RECORD_ARCHIVE_ROLES = ['administrador', 'recepcion'] as const;
+export const RECORD_REACTIVATE_ROLES = ['administrador'] as const;
 
 export const ARCHIVE_MOTIVOS = [
   'traslado',
@@ -47,6 +48,7 @@ export interface ValidateArchiveInput {
 const ANTECEDENTE_KEYS = new Set(['tipo', 'descripcion', 'fecha_inicio', 'vigente']);
 const ALERGIA_KEYS = new Set(['sustancia', 'tipo', 'severidad', 'reaccion', 'fecha_deteccion']);
 const ARCHIVE_KEYS = new Set(['motivo_archivo', 'observacion_archivo']);
+const REACTIVATE_KEYS = new Set(['motivo']);
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -119,6 +121,10 @@ export function assertRecordClinicalRole(roles: readonly string[]): void {
 
 export function assertRecordArchiveRole(roles: readonly string[]): void {
   assertRoles(roles, RECORD_ARCHIVE_ROLES);
+}
+
+export function assertRecordReactivateRole(roles: readonly string[]): void {
+  assertRoles(roles, RECORD_REACTIVATE_ROLES);
 }
 
 export function parseOp12Params(params: { id: number }, query: Record<string, unknown>): number {
@@ -245,6 +251,19 @@ export function parseOp16Params(params: { id: number }): number {
 
 export function parseOp18Params(params: { id: number }): number {
   return assertPositiveId(params?.id, 'invalid_body');
+}
+
+export function parseOp19Params(params: { id: number }): number {
+  return assertPositiveId(params?.id, 'invalid_body');
+}
+
+export function parseReactivateInput(body: unknown): { motivo: string } {
+  if (!isPlainObject(body)) {
+    throw new ClinicalError('invalid_body', 'Solicitud inválida');
+  }
+  assertNoUnknownKeys(body, REACTIVATE_KEYS);
+  const motivo = assertBoundedText(body.motivo, 300);
+  return { motivo };
 }
 
 export function requireIdempotencyKey(key: string | undefined): string {

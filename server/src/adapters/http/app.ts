@@ -22,6 +22,8 @@ import {
   toErrorDto,
 } from './errors.js';
 import { archiveViaOp18, registerFullClinicalRoutes } from './full-routes.js';
+import { registerAccountRoutes } from './full/account.js';
+import { registerUsersRoutes } from './full/users.js';
 import { registerLaneABRoutes } from './lane-ab-routes.js';
 import { registerSpecialtyRoutes } from './specialty-routes.js';
 import {
@@ -32,10 +34,15 @@ import {
   searchSchema,
 } from './schemas.js';
 import type { AdapterSetWithFull } from '../../config/full-modules.js';
+import type { AccountRepositoryPort } from '../../ports/full/account.js';
+import type { UsersRepositoryPort } from '../../ports/full/users.js';
 
 export interface HttpAppOptions {
   registry: InstitutionAdapterRegistry;
   auth: AuthPort;
+  account?: AccountRepositoryPort;
+  users?: UsersRepositoryPort;
+  nowIso?: () => string;
 }
 
 declare module 'fastify' {
@@ -462,6 +469,20 @@ export function buildHttpApp(options: HttpAppOptions) {
   registerFullClinicalRoutes(app, { registry: options.registry, requirePrincipal });
   registerSpecialtyRoutes(app, { registry: options.registry, requirePrincipal });
   registerLaneABRoutes(app, { registry: options.registry, requirePrincipal });
+  if (options.account) {
+    registerAccountRoutes(app, {
+      account: options.account,
+      requirePrincipal,
+      nowIso: options.nowIso ?? (() => new Date().toISOString()),
+    });
+  }
+  if (options.users) {
+    registerUsersRoutes(app, {
+      users: options.users,
+      requirePrincipal,
+      nowIso: options.nowIso ?? (() => new Date().toISOString()),
+    });
+  }
 
   return app;
 }

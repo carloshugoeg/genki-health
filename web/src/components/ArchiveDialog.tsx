@@ -69,7 +69,7 @@ export function ArchiveDialog({
       <h2 id="archive-title">Archivar expediente del paciente {patientId}</h2>
       <p>
         El historial se conserva. El expediente saldrá de la búsqueda de activos y no admitirá
-        nuevas consultas. No hay reactivación en esta entrega.
+        nuevas consultas. Un administrador puede reactivarlo después.
       </p>
       <form onSubmit={submit}>
         <fieldset disabled={busy}>

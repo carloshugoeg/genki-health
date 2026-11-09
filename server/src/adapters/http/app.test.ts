@@ -10,7 +10,11 @@ import type {
 } from '@genki/shared';
 import { closeConsulta } from '../../application/close-consulta.js';
 import { InstitutionAdapterRegistry } from '../../config/adapter-registry.js';
-import { createPhase0Auth, createPhase0Registry } from '../../config/compose-memory.js';
+import {
+  createPhase0Auth,
+  createPhase0Identity,
+  createPhase0Registry,
+} from '../../config/compose-memory.js';
 import {
   createTestMemoryAdapterSet,
   type TestMemoryAdapterSet,
@@ -101,11 +105,11 @@ function closeBody(): CloseConsultaRequest {
   };
 }
 
-async function authWithHospitalRoles() {
-  const { password, jwtSecret } = testCredentials();
+async function hospitalIdentityUsers(): Promise<IdentityUser[]> {
+  const { password } = testCredentials();
   const demos = await buildDemoUsers(password);
   const hash = demos[0]!.hash_contrasena;
-  const users: IdentityUser[] = [
+  return [
     ...demos,
     {
       id_usuario: 10,
@@ -135,7 +139,16 @@ async function authWithHospitalRoles() {
       estado: 'activo',
     },
   ];
-  return createPhase0Auth(jwtSecret, users);
+}
+
+async function authWithHospitalRoles() {
+  const { jwtSecret } = testCredentials();
+  return createPhase0Auth(jwtSecret, await hospitalIdentityUsers());
+}
+
+async function identityWithHospitalRoles() {
+  const { jwtSecret } = testCredentials();
+  return createPhase0Identity(jwtSecret, await hospitalIdentityUsers());
 }
 
 function clinicalRegistry(hospital: TestMemoryAdapterSet, pediatric: TestMemoryAdapterSet) {
@@ -438,7 +451,7 @@ describe('HTTP patient search detail catalog archive', () => {
     void pedToken;
   });
 
-  it('reactivate_route_absent', async () => {
+  it('op19_reactivate_expediente', async () => {
     const hospital = createTestMemoryAdapterSet('hospital_general', 1);
     const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
     const auth = await authWithHospitalRoles();
@@ -452,25 +465,44 @@ describe('HTTP patient search detail catalog archive', () => {
       payload: adult('REACT-1'),
     });
     const id = (created.json() as PacienteResumen).paciente.id_paciente;
-    await app.inject({
+    const archived = await app.inject({
       method: 'POST',
       url: `/api/pacientes/${id}/archivo`,
       headers: { authorization: `Bearer ${token}` },
       payload: { motivo_archivo: 'inactividad' },
     });
+    expect(archived.statusCode).toBe(200);
+    expect((archived.json() as { estado: string }).estado).toBe('archivado');
 
-    for (const method of ['POST', 'PUT', 'PATCH'] as const) {
+    const reactivated = await app.inject({
+      method: 'POST',
+      url: `/api/pacientes/${id}/reactivacion`,
+      headers: {
+        authorization: `Bearer ${token}`,
+        'idempotency-key': 'op19-react-1',
+      },
+      payload: { motivo: 'Reingreso administrativo de prueba' },
+    });
+    expect(reactivated.statusCode).toBe(200);
+    const body = reactivated.json() as {
+      estado: string;
+      fecha_archivo: string | null;
+      motivo_archivo: string | null;
+      observacion_archivo: string | null;
+    };
+    expect(body.estado).toBe('activo');
+    expect(body.fecha_archivo).toBeNull();
+    expect(body.motivo_archivo).toBeNull();
+    expect(body.observacion_archivo).toBeNull();
+
+    for (const method of ['PUT', 'PATCH'] as const) {
       const missing = await app.inject({
         method,
         url: `/api/pacientes/${id}/reactivacion`,
         headers: { authorization: `Bearer ${token}` },
-        payload: {},
+        payload: { motivo: 'x' },
       });
       expect(missing.statusCode).toBe(404);
-      expect(missing.json()).toEqual({
-        error: 'not_found',
-        message: 'Recurso no encontrado',
-      });
     }
   });
 
@@ -886,5 +918,169 @@ describe('HTTP patient search detail catalog archive', () => {
     });
     expect(sessionMissing.statusCode).toBe(404);
     expect((sessionMissing.json() as ErrorDto).error).toBe('not_found');
+  });
+});
+
+describe('HTTP account users lane3', () => {
+  it('op03_change_password', async () => {
+    const { password } = testCredentials();
+    const identity = await identityWithHospitalRoles();
+    const hospital = createTestMemoryAdapterSet('hospital_general', 1);
+    const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
+    const app = buildHttpApp({
+      registry: clinicalRegistry(hospital, pediatric),
+      auth: identity.auth,
+      account: identity.account,
+      users: identity.users,
+    });
+    const first = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        email: 'hospital@genki.local',
+        password,
+        institution_kind: 'hospital_general',
+      },
+    });
+    expect(first.statusCode).toBe(200);
+    const tokens = first.json() as AuthTokensDto;
+    const nueva = `${password}Xtra9`;
+    const wrong = await app.inject({
+      method: 'POST',
+      url: '/api/auth/password',
+      headers: { authorization: `Bearer ${tokens.access_token}` },
+      payload: { anterior: 'no-es-la-clave', nueva },
+    });
+    expect(wrong.statusCode).toBe(401);
+    expect((wrong.json() as ErrorDto).error).toBe('invalid_credentials');
+    const weak = await app.inject({
+      method: 'POST',
+      url: '/api/auth/password',
+      headers: { authorization: `Bearer ${tokens.access_token}` },
+      payload: { anterior: password, nueva: 'corta1' },
+    });
+    expect(weak.statusCode).toBe(400);
+    expect((weak.json() as ErrorDto).error).toBe('password_policy');
+    const changed = await app.inject({
+      method: 'POST',
+      url: '/api/auth/password',
+      headers: { authorization: `Bearer ${tokens.access_token}` },
+      payload: { anterior: password, nueva },
+    });
+    expect(changed.statusCode).toBe(204);
+    const refresh = await app.inject({
+      method: 'POST',
+      url: '/api/auth/refresh',
+      payload: { refresh_token: tokens.refresh_token },
+    });
+    expect(refresh.statusCode).toBe(401);
+
+    const oldLogin = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        email: 'hospital@genki.local',
+        password,
+        institution_kind: 'hospital_general',
+      },
+    });
+    expect(oldLogin.statusCode).toBe(401);
+
+    const newLogin = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        email: 'hospital@genki.local',
+        password: nueva,
+        institution_kind: 'hospital_general',
+      },
+    });
+    expect(newLogin.statusCode).toBe(200);
+  });
+
+  it('op05_create_user', async () => {
+    const identity = await identityWithHospitalRoles();
+    const hospital = createTestMemoryAdapterSet('hospital_general', 1);
+    const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
+    const app = buildHttpApp({
+      registry: clinicalRegistry(hospital, pediatric),
+      auth: identity.auth,
+      account: identity.account,
+      users: identity.users,
+    });
+    const token = await loginAs(app, 'hospital@genki.local');
+    const rejectedRole = await app.inject({
+      method: 'POST',
+      url: '/api/usuarios',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        action: 'create',
+        nombre_usuario: 'root',
+        correo: 'root@genki.local',
+        rol: 'superadministrador',
+      },
+    });
+    expect(rejectedRole.statusCode).toBe(400);
+    const lastAdmin = await app.inject({
+      method: 'POST',
+      url: '/api/usuarios',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { action: 'deactivate', id: 1 },
+    });
+    expect(lastAdmin.statusCode).toBe(409);
+    expect((lastAdmin.json() as ErrorDto).error).toBe('conflict');
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/usuarios',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        action: 'create',
+        nombre_usuario: 'nuevo_recepcion',
+        correo: 'nuevo-recepcion@genki.local',
+        rol: 'recepcion',
+      },
+    });
+    expect(created.statusCode).toBe(200);
+    const body = created.json() as {
+      usuario: { correo: string; rol: string; estado: string };
+      temporal: string;
+    };
+    expect(body.usuario.correo).toBe('nuevo-recepcion@genki.local');
+    expect(body.usuario.rol).toBe('recepcion');
+    expect(body.usuario.estado).toBe('activo');
+    expect(body.temporal.length).toBe(24);
+    expect(JSON.stringify(body)).not.toContain('hash_contrasena');
+    const audit = await app.inject({
+      method: 'GET',
+      url: '/api/bitacora',
+      headers: { authorization: `Bearer ${token}` },
+    });
+    expect(audit.statusCode).toBe(200);
+    const auditText = JSON.stringify(audit.json());
+    expect(auditText).not.toContain(body.temporal);
+    expect(auditText).toContain('"entidad":"usuario"');
+    const asNew = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        email: 'nuevo-recepcion@genki.local',
+        password: body.temporal,
+        institution_kind: 'hospital_general',
+      },
+    });
+    expect(asNew.statusCode).toBe(200);
+    const recepcion = await loginAs(app, 'recepcion@genki.local');
+    const denied = await app.inject({
+      method: 'POST',
+      url: '/api/usuarios',
+      headers: { authorization: `Bearer ${recepcion}` },
+      payload: {
+        action: 'create',
+        nombre_usuario: 'otro',
+        correo: 'otro@genki.local',
+        rol: 'medico',
+      },
+    });
+    expect(denied.statusCode).toBe(403);
   });
 });

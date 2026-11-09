@@ -52,7 +52,20 @@ function fixture() {
     mongodb: factory,
     firebase: factory,
     checkNative: vi.fn(async () => {}),
-    auth: vi.fn(async () => ({ auth, close: identityClose })),
+    auth: vi.fn(async () => ({
+      auth,
+      account: {
+        op01: unused,
+        op02: unused,
+        op03: unused,
+        op04: unused,
+      },
+      users: {
+        op05: unused,
+        op06: unused,
+      },
+      close: identityClose,
+    })),
   };
   return { env, factories, resources, identityClose, auth, factory };
 }

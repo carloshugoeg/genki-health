@@ -9,6 +9,7 @@ import type {
   PacienteId,
   PacientePage,
   PacienteResumen,
+  ReactivateExpedienteInput,
   ResponsableInput,
   Sexo,
 } from '@genki/shared';
@@ -31,6 +32,7 @@ const GUARDIAN_REQUIRED = 'Se requiere responsable principal';
 const INVALID_GUARDIANS = 'Debe existir exactamente un responsable principal';
 const ALREADY_ARCHIVED = 'El expediente ya está archivado';
 const NOT_FOUND = 'Recurso no encontrado';
+const CONFLICT = 'Conflicto de recurso';
 const DOCUMENT_CONSTRAINT = 'uq_paciente_documento';
 
 interface PacienteRow {
@@ -428,6 +430,38 @@ export class PostgresPacienteRepository implements PacienteRepositoryPort {
           input.motivo_archivo,
           input.observacion_archivo ?? null,
         ],
+      );
+      return mapExpediente(updated.rows[0]!);
+    });
+  }
+
+  async reactivateExpediente(input: ReactivateExpedienteInput): Promise<ExpedienteDto> {
+    return this.unitOfWork.runInTransaction(async () => {
+      const locked = await postgresQuery<ExpedienteRow>(
+        `SELECT e.*
+           FROM expediente e
+           JOIN paciente p ON p.id_paciente = e.id_paciente
+          WHERE e.id_expediente = $1 AND p.id_institucion = $2
+          FOR UPDATE OF e`,
+        [input.id_expediente, this.id_institucion],
+      );
+      const current = locked.rows[0];
+      if (!current) {
+        throw new ClinicalError('not_found', NOT_FOUND);
+      }
+      if (current.estado !== 'archivado') {
+        throw new ClinicalError('conflict', CONFLICT);
+      }
+
+      const updated = await postgresQuery<ExpedienteRow>(
+        `UPDATE expediente
+            SET estado = 'activo',
+                fecha_archivo = NULL,
+                motivo_archivo = NULL,
+                observacion_archivo = NULL
+          WHERE id_expediente = $1
+          RETURNING *`,
+        [input.id_expediente],
       );
       return mapExpediente(updated.rows[0]!);
     });

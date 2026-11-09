@@ -3,6 +3,7 @@ import type { AuthPrincipalDto, CatalogosDto, HistorialDto } from '@genki/shared
 import { api, errorMessage } from '../api';
 import { navigate } from '../router';
 import { ArchiveDialog } from '../components/ArchiveDialog';
+import { ReactivateDialog } from '../components/ReactivateDialog';
 import { FichaLane1 } from '../full/FichaLane1';
 import { SpecialtyPanels } from '../full/SpecialtyPanels';
 import { Consulta } from './Consulta';
@@ -104,9 +105,11 @@ function Fields({ value }: { value: object }) {
   );
 }
 export function mutationActions(state: string, roles: string[]) {
+  const admin = roles.includes('superadministrador') || roles.includes('administrador');
   return {
     consulta: state === 'activo' && roles.some((r) => ['administrador', 'medico'].includes(r)),
     archive: state === 'activo' && roles.some((r) => ['administrador', 'recepcion'].includes(r)),
+    reactivate: state === 'archivado' && admin,
   };
 }
 export function HistoryContent({
@@ -218,6 +221,7 @@ export function Historial({
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [reactivateOpen, setReactivateOpen] = useState(false);
   const [draftOpened, setDraftOpened] = useState(composing);
   useEffect(() => {
     if (composing) setDraftOpened(true);
@@ -309,6 +313,15 @@ export function Historial({
                 Archivar expediente
               </button>
             )}
+            {actions.reactivate && (
+              <button
+                data-testid="reactivate-open"
+                disabled={loading || !!error}
+                onClick={() => setReactivateOpen(true)}
+              >
+                Reactivar expediente
+              </button>
+            )}
             {draftOpened && !actions.consulta && (
               <button onClick={() => navigate(`/pacientes/${patientId}/consulta/nueva`)}>
                 Ver borrador no guardado
@@ -348,6 +361,19 @@ export function Historial({
             );
           }}
           onConflict={() => refresh('El expediente ya está archivado. Se actualizó la ficha.')}
+        />
+      )}
+      {reactivateOpen && (
+        <ReactivateDialog
+          patientId={patientId}
+          onClose={() => setReactivateOpen(false)}
+          onSuccess={() => {
+            setReactivateOpen(false);
+            refresh('Expediente reactivado. Metadatos de archivo limpiados; historial conservado.');
+          }}
+          onConflict={() =>
+            refresh('El expediente no está archivado. Se actualizó la ficha.')
+          }
         />
       )}
       <button type="button" onClick={() => navigate('/pacientes')}>

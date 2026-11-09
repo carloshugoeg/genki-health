@@ -10,6 +10,7 @@ import {
   type PacienteId,
   type PacientePage,
   type PacienteResumen,
+  type ReactivateExpedienteInput,
   type ResponsableInput,
 } from '@genki/shared';
 import { ClinicalError } from '../../domain/clinical-error.js';
@@ -212,6 +213,28 @@ export class FirebasePacienteRepository implements PacienteRepositoryPort {
         fecha_archivo: input.fecha_archivo,
         motivo_archivo: input.motivo_archivo,
         observacion_archivo: input.observacion_archivo ?? null,
+      };
+      await this.unitOfWork.update('records', input.id_expediente, {
+        ...expediente,
+        revision: row.revision + 1,
+      });
+      return expediente;
+    });
+  }
+
+  async reactivateExpediente(input: ReactivateExpedienteInput): Promise<ExpedienteDto> {
+    return this.unitOfWork.runInTransaction(async () => {
+      const row = await this.unitOfWork.read('records', input.id_expediente);
+      if (!row) throw new ClinicalError('not_found', 'Recurso no encontrado');
+      if (row.estado !== 'archivado') {
+        throw new ClinicalError('conflict', 'Conflicto de recurso');
+      }
+      const expediente: ExpedienteDto = {
+        ...recordDto(row),
+        estado: 'activo',
+        fecha_archivo: null,
+        motivo_archivo: null,
+        observacion_archivo: null,
       };
       await this.unitOfWork.update('records', input.id_expediente, {
         ...expediente,

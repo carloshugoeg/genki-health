@@ -8,6 +8,7 @@ import type {
   PacienteId,
   PacientePage,
   PacienteResumen,
+  ReactivateExpedienteInput,
   ResponsableInput,
 } from '@genki/shared';
 import { asExpedienteId, asInstitutionId, asPacienteId } from '@genki/shared';
@@ -37,6 +38,7 @@ const GUARDIAN_REQUIRED = 'Se requiere responsable principal';
 const INVALID_GUARDIANS = 'Debe existir exactamente un responsable principal';
 const ALREADY_ARCHIVED = 'El expediente ya está archivado';
 const NOT_FOUND = 'Recurso no encontrado';
+const CONFLICT = 'Conflicto de recurso';
 
 function sessionOpts():
   | Pick<FindOptions, 'session'>
@@ -406,6 +408,49 @@ export class MongoPacienteRepository implements PacienteRepositoryPort {
       );
       if (!updated) {
         throw new ClinicalError('already_archived', ALREADY_ARCHIVED);
+      }
+      return cloneDto(expedienteFromDoc(updated));
+    });
+  }
+
+  async reactivateExpediente(input: ReactivateExpedienteInput): Promise<ExpedienteDto> {
+    return this.unitOfWork.runInTransaction(async () => {
+      const opts = sessionOpts();
+      const existing = await this.db.collection<MongoStringIdDoc>('expedientes').findOne(
+        {
+          ...this.institutionFilter(),
+          id_expediente: toBsonInt(input.id_expediente),
+        },
+        opts,
+      );
+      if (!existing) {
+        throw new ClinicalError('not_found', NOT_FOUND);
+      }
+      if (String(existing.estado) !== 'archivado') {
+        throw new ClinicalError('conflict', CONFLICT);
+      }
+
+      const currentRev = asPlainInt(existing._rev);
+      const updated = await this.db.collection<MongoStringIdDoc>('expedientes').findOneAndUpdate(
+        {
+          _id: existing._id,
+          institution_id: toBsonInt(this.id_institucion),
+          estado: archivedEstado(),
+          _rev: existing._rev,
+        },
+        {
+          $set: {
+            estado: 'activo',
+            fecha_archivo: null,
+            motivo_archivo: null,
+            observacion_archivo: null,
+            _rev: toBsonInt(currentRev + 1),
+          },
+        },
+        { returnDocument: 'after', ...opts },
+      );
+      if (!updated) {
+        throw new ClinicalError('conflict', CONFLICT);
       }
       return cloneDto(expedienteFromDoc(updated));
     });
