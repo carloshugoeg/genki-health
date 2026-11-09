@@ -1,46 +1,96 @@
 -- Lane-1 clinical shared: open consultations, vitals, record, attachments.
--- Idempotent for disposable loopback databases where possible.
+-- Driver-friendly (no DELIMITER). Safe to re-run CREATE TABLE IF NOT EXISTS.
+-- CHECK drops for consulta rely on known auto names from 0001-core order.
 
-SET @db := DATABASE();
+SET @exist := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'consulta'
+     AND CONSTRAINT_NAME = 'consulta_chk_1'
+);
+SET @sql := IF(@exist > 0, 'ALTER TABLE consulta DROP CHECK consulta_chk_1', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-DROP PROCEDURE IF EXISTS genki_drop_consulta_checks;
-DELIMITER //
-CREATE PROCEDURE genki_drop_consulta_checks()
-BEGIN
-  DECLARE done INT DEFAULT 0;
-  DECLARE cname VARCHAR(64);
-  DECLARE cur CURSOR FOR
-    SELECT CONSTRAINT_NAME
-      FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
-     WHERE TABLE_SCHEMA = DATABASE()
-       AND TABLE_NAME = 'consulta'
-       AND CONSTRAINT_TYPE = 'CHECK';
-  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
-  OPEN cur;
-  read_loop: LOOP
-    FETCH cur INTO cname;
-    IF done = 1 THEN
-      LEAVE read_loop;
-    END IF;
-    SET @ddl = CONCAT('ALTER TABLE consulta DROP CHECK `', cname, '`');
-    PREPARE stmt FROM @ddl;
-    EXECUTE stmt;
-    DEALLOCATE PREPARE stmt;
-  END LOOP;
-  CLOSE cur;
-END //
-DELIMITER ;
-CALL genki_drop_consulta_checks();
-DROP PROCEDURE IF EXISTS genki_drop_consulta_checks;
+SET @exist := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'consulta'
+     AND CONSTRAINT_NAME = 'consulta_chk_2'
+);
+SET @sql := IF(@exist > 0, 'ALTER TABLE consulta DROP CHECK consulta_chk_2', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-ALTER TABLE consulta
-  MODIFY fecha_hora_fin DATETIME(3) NULL,
-  ADD CONSTRAINT consulta_tipo_check CHECK (tipo IN ('primera_vez', 'seguimiento', 'emergencia')),
-  ADD CONSTRAINT consulta_estado_check CHECK (estado IN ('abierta', 'cerrada', 'anulada')),
-  ADD CONSTRAINT consulta_fin_check CHECK (
-    fecha_hora_fin IS NULL OR fecha_hora_fin >= fecha_hora_inicio
-  ),
-  ADD CONSTRAINT consulta_id_cita_null_check CHECK (id_cita IS NULL);
+SET @exist := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'consulta'
+     AND CONSTRAINT_NAME = 'consulta_chk_3'
+);
+SET @sql := IF(@exist > 0, 'ALTER TABLE consulta DROP CHECK consulta_chk_3', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @exist := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'consulta'
+     AND CONSTRAINT_NAME = 'consulta_chk_4'
+);
+SET @sql := IF(@exist > 0, 'ALTER TABLE consulta DROP CHECK consulta_chk_4', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+ALTER TABLE consulta MODIFY fecha_hora_fin DATETIME(3) NULL;
+
+SET @exist := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'consulta'
+     AND CONSTRAINT_NAME = 'consulta_tipo_check'
+);
+SET @sql := IF(
+  @exist = 0,
+  'ALTER TABLE consulta ADD CONSTRAINT consulta_tipo_check CHECK (tipo IN (''primera_vez'', ''seguimiento'', ''emergencia''))',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @exist := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'consulta'
+     AND CONSTRAINT_NAME = 'consulta_estado_check'
+);
+SET @sql := IF(
+  @exist = 0,
+  'ALTER TABLE consulta ADD CONSTRAINT consulta_estado_check CHECK (estado IN (''abierta'', ''cerrada'', ''anulada''))',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @exist := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'consulta'
+     AND CONSTRAINT_NAME = 'consulta_fin_check'
+);
+SET @sql := IF(
+  @exist = 0,
+  'ALTER TABLE consulta ADD CONSTRAINT consulta_fin_check CHECK (fecha_hora_fin IS NULL OR fecha_hora_fin >= fecha_hora_inicio)',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @exist := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'consulta'
+     AND CONSTRAINT_NAME = 'consulta_id_cita_null_check'
+);
+SET @sql := IF(
+  @exist = 0,
+  'ALTER TABLE consulta ADD CONSTRAINT consulta_id_cita_null_check CHECK (id_cita IS NULL)',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 CREATE TABLE IF NOT EXISTS antecedente (
   id_institucion INTEGER NOT NULL,
