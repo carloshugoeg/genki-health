@@ -18,7 +18,7 @@ export function Panel() {
     setError('');
     try {
       await selectInstitution(kind);
-      navigate('/pacientes');
+      navigate('/inicio');
     } catch (e) {
       setError(errorMessage(e));
     } finally {

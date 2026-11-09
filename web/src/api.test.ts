@@ -92,6 +92,8 @@ it('register_omits_engine_and_institution', async () => {
 });
 it('router_has_exact_mvp_paths', () => {
   expect(MVP_PATHS).toEqual([
+    '/',
+    '/inicio',
     '/login',
     '/panel',
     '/pacientes',
@@ -110,10 +112,14 @@ it('router_has_exact_mvp_paths', () => {
     '/cuenta',
     '/usuarios',
   ]);
+  expect(route('/')).toBe('home');
+  expect(route('/inicio')).toBe('home');
   expect(route('/cuenta')).toBe('cuenta');
   expect(route('/usuarios')).toBe('usuarios');
   expect(
     [
+      '/',
+      '/inicio',
       '/login',
       '/panel',
       '/pacientes',
@@ -124,6 +130,8 @@ it('router_has_exact_mvp_paths', () => {
       '/economia',
     ].map(route),
   ).toEqual([
+    'home',
+    'home',
     'login',
     'panel',
     'patients',

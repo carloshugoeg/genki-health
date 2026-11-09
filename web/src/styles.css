@@ -244,3 +244,119 @@ dialog::backdrop {
   display: grid;
   gap: 0.35rem;
 }
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 16.5rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.sidepanel {
+  background: #123833;
+  color: #f4fffc;
+  padding: 1.25rem 0.9rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sidepanel h1 {
+  color: #f4fffc;
+  font-size: 1.7rem;
+  margin: 0.15rem 0 0.8rem;
+}
+
+.sidepanel .nav-group {
+  margin: 0.9rem 0 0.15rem;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b7d4ce;
+}
+
+.sidepanel button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  margin: 0;
+  padding: 0.4rem 0.55rem;
+}
+
+.sidepanel button[aria-current='page'] {
+  background: var(--accent);
+}
+
+.sidepanel .notice {
+  margin-top: auto;
+  font-size: 0.78rem;
+}
+
+.app-main {
+  min-width: 0;
+  padding: 1rem 1.5rem 3rem;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #9bb5b0;
+}
+
+.topbar p {
+  margin: 0.15rem 0 0;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.dash-card {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #9bb5b0;
+  padding: 1rem 1.1rem;
+}
+
+.dash-card strong {
+  display: block;
+  font-size: 2.2rem;
+  line-height: 1.1;
+  margin: 0.35rem 0 0.6rem;
+}
+
+@media (max-width: 860px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidepanel nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .sidepanel button {
+    width: auto;
+  }
+
+  .sidepanel .notice {
+    margin-top: 1rem;
+  }
+}

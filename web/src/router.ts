@@ -1,4 +1,6 @@
 export const MVP_PATHS = [
+  '/',
+  '/inicio',
   '/login',
   '/panel',
   '/pacientes',
@@ -19,6 +21,7 @@ export const MVP_PATHS = [
 ] as const;
 
 export type AppRoute =
+  | 'home'
   | 'login'
   | 'panel'
   | 'patients'
@@ -39,6 +42,7 @@ export type AppRoute =
   | 'unknown';
 
 export function route(path: string): AppRoute {
+  if (path === '/' || path === '/inicio') return 'home';
   if (path === '/login') return 'login';
   if (path === '/panel') return 'panel';
   if (path === '/pacientes') return 'patients';
