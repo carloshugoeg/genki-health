@@ -46,4 +46,4 @@ E1-02–E1-04 and E1-06 are Done. E1-03 is Done (merged PR #8). E1-05 remains Jo
 
 | E2-P5-01 | Fake idempotent seeds | Implemented; physical verification pending | Codex | codex/e2-p5-01-seeds-private-20261108-01 | Private integration; claimed 2026-11-08T16:41:01.563391-06:00 |
 
-| E2-P5-02 | Real engine composition and fail-fast startup | In progress | Codex | codex/e2-p5-02-composition-private-20261108-01 | Private child of completed P5-01 |
+| E2-P5-02 | Real engine composition and fail-fast startup | Implemented; physical runtime unverified | Codex | codex/e2-p5-02-composition-private-20261108-01 | Private child of completed P5-01 |

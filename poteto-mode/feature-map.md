@@ -15,6 +15,9 @@ Rows that share a ticket share a status. Owner is `Carlos/Cursor`, `Jordin/Claud
 
 ## Rollup
 
+- **Private P5-02:** real four-engine + Hospital PG auth composition implemented; Firestore05/core49/UI504 merged; physical runtime unverified.
+
+
 - **Private integration lane:** E2-P5-01 implemented with authorized demo-only fixed-ID bootstrap; physical verification pending. Dependency lane summaries below retain their original evidence and do not establish runtime validation of this integration.
 
 
@@ -100,3 +103,5 @@ Phase-0 scaffold is on `main`. Real engine adapters remain incomplete. Capabilit
 | Comparative note and written engine assignment | next | both | E2-P6-01 / E2-P6-02 |
 
 | Four-institution fake idempotent seeds | implemented; physical verification pending | Codex | E2-P5-01 |
+
+| Four-engine startup, Hospital PG identity and resource shutdown | implemented; runtime unverified | Codex | E2-P5-02 |

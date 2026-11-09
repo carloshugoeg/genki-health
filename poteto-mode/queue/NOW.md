@@ -24,3 +24,7 @@
 ## Authorized private seed lane
 
 E2-P5-01 implemented by Codex on `codex/e2-p5-01-seeds-private-20261108-01`; physical verification pending. Carlos resolved the previous fixed-ID/API mismatch by authorizing native demo bootstrap. Existing lane notes above are historical dependency evidence. No P5-02 claim or work. No new ticket was started.
+
+## Private P5-02 successor
+
+E2-P5-02 implemented on `codex/e2-p5-02-composition-private-20261108-01`, child of completed P5-01 a83e574. Firestore05/core49/actual UI504 integrated privately. Physical startup/seed idempotency remain unverified; no next ticket claimed.

@@ -41,12 +41,17 @@ export async function createMysqlAdapterSet(options: EngineOptions): Promise<Ada
     timezone: 'Z',
   });
 
-  const connection = await pool.getConnection();
   try {
-    await connection.query(`SELECT 1`);
-    await connection.query(`SET time_zone = '+00:00'`);
-  } finally {
-    connection.release();
+    const connection = await pool.getConnection();
+    try {
+      await connection.query('SELECT 1');
+      await connection.query("SET time_zone = '+00:00'");
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    await pool.end().catch(() => undefined);
+    throw error;
   }
 
   const clock = options.clock ?? defaultClock;

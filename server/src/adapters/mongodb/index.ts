@@ -25,8 +25,8 @@ function databaseNameFromUrl(url: string): string {
 /** C3.6 factory: connect, assert writable primary, return closable adapter set. */
 export async function createMongoAdapterSet(options: EngineOptions): Promise<AdapterResource> {
   const client = new MongoClient(options.url);
-  await client.connect();
   try {
+    await client.connect();
     await assertMongoPrimaryReady(client);
   } catch (error) {
     await client.close().catch(() => undefined);

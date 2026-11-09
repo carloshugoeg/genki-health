@@ -118,3 +118,7 @@ Implementado el bootstrap demo-only con IDs exactos 101/102/103, sin cambiar API
 - Compilación explícita de `scripts/seed.ts` y `server/test/seeds.test.ts` con TypeScript estricto: resultado en journal; el tsconfig normal no incluye estos paths.
 - Las cuatro pruebas físicas requeridas se añadieron en `server/test/seeds.test.ts`, sin skip ni memory fallback. No ejecutadas por instrucción actual de Carlos: solamente build/type/lint, sin suites/revisiones opcionales.
 - Sin ejecución de `db:seed`, motores, emulador, validate.sh, E2E, deployment, cambio de configuración, credenciales ni P5-02. No se declara readiness desde compilación.
+
+## E2-P5-02 — evidencia limitada autorizada
+
+Composición implementada con Firestore05/core49/UI504 integrados por merge privado. Build y typecheck de todos los workspaces: exit 0. Lint y whitespace: resultado en journal. No se marca gate físico completo: no suites, validate.sh, E2E, revisión adicional, servicios ni preview. El error histórico de fixtures no se reprodujo en estos builds. P5-01 conserva su limitación de idempotencia física no verificada.
