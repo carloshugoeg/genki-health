@@ -303,6 +303,10 @@ describe('AuthPort C3.5 session transitions', () => {
     expect(after.institution_kind).toBe('hospital_general');
     expect(after.motor).toBe('postgres');
 
+    await expect(
+      auth.selectInstitution(rotated.access_token, rotated.refresh_token, 'centro_pediatrico'),
+    ).rejects.toMatchObject({ code: 'forbidden' } satisfies Partial<AuthError>);
+
     const forged = await new SignJWT({
       email: 'hospital@genki.local',
       institucion_id: 2,
@@ -328,6 +332,43 @@ describe('AuthPort C3.5 session transitions', () => {
     const other = await auth.verifyAccessToken(pediatric.access_token);
     expect(other.institution_kind).toBe('centro_pediatrico');
     expect(other.id_institucion).toBe(2);
+  });
+
+  it('superadmin_can_switch_institution_and_normal_user_cannot', async () => {
+    const { auth, password } = await makeAuth();
+    const normal = await auth.login({
+      email: 'hospital@genki.local',
+      password,
+      institution_kind: 'hospital_general',
+    });
+    await expect(
+      auth.selectInstitution(normal.access_token, normal.refresh_token, 'laboratorio_clinico'),
+    ).rejects.toMatchObject({ code: 'forbidden' } satisfies Partial<AuthError>);
+
+    const tokens = await auth.login({
+      email: 'superadmin@example.invalid',
+      password,
+      institution_kind: 'hospital_general',
+    });
+    const home = await auth.verifyAccessToken(tokens.access_token);
+    expect(home.roles).toContain('superadministrador');
+    expect(home.institution_kind).toBe('hospital_general');
+
+    const switched = await auth.selectInstitution(
+      tokens.access_token,
+      tokens.refresh_token,
+      'centro_pediatrico',
+    );
+    const active = await auth.verifyAccessToken(switched.access_token);
+    expect(active.institution_kind).toBe('centro_pediatrico');
+    expect(active.id_institucion).toBe(2);
+    expect(active.motor).toBe('mysql');
+    expect(active.roles).toContain('superadministrador');
+
+    const refreshed = await auth.refresh(switched.refresh_token);
+    const still = await auth.verifyAccessToken(refreshed.access_token);
+    expect(still.institution_kind).toBe('centro_pediatrico');
+    expect(still.motor).toBe('mysql');
   });
 
   it('enforces password policy on login input', async () => {

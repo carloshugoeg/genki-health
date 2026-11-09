@@ -128,7 +128,8 @@ flowchart TB
 2. Claims de access: `sub`, `email`, `institucion_id`, `institucion_kind`, `roles`, `motor`, `iat`, `exp`, `typ:"access"`.
 3. Rutas clínicas (p. ej. `POST /api/pacientes`) exigen `Authorization: Bearer <access>`; el middleware resuelve el registro.
 4. `POST /api/auth/refresh` rota el refresh (`jti` anterior invalidado).
-5. Identidad: `AuthPort` de plataforma (memory ahora; Hospital PostgreSQL después). No es por-adaptador clínico.
+5. Identidad: `AuthPort` de plataforma con SoR en Hospital PostgreSQL (`AUTH_DATABASE_URL`).
+6. Superadministrador de calificación (`superadmin@example.invalid`, rol `superadministrador`, institución hogar 1): tras el login ve `/panel` y `POST /api/auth/select-institution` reemite JWT con la institución elegida. Usuarios normales no pueden cambiar de institución; su claim sigue atado al hogar.
 
 ## Módulos del dominio clínico
 

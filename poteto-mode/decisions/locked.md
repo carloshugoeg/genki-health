@@ -64,6 +64,8 @@ Carlos Hugo Escobar Gómez locked Entrega II authentication. Agents do not reope
    - Refresh tokens rotate on each successful refresh (`jti` replaced; previous `jti` invalidated).
    Refresh claims: `sub`, `institucion_id`, `institucion_kind`, `jti`, `iat`, `exp`, `typ: "refresh"`.
 
+5. **Superadministrador de calificación (Carlos, 2026-11-09).** Exception for the grading engineer only: identity `superadmin@example.invalid` with role `superadministrador` lives on Hospital PostgreSQL (institution 1). After login, `POST /api/auth/select-institution` may reissue tokens whose `institucion_id` / `institucion_kind` / `motor` match any of the four locked institutions. Claim set stays the same. Normal users remain unable to change institution after login.
+
 ## How the pair works
 
 - Humans own design. Cursor codes for Carlos. Claude codes for Jordin.

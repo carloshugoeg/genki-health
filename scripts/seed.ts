@@ -174,10 +174,16 @@ export function sqlFixtures(institution: 1 | 2): SqlRow[] {
       for (const guardian of guardians(patient.id_paciente))
         add('responsable', 'id_responsable', guardian);
   }
-  if (institution === 1)
+  if (institution === 1) {
     ROLES.forEach((role, index) =>
       add('rol', 'id_rol', { id_rol: index + 1, nombre: role, descripcion: FAKE_BANNER }),
     );
+    add('rol', 'id_rol', {
+      id_rol: 5,
+      nombre: 'superadministrador',
+      descripcion: FAKE_BANNER,
+    });
+  }
   if (institution === 2)
     for (const row of rows)
       for (const [key, value] of Object.entries(row.data)) {
@@ -436,7 +442,7 @@ export async function runSeed(
         page_size: 1,
       });
       report(
-        `institution=${index + 1} engine=${INSTITUTIONS[index]!.engine} patients=${counts.total}${index === 0 ? ' identities=16' : ''}`,
+        `institution=${index + 1} engine=${INSTITUTIONS[index]!.engine} patients=${counts.total}${index === 0 ? ' identities=17' : ''}`,
       );
     }
   } catch (error) {

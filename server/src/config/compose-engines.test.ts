@@ -43,6 +43,7 @@ function fixture() {
     refresh: unused,
     logout: unused,
     verifyAccessToken: unused,
+    selectInstitution: unused,
   };
   const identityClose = vi.fn(async () => {});
   const factories: typeof engineFactories = {

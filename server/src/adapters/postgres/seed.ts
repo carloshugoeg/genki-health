@@ -122,6 +122,44 @@ export async function seedPostgres(url: string, rows: SeedRow[], password: strin
         );
       }
     }
+    // Grading superadmin: Hospital PG identity only; password from SEED_PASSWORD.
+    const superRole = await client.query(
+      "SELECT id_rol,nombre FROM rol WHERE id_rol=5 OR nombre='superadministrador'",
+    );
+    if (superRole.rowCount) {
+      const row = superRole.rows[0];
+      if (row.id_rol !== 5 || row.nombre !== 'superadministrador')
+        throw new Error('Seed superadministrador role conflict');
+    } else {
+      await client.query(
+        "INSERT INTO rol (id_rol,nombre,descripcion) VALUES (5,'superadministrador',$1)",
+        ['Contenido académico simulado; no usar para atención'],
+      );
+    }
+    const superCorreo = 'superadmin@example.invalid';
+    const superUser = await client.query(
+      'SELECT id_institucion,id_rol,nombre_usuario,hash_contrasena,estado FROM usuario WHERE correo=$1',
+      [superCorreo],
+    );
+    if (superUser.rowCount) {
+      const current = superUser.rows[0];
+      if (
+        current.id_institucion !== 1 ||
+        current.id_rol !== 5 ||
+        current.nombre_usuario !== 'superadmin'
+      )
+        throw new Error('Seed superadmin identity fixture conflict');
+      if (current.estado !== 'activo' || !String(current.hash_contrasena).startsWith('$argon2id$'))
+        throw new Error(
+          'Seed existing identity is inactive or lacks Argon2id; preserved without reset',
+        );
+    } else {
+      const hash = await argon2.hash(password, { type: argon2.argon2id });
+      await client.query(
+        "INSERT INTO usuario (id_institucion,id_rol,nombre_usuario,correo,hash_contrasena,estado) VALUES (1,5,'superadmin',$1,$2,'activo')",
+        [superCorreo, hash],
+      );
+    }
     const folios = await client.query<{ maximum: number }>(
       "SELECT COALESCE(MAX(substring(folio from '^REC-([0-9]+)$')::bigint),0)::int AS maximum FROM receta",
     );

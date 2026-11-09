@@ -93,6 +93,7 @@ it('register_omits_engine_and_institution', async () => {
 it('router_has_exact_mvp_paths', () => {
   expect(MVP_PATHS).toEqual([
     '/login',
+    '/panel',
     '/pacientes',
     '/pacientes/nuevo',
     '/pacientes/:id',
@@ -101,12 +102,13 @@ it('router_has_exact_mvp_paths', () => {
   expect(
     [
       '/login',
+      '/panel',
       '/pacientes',
       '/pacientes/nuevo',
       '/pacientes/12',
       '/pacientes/12/consulta/nueva',
     ].map(route),
-  ).toEqual(['login', 'patients', 'register', 'record', 'consultation']);
+  ).toEqual(['login', 'panel', 'patients', 'register', 'record', 'consultation']);
   expect(route('/pacientes/0')).toBe('unknown');
   expect(route('/other')).toBe('unknown');
 });

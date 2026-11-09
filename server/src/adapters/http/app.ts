@@ -54,6 +54,9 @@ function bearerToken(header: string | undefined): string | null {
 }
 
 function hasAnyRole(principal: AuthPrincipalDto, roles: readonly string[]): boolean {
+  if (principal.roles.includes('superadministrador')) {
+    return true;
+  }
   return principal.roles.some((role) => roles.includes(role));
 }
 
@@ -243,6 +246,42 @@ export function buildHttpApp(options: HttpAppOptions) {
     }
     return principal;
   });
+
+  app.post<{ Body: { institution_kind?: string; refresh_token?: string } }>(
+    '/api/auth/select-institution',
+    async (request, reply) => {
+      const principal = await requirePrincipal(request, reply);
+      if (!principal) {
+        return;
+      }
+      const body = request.body;
+      if (
+        !body ||
+        typeof body.institution_kind !== 'string' ||
+        !isInstitutionKind(body.institution_kind) ||
+        typeof body.refresh_token !== 'string'
+      ) {
+        const mapped = invalidBodyError();
+        return reply.code(mapped.status).send(mapped.body);
+      }
+      const token = bearerToken(request.headers.authorization);
+      if (!token) {
+        return reply
+          .code(401)
+          .send({ error: 'missing_bearer', message: 'Authorization Bearer required' });
+      }
+      try {
+        const tokens = await options.auth.selectInstitution(
+          token,
+          body.refresh_token,
+          body.institution_kind,
+        );
+        return reply.code(200).send(tokens);
+      } catch (error) {
+        return sendMapped(reply, error);
+      }
+    },
+  );
 
   app.get('/api/catalogos', async (request, reply) => {
     const principal = await requirePrincipal(request, reply);

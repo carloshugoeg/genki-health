@@ -1,6 +1,7 @@
 import type {
   AuthTokensDto,
   ClinicalErrorCode,
+  InstitutionKind,
   LoginRequestDto,
   RegisterPacienteRequest,
   PacienteResumen,
@@ -111,6 +112,28 @@ export async function login(input: LoginRequestDto): Promise<void> {
   );
   if (epoch !== generation) throw new ApiError('invalid_token', 401);
   saveSession(tokens, input.institution_kind);
+}
+export async function selectInstitution(institution_kind: InstitutionKind): Promise<void> {
+  await api('/api/auth/me');
+  const session = loadSession();
+  if (!session.access_token || !session.refresh_token) throw new ApiError('invalid_token', 401);
+  const epoch = generation;
+  const tokens = await read<AuthTokensDto>(
+    await fetch('/api/auth/select-institution', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        institution_kind,
+        refresh_token: session.refresh_token,
+      }),
+    }),
+  );
+  if (epoch !== generation) throw new ApiError('invalid_token', 401);
+  generation++;
+  saveSession(tokens, institution_kind);
 }
 export async function logout(): Promise<void> {
   generation++;

@@ -8,7 +8,8 @@ import type {
 export class AuthError extends Error {
   constructor(
     message: string,
-    readonly code: 'invalid_credentials' | 'invalid_token' | 'password_policy' | 'misconfigured',
+    readonly code:
+      'invalid_credentials' | 'invalid_token' | 'password_policy' | 'misconfigured' | 'forbidden',
   ) {
     super(message);
     this.name = 'AuthError';
@@ -22,6 +23,12 @@ export interface AuthPort {
   refresh(refreshToken: string): Promise<AuthTokensDto>;
   verifyAccessToken(accessToken: string): Promise<AuthPrincipalDto>;
   logout(refreshToken: string): Promise<void>;
+  /** Superadmin only: reissue tokens scoped to the chosen institution. */
+  selectInstitution(
+    accessToken: string,
+    refreshToken: string,
+    institution_kind: InstitutionKind,
+  ): Promise<AuthTokensDto>;
 }
 
 export function isInstitutionKind(value: string): value is InstitutionKind {
