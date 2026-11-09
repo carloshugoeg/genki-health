@@ -2,6 +2,10 @@
 
 Plataforma compartida de historiales clínicos para cuatro instituciones médicas independientes. Proyecto final de Bases de Datos II, Universidad Rafael Landívar. Integrantes: Carlos Hugo Escobar Gómez y Héctor Jordin Adolfo García Coyoy.
 
+## Lane-3 account / users / reactivación (2026-11-09)
+
+Hospital PG identity SoR mounts OP-03 `POST /api/auth/password` and OP-04 `POST /api/usuarios/:id/reset-password` (account) plus OP-05 `POST /api/usuarios` and OP-06 `GET /api/bitacora` (users). Domain checks use central `assertRoles` (superadministrador bypass). OP-19 `POST /api/pacientes/:id/reactivacion` reactivates archived expedientes on all four engines without erasing history. UI: `/cuenta`, `/usuarios`, Historial reactivar. `db:setup:all` runs `server/test/full/lane3/manage.ts` idempotently (PG/MySQL migrations, Mongo index, Firestore ensure) and honors `FIRESTORE_MODE=real`.
+
 ## Lane A+B integration (2026-11-09)
 
 Codex lanes A (caja/inventario/honorarios/facturación OP61–77) and B (agenda OP20–25) are mounted on the main Fastify app via `registerLaneABRoutes`: full `agendaPlugin` plus economic plugins resolve the selected institution's `AdapterSet.full` bag (agenda + shared EconomicStore services). Engine factories and memory attach that bag through `laneABModulesFrom`. Auth uses `requirePrincipal` and domain `assertRoles` (superadministrador bypass). UI routes: `/agenda`, `/economia`, `/inventario`, `/honorarios`, `/facturacion`, `/caja`, `/personal`. `npm run db:setup:all` still migrates/seeds charges+agenda on all four engines.

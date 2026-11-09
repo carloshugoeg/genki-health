@@ -17,6 +17,8 @@ import { PaymentsPage } from './full/payments';
 import { PersonnelPage } from './full/personnel';
 import { ProcedurePage } from './full/procedure';
 import { DentalSessionPage } from './full/dental-session';
+import { AccountPage } from './full/account';
+import { UsersPage } from './full/users';
 import type { EconomicClient } from './full/charges/EconomicPage';
 
 function isSuperadmin(principal: AuthPrincipalDto): boolean {
@@ -132,6 +134,10 @@ export function App() {
               {current !== 'panel' && (
                 <button onClick={() => navigate('/sesiones-dentales')}>Sesiones dentales</button>
               )}
+              {current !== 'panel' && <button onClick={() => navigate('/cuenta')}>Cuenta</button>}
+              {current !== 'panel' && (
+                <button onClick={() => navigate('/usuarios')}>Usuarios</button>
+              )}
               <button disabled={busy} onClick={() => void signOut()}>
                 Cerrar sesión
               </button>
@@ -189,6 +195,10 @@ export function App() {
         <ProcedurePage client={client} />
       ) : current === 'sesiones-dentales' ? (
         <DentalSessionPage client={client} />
+      ) : current === 'cuenta' ? (
+        <AccountPage client={client} />
+      ) : current === 'usuarios' ? (
+        <UsersPage client={client} />
       ) : null}
       <details className="out-of-scope">
         <summary>Fuera del alcance de esta entrega</summary>
