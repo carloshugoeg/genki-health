@@ -151,16 +151,18 @@ async function identityWithHospitalRoles() {
   return createPhase0Identity(jwtSecret, await hospitalIdentityUsers());
 }
 
-function clinicalRegistry(hospital: TestMemoryAdapterSet, pediatric: TestMemoryAdapterSet) {
+function clinicalRegistry(
+  hospital: TestMemoryAdapterSet,
+  pediatric: TestMemoryAdapterSet,
+  dental: TestMemoryAdapterSet = createTestMemoryAdapterSet('clinica_odontologica', 4),
+) {
   const registry = new InstitutionAdapterRegistry();
   registry.register('hospital_general', () => hospital);
   registry.register('centro_pediatrico', () => pediatric);
   registry.register('laboratorio_clinico', () =>
     createTestMemoryAdapterSet('laboratorio_clinico', 3),
   );
-  registry.register('clinica_odontologica', () =>
-    createTestMemoryAdapterSet('clinica_odontologica', 4),
-  );
+  registry.register('clinica_odontologica', () => dental);
   return registry;
 }
 
@@ -847,9 +849,14 @@ describe('HTTP patient search detail catalog archive', () => {
   it('op37_and_fs19_routes_accept_superadmin_on_institution_engines', async () => {
     const hospital = createTestMemoryAdapterSet('hospital_general', 1);
     const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
+    const dentalSet = createTestMemoryAdapterSet('clinica_odontologica', 4);
     seedHospitalCatalogs(hospital);
+    seedHospitalCatalogs(dentalSet);
     const auth = await authWithHospitalRoles();
-    const app = buildHttpApp({ registry: clinicalRegistry(hospital, pediatric), auth });
+    const app = buildHttpApp({
+      registry: clinicalRegistry(hospital, pediatric, dentalSet),
+      auth,
+    });
     const { password } = testCredentials();
 
     const login = await app.inject({
@@ -918,6 +925,64 @@ describe('HTTP patient search detail catalog archive', () => {
     });
     expect(sessionMissing.statusCode).toBe(404);
     expect((sessionMissing.json() as ErrorDto).error).toBe('not_found');
+
+    const registered = await app.inject({
+      method: 'POST',
+      url: '/api/pacientes',
+      headers: { authorization: `Bearer ${dental.access_token}` },
+      payload: adult('DENTAL-SES-1', 'Dina'),
+    });
+    expect(registered.statusCode).toBe(201);
+    const patientId = (registered.json() as PacienteResumen).paciente.id_paciente;
+
+    const plan = await app.inject({
+      method: 'POST',
+      url: `/api/pacientes/${patientId}/planes`,
+      headers: {
+        authorization: `Bearer ${dental.access_token}`,
+        'idempotency-key': 'op57-http-1',
+      },
+      payload: {
+        id_profesional: 1,
+        detalle: [
+          {
+            linea: 1,
+            numero_pieza: 11,
+            codigo_procedimiento: 'RESINA',
+            orden: 1,
+            precio_unitario: '150.00',
+          },
+        ],
+      },
+    });
+    expect(plan.statusCode).toBe(201);
+    const planId = (plan.json() as { id_plan: number }).id_plan;
+
+    const accepted = await app.inject({
+      method: 'POST',
+      url: `/api/planes/${planId}/aceptacion`,
+      headers: {
+        authorization: `Bearer ${dental.access_token}`,
+        'idempotency-key': 'op58-http-1',
+      },
+    });
+    expect(accepted.statusCode).toBe(200);
+
+    const session = await app.inject({
+      method: 'POST',
+      url: `/api/planes/${planId}/sesiones`,
+      headers: {
+        authorization: `Bearer ${dental.access_token}`,
+        'idempotency-key': 'op59-http-ok',
+      },
+      payload: {
+        fecha: '2026-11-09',
+        lineas: [1],
+        expected_revision: 0,
+      },
+    });
+    expect(session.statusCode).toBe(201);
+    expect((session.json() as { id_sesion: number }).id_sesion).toBeGreaterThan(0);
   });
 });
 

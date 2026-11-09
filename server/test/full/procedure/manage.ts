@@ -7,9 +7,18 @@ const [command, engine = 'postgres'] = process.argv.slice(2);
 if (!['migrate', 'seed'].includes(command ?? '') || engine !== 'postgres') {
   throw new Error('Uso: manage.ts migrate|seed [postgres]');
 }
-if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL required');
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+function procedureDatabaseUrl(): string {
+  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+  const admin = process.env.PG_ADMIN_URL;
+  const db = process.env.POSTGRES_DB ?? 'genki_hospital';
+  if (!admin) throw new Error('DATABASE_URL or PG_ADMIN_URL required');
+  const url = new URL(admin);
+  url.pathname = `/${db}`;
+  return url.toString();
+}
+
+const pool = new pg.Pool({ connectionString: procedureDatabaseUrl() });
 try {
   const sql = await readFile(
     fileURLToPath(

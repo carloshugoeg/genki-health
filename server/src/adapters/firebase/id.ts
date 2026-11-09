@@ -16,6 +16,8 @@ const sequences = new Set([
   'signos_vitales',
   'odontograma',
   'plan_tratamiento',
+  'sesion_tratamiento',
+  'reactivacion_audit',
 ]);
 
 export class FirebaseId implements IdPort {

@@ -4,7 +4,7 @@ Plataforma compartida de historiales clínicos para cuatro instituciones médica
 
 ## Lane-3 account / users / reactivación (2026-11-09)
 
-Hospital PG identity SoR mounts OP-03 `POST /api/auth/password` and OP-04 `POST /api/usuarios/:id/reset-password` (account) plus OP-05 `POST /api/usuarios` and OP-06 `GET /api/bitacora` (users). Domain checks use central `assertRoles` (superadministrador bypass). OP-19 `POST /api/pacientes/:id/reactivacion` reactivates archived expedientes on all four engines without erasing history. UI: `/cuenta`, `/usuarios`, Historial reactivar. `db:setup:all` runs `server/test/full/lane3/manage.ts` idempotently (PG/MySQL migrations, Mongo index, Firestore ensure) and honors `FIRESTORE_MODE=real`.
+Hospital PG identity SoR mounts OP-03 `POST /api/auth/password` and OP-04 `POST /api/usuarios/:id/reset-password` (account) plus OP-05 `POST /api/usuarios` and OP-06 `GET /api/bitacora` (users). Domain checks use central `assertRoles` (superadministrador bypass). OP-19 `POST /api/pacientes/:id/reactivacion` reactivates archived expedientes on all four engines without erasing history. UI: `/cuenta`, `/usuarios`, Historial reactivar. `db:setup:all` runs `server/test/full/lane3/manage.ts` idempotently (PG/MySQL migrations, Mongo index, Firestore ensure) and honors `FIRESTORE_MODE=real`. Postgres bootstrap applies `security.sql` on the hospital database (not the maintenance DB) so bitácora / permiso / rol_permiso / reactivacion_audit / account column grants land. Mongo `genkiApp` includes lane-1/2 clinical collections plus `reactivacion_audit`. Firestore counters allow `sesion_tratamiento` and `reactivacion_audit`.
 
 ## Lane A+B integration (2026-11-09)
 
