@@ -388,7 +388,7 @@
         },
         "tratamientos": {
           "bsonType": "array",
-          "minItems": 1,
+          "minItems": 0,
           "maxItems": 20,
           "items": {
             "bsonType": "object",

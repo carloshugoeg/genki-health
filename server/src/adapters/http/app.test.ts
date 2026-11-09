@@ -621,4 +621,95 @@ describe('HTTP patient search detail catalog archive', () => {
     expect((denied.json() as ErrorDto).error).toBe('forbidden');
     expect(hospital.memoryState.getPublished().consultas.size).toBe(0);
   });
+
+  it('superadmin_selected_institution_passes_clinical_role_and_recepcion_still_forbidden', async () => {
+    const hospital = createTestMemoryAdapterSet('hospital_general', 1);
+    const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
+    seedHospitalCatalogs(hospital);
+    const auth = await authWithHospitalRoles();
+    const app = buildHttpApp({ registry: clinicalRegistry(hospital, pediatric), auth });
+    const { password } = testCredentials();
+
+    const adminToken = await loginAs(app, 'hospital@genki.local');
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/pacientes',
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: adult('SUPER-ALG-1'),
+    });
+    expect(created.statusCode).toBe(201);
+    const id = (created.json() as PacienteResumen).paciente.id_paciente;
+
+    const login = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        email: 'superadmin@example.invalid',
+        password,
+        institution_kind: 'hospital_general',
+      },
+    });
+    expect(login.statusCode).toBe(200);
+    const homeTokens = login.json() as AuthTokensDto;
+
+    const away = await app.inject({
+      method: 'POST',
+      url: '/api/auth/select-institution',
+      headers: { authorization: `Bearer ${homeTokens.access_token}` },
+      payload: {
+        institution_kind: 'laboratorio_clinico',
+        refresh_token: homeTokens.refresh_token,
+      },
+    });
+    expect(away.statusCode).toBe(200);
+    const labTokens = away.json() as AuthTokensDto;
+
+    const back = await app.inject({
+      method: 'POST',
+      url: '/api/auth/select-institution',
+      headers: { authorization: `Bearer ${labTokens.access_token}` },
+      payload: {
+        institution_kind: 'hospital_general',
+        refresh_token: labTokens.refresh_token,
+      },
+    });
+    expect(back.statusCode).toBe(200);
+    const active = back.json() as AuthTokensDto;
+
+    const allowed = await app.inject({
+      method: 'POST',
+      url: `/api/pacientes/${id}/alergias`,
+      headers: {
+        authorization: `Bearer ${active.access_token}`,
+        'idempotency-key': 'superadmin-alergia-1',
+      },
+      payload: {
+        sustancia: 'Penicilina',
+        tipo: 'medicamento',
+        severidad: 'moderada',
+        reaccion: 'Urticaria',
+        fecha_deteccion: '2020-03-15',
+      },
+    });
+    expect(allowed.statusCode).toBe(201);
+
+    const recepcionToken = await loginAs(app, 'recepcion@genki.local');
+    const denied = await app.inject({
+      method: 'POST',
+      url: `/api/pacientes/${id}/alergias`,
+      headers: {
+        authorization: `Bearer ${recepcionToken}`,
+        'idempotency-key': 'recepcion-alergia-1',
+      },
+      payload: {
+        sustancia: 'Ibuprofeno',
+        tipo: 'medicamento',
+        severidad: 'leve',
+        reaccion: null,
+        fecha_deteccion: null,
+      },
+    });
+    expect(denied.statusCode).toBe(403);
+    expect((denied.json() as ErrorDto).error).toBe('forbidden');
+  });
 });

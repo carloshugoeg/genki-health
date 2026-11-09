@@ -1,4 +1,5 @@
 import { ClinicalError } from '../clinical-error.js';
+import { assertRoles } from './specialty-common.js';
 
 export const CONSULTATION_OPEN_ROLES = ['medico', 'odontologo'] as const;
 export const CONSULTATION_VITALS_ROLES = ['medico', 'enfermeria', 'odontologo'] as const;
@@ -120,15 +121,11 @@ function assertOptionalPositive(value: unknown, present: boolean): number | null
 }
 
 export function assertConsultationOpenRole(roles: readonly string[]): void {
-  if (!roles.some((role) => (CONSULTATION_OPEN_ROLES as readonly string[]).includes(role))) {
-    throw new ClinicalError('forbidden', 'No autorizado');
-  }
+  assertRoles(roles, CONSULTATION_OPEN_ROLES);
 }
 
 export function assertConsultationVitalsRole(roles: readonly string[]): void {
-  if (!roles.some((role) => (CONSULTATION_VITALS_ROLES as readonly string[]).includes(role))) {
-    throw new ClinicalError('forbidden', 'No autorizado');
-  }
+  assertRoles(roles, CONSULTATION_VITALS_ROLES);
 }
 
 export function parseOp26Params(params: { id: number }): number {

@@ -1,4 +1,5 @@
 import { ClinicalError } from '../clinical-error.js';
+import { assertRoles } from './specialty-common.js';
 
 export const ANTECEDENTE_TIPOS = ['personal', 'familiar', 'quirurgico', 'habito'] as const;
 export type AntecedenteTipo = (typeof ANTECEDENTE_TIPOS)[number];
@@ -113,15 +114,11 @@ export function normalizeSustancia(value: string): string {
 }
 
 export function assertRecordClinicalRole(roles: readonly string[]): void {
-  if (!roles.some((role) => (RECORD_CLINICAL_ROLES as readonly string[]).includes(role))) {
-    throw new ClinicalError('forbidden', 'No autorizado');
-  }
+  assertRoles(roles, RECORD_CLINICAL_ROLES);
 }
 
 export function assertRecordArchiveRole(roles: readonly string[]): void {
-  if (!roles.some((role) => (RECORD_ARCHIVE_ROLES as readonly string[]).includes(role))) {
-    throw new ClinicalError('forbidden', 'No autorizado');
-  }
+  assertRoles(roles, RECORD_ARCHIVE_ROLES);
 }
 
 export function parseOp12Params(params: { id: number }, query: Record<string, unknown>): number {

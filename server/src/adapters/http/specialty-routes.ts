@@ -41,12 +41,14 @@ function actorFrom(
   return {
     id_institucion: principal.id_institucion,
     id_usuario: principal.id_usuario,
-    id_profesional: principal.roles.includes('medico') ||
+    id_profesional:
+      principal.roles.includes('superadministrador') ||
+      principal.roles.includes('medico') ||
       principal.roles.includes('enfermeria') ||
       principal.roles.includes('odontologo') ||
       principal.roles.includes('laboratorista')
-      ? 1
-      : null,
+        ? 1
+        : null,
     roles: principal.roles,
     permissions: [],
     now: adapters.clock.nowIso(),
@@ -92,7 +94,10 @@ export function registerSpecialtyRoutes(
   },
 ): void {
   const resolve = (principal: AuthPrincipalDto) =>
-    options.registry.resolve(principal.institution_kind, principal.id_institucion) as AdapterSetWithFull;
+    options.registry.resolve(
+      principal.institution_kind,
+      principal.id_institucion,
+    ) as AdapterSetWithFull;
 
   app.get('/api/camas', async (request, reply) => {
     const principal = await options.requirePrincipal(request, reply);

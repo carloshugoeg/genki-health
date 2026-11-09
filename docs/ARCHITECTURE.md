@@ -137,7 +137,7 @@ flowchart TB
 3. Rutas clínicas (p. ej. `POST /api/pacientes`) exigen `Authorization: Bearer <access>`; el middleware resuelve el registro.
 4. `POST /api/auth/refresh` rota el refresh (`jti` anterior invalidado).
 5. Identidad: `AuthPort` de plataforma con SoR en Hospital PostgreSQL (`AUTH_DATABASE_URL`).
-6. Superadministrador de calificación (`superadmin@example.invalid`, rol `superadministrador`, institución hogar 1): tras el login ve `/panel` y `POST /api/auth/select-institution` reemite JWT con la institución elegida. Usuarios normales no pueden cambiar de institución; su claim sigue atado al hogar.
+6. Superadministrador de calificación (`superadmin@example.invalid`, rol `superadministrador`, institución hogar 1): tras el login ve `/panel` y `POST /api/auth/select-institution` reemite JWT con la institución elegida. En la institución seleccionada el chequeo central de roles (`assertRoles` / `hasAnyRole`) lo trata como si tuviera todos los roles de módulo; `created_by` / auditoría siguen identificando al usuario superadmin. Usuarios normales no pueden cambiar de institución; su claim sigue atado al hogar.
 
 ## Módulos del dominio clínico
 

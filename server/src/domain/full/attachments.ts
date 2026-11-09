@@ -1,4 +1,5 @@
 import { ClinicalError } from '../clinical-error.js';
+import { assertRoles } from './specialty-common.js';
 
 export const ATTACHMENT_CLINICAL_ROLES = ['medico', 'odontologo', 'enfermeria'] as const;
 
@@ -52,9 +53,7 @@ function hasMagic(bytes: Uint8Array, magic: Uint8Array): boolean {
 }
 
 export function assertAttachmentClinicalRole(roles: readonly string[]): void {
-  if (!roles.some((role) => (ATTACHMENT_CLINICAL_ROLES as readonly string[]).includes(role))) {
-    throw new ClinicalError('forbidden', 'No autorizado');
-  }
+  assertRoles(roles, ATTACHMENT_CLINICAL_ROLES);
 }
 
 export function parseOp17Params(params: { id: number }): number {
