@@ -4,6 +4,7 @@ import { api, errorMessage } from '../api';
 import { navigate } from '../router';
 import { ArchiveDialog } from '../components/ArchiveDialog';
 import { FichaLane1 } from '../full/FichaLane1';
+import { SpecialtyPanels } from '../full/SpecialtyPanels';
 import { Consulta } from './Consulta';
 
 const labels: Record<string, string> = {
@@ -111,9 +112,11 @@ export function mutationActions(state: string, roles: string[]) {
 export function HistoryContent({
   history,
   catalogs,
+  principal,
 }: {
   history: HistorialDto;
   catalogs: CatalogosDto | null;
+  principal: AuthPrincipalDto;
 }) {
   const consultations = [...history.consultas].sort(
     (a, b) =>
@@ -134,6 +137,7 @@ export function HistoryContent({
         <Fields value={history.expediente} />
       </section>
       <FichaLane1 patientId={history.paciente.id_paciente} />
+      <SpecialtyPanels patientId={history.paciente.id_paciente} principal={principal} />
       <section>
         <h3>Historial de consultas</h3>
         <p className="muted">
@@ -285,7 +289,7 @@ export function Historial({
       )}
       {!composing && history && (
         <>
-          <HistoryContent history={history} catalogs={catalogs} />
+          <HistoryContent history={history} catalogs={catalogs} principal={principal} />
           <div className="actions">
             {actions.consulta && (
               <button

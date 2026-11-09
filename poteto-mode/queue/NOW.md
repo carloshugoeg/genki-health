@@ -1,5 +1,7 @@
 # Now
 
+**Lane 2 specialties in review** on `cursor/genki-lane-2-specialties` (draft PR stacked on `cursor/genki-lane-1-clinical-shared`). Scope: FS-08/09(OP36 only)/10, FS-12/13/14, FS-15/16, FS-17/18. OP37 and FS-19 deferred.
+
 **No active agent claim.** E2-P3A-03 is Done on `cursor/e2-p3a-03-pg-paciente-a348` (stacked on `cursor/e2-p3a-02-pg-migrations-e038`). Do not start the next ticket until an owner opens that claim.
 **No active agent claim.** E2-P3B-04 is Done on `cursor/e2-p3b-04-mysql-security-4d65` (stacked on `cursor/e2-p3b-03-mysql-consulta-b7cc`). Do not start the next ticket until an owner opens that claim.
 **No active agent claim.** E2-P4A-04 is Done on `cursor/e2-p4a-04-mongo-permissions-f1c6` (stacked on `cursor/e2-p4a-03-mongo-consulta-26d7`). Do not start the next ticket until an owner opens that claim.

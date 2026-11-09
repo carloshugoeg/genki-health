@@ -15,6 +15,8 @@ Rows that share a ticket share a status. Owner is `Carlos/Cursor`, `Jordin/Claud
 
 ## Rollup
 
+- **Lane 2 specialties:** hospitalización (PG OP34–36/38), pediatría (MySQL OP40–47), laboratorio (Mongo OP48–54), odontología (Firestore OP55–58) implemented on `cursor/genki-lane-2-specialties`. OP37 and FS-19 deferred. WHO percentiles not fabricated.
+
 - **Private P5-02:** real four-engine + Hospital PG auth composition implemented; Firestore05/core49/UI504 merged; physical runtime unverified.
 
 

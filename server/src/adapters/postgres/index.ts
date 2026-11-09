@@ -2,8 +2,11 @@ import pg from 'pg';
 import type { AdapterResource, EngineOptions } from '../../ports/index.js';
 import { PostgresCatalogoRepository } from './catalogo-repository.js';
 import { PostgresConsultaRepository } from './consulta-repository.js';
+import { createPostgresAdmissionRepository } from './full/admission.js';
 import { createPostgresAttachmentsRepository } from './full/attachments.js';
 import { createPostgresConsultationRepository } from './full/consultation.js';
+import { createPostgresDischargeRepository } from './full/discharge.js';
+import { createPostgresProcedureRepository } from './full/procedure.js';
 import { createPostgresRecordRepository } from './full/record.js';
 import { PostgresIdPort } from './id.js';
 import { PostgresPacienteRepository } from './paciente-repository.js';
@@ -57,6 +60,9 @@ export async function createPostgresAdapterSet(options: EngineOptions): Promise<
         record: createPostgresRecordRepository(fullDeps),
         attachments: createPostgresAttachmentsRepository(fullDeps),
         consultation: createPostgresConsultationRepository(fullDeps),
+        admission: createPostgresAdmissionRepository(fullDeps),
+        procedure: createPostgresProcedureRepository(fullDeps),
+        discharge: createPostgresDischargeRepository(fullDeps),
       },
     },
     async close(): Promise<void> {
