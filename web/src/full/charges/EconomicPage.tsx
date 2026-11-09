@@ -4,6 +4,7 @@ export type Field = {
   label: string;
   type?: string;
   optional?: boolean;
+  nullable?: boolean;
   options?: string[];
 };
 export type Operation = {
@@ -67,8 +68,8 @@ export function EconomicPage({
     try {
       for (const field of op.fields) {
         const raw = data.get(field.name);
-        if ((raw === null || raw === '') && field.optional) continue;
-        let value: unknown = raw;
+        if ((raw === null || raw === '') && field.optional && !field.nullable) continue;
+        let value: unknown = field.nullable && (raw === null || raw === '') ? null : raw;
         if (field.type === 'number') value = Number(raw);
         if (field.type === 'ids')
           value = String(raw)

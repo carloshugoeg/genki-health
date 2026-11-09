@@ -5,6 +5,7 @@ import { connect, engines, type Engine } from './harness.js';
 import { economicContract } from '../charges.contract.js';
 import type { EconomicReferences } from '../../../src/ports/full/charges.js';
 const selected = process.env.LANE_A_ENGINE as Engine | undefined;
+if (selected && !engines.includes(selected)) throw new Error('LANE_A_ENGINE inválido');
 for (const engine of engines)
   it.skipIf(process.env.LANE_A_ENGINES !== '1' || (selected && selected !== engine))(
     `${engine}: native commit and reopen, atomic money and stock`,

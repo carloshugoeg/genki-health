@@ -13,6 +13,7 @@ import {
   cents,
   ensure,
   idempotent,
+  hash,
   money,
   next,
   page,
@@ -84,6 +85,52 @@ export async function generateCharge(
       );
       ensure(act?.id_paciente === p.id_paciente, 'Acto ajeno o inexistente');
     }
+    let price = frozenPrice ?? service.precio_unitario;
+    if (input.id_admision) {
+      const admission = await tx.act('estancia', input.id_admision);
+      ensure(admission?.id_paciente === p.id_paciente, 'Admisión ajena o inexistente');
+    }
+    if (input.id_consumo) {
+      const consumption = await tx.get<{
+        id_paciente: number;
+        codigo_servicio: string;
+        cantidad: number;
+        precio_unitario: string;
+      }>('consumptions', input.id_consumo);
+      ensure(
+        consumption?.id_paciente === p.id_paciente &&
+          consumption.codigo_servicio === input.codigo_servicio &&
+          consumption.cantidad === quantity,
+        'Consumo ajeno o incompatible',
+      );
+      price = consumption.precio_unitario;
+    }
+    if (input.id_participacion) {
+      const participation = await tx.get<{
+        id_consulta?: number;
+        id_procedimiento?: number;
+        honorario_calculado: string | null;
+      }>('participations', input.id_participacion);
+      ensure(
+        participation?.honorario_calculado != null && quantity === 1,
+        'Honorario no calculado',
+      );
+      const act = await tx.act(
+        participation.id_consulta ? 'consulta' : 'procedimiento',
+        (participation.id_consulta ?? participation.id_procedimiento)!,
+      );
+      ensure(
+        act?.id_paciente === p.id_paciente && act.codigo_servicio === input.codigo_servicio,
+        'Honorario ajeno o incompatible',
+      );
+      price = participation.honorario_calculado;
+    }
+    const eventKey = hash(
+      origins.length
+        ? { origen: input.origen, id: origins[0], servicio: input.codigo_servicio }
+        : { clave: input.clave_evento },
+    );
+    ensure((await tx.get('charge_events', eventKey)) === null, 'El evento ya generó cargo');
     const row: CARGO = {
       id_cargo: await next(tx, 'charge'),
       id_expediente: p.id_expediente,
@@ -96,12 +143,13 @@ export async function generateCharge(
       ...(input.id_participacion ? { id_participacion: input.id_participacion } : {}),
       descripcion: service.nombre,
       cantidad: quantity,
-      precio_unitario: money(cents(frozenPrice ?? service.precio_unitario)),
-      subtotal: money(Math.round(cents(frozenPrice ?? service.precio_unitario) * quantity)),
+      precio_unitario: money(cents(price)),
+      subtotal: money(Math.round(cents(price) * quantity)),
       fecha_hora: ctx.now,
       estado: 'pendiente',
     };
     await tx.put('charges', row.id_cargo, row);
+    await tx.put('charge_events', eventKey, { id_cargo: row.id_cargo });
     return row;
   });
 }

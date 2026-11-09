@@ -35,6 +35,10 @@ export class InventoryService implements InventoryRepositoryPort {
           ensure(act?.id_paciente === input.body.id_paciente, 'Acto ajeno o inexistente');
         }
         ensure(Number.isInteger(b.cantidad) && b.cantidad > 0, 'Cantidad debe ser entero positivo');
+        if (b.id_admision) {
+          const admission = await tx.act('estancia', b.id_admision);
+          ensure(admission?.id_paciente === input.body.id_paciente, 'Admisión ajena o inexistente');
+        }
         ensure(ctx.id_profesional === b.id_profesional_registra, 'Profesional ajeno', 'forbidden');
         ensure(
           (await tx.get<{ activo: boolean }>('professionals', b.id_profesional_registra))?.activo,
@@ -55,7 +59,11 @@ export class InventoryService implements InventoryRepositoryPort {
         };
         supply.existencia_actual! -= b.cantidad;
         await tx.put('supplies', supply.id_insumo, supply);
-        await tx.put('consumptions', row.id_consumo, row);
+        await tx.put('consumptions', row.id_consumo, {
+          ...row,
+          id_paciente: input.body.id_paciente,
+          codigo_servicio: supply.codigo_servicio,
+        });
         await generateCharge(
           tx,
           {

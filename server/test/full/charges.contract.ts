@@ -160,13 +160,33 @@ export async function economicContract(
       },
     },
   };
-  await inventory.op66(consume, { ...clinical, idempotency_key: `${ctx.idempotency_key}-consume` });
+  const consumed = await inventory.op66(consume, {
+    ...clinical,
+    idempotency_key: `${ctx.idempotency_key}-consume`,
+  });
   await inventory.op66(consume, { ...clinical, idempotency_key: `${ctx.idempotency_key}-consume` });
   expect(
     (await inventory.op67({ params: {}, query: {}, body: {} }, ctx)).items.find(
       (x) => x.id_insumo === 1,
     )!.existencia_actual,
   ).toBe(before.existencia_actual! - 1);
+  await expect(
+    charges.op68(
+      {
+        params: {},
+        query: {},
+        body: {
+          id_paciente: 1,
+          codigo_servicio: 'INSUMO',
+          origen: 'insumo',
+          id_consumo: consumed.id_consumo,
+          cantidad: '1',
+          clave_evento: `different-key-${ctx.idempotency_key}`,
+        },
+      },
+      ctx,
+    ),
+  ).rejects.toMatchObject({ code: 'conflict' });
   await expect(
     inventory.op66(
       {

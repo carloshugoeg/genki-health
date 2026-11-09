@@ -74,7 +74,7 @@ export interface PatientReference {
 }
 export interface ActReference {
   id: number;
-  kind: 'consulta' | 'procedimiento';
+  kind: 'consulta' | 'procedimiento' | 'estancia';
   id_paciente: number;
   codigo_servicio: string;
   fecha_hora: string;

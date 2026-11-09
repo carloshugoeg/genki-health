@@ -14,7 +14,13 @@ const operations: Operation[] = [
       },
       { name: 'nombres', label: 'Nombres', type: 'text', optional: true },
       { name: 'apellidos', label: 'Apellidos', type: 'text', optional: true },
-      { name: 'numero_colegiado', label: 'Colegiado', type: 'text', optional: true },
+      {
+        name: 'numero_colegiado',
+        nullable: true,
+        label: 'Colegiado',
+        type: 'text',
+        optional: true,
+      },
       { name: 'id_tipo_personal', label: 'Categoría', type: 'number', optional: true },
       {
         name: 'modalidad_contrato',
