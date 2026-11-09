@@ -1,0 +1,46 @@
+{
+  "run": "20261109D",
+  "tag": "E2E-AUDIT-20261109D",
+  "inst": {
+    "hospital_general": {
+      "agendaDate": "2027-07-29",
+      "pidB": 119,
+      "pid": 116,
+      "doc": "E2E-AUDIT-20261109D-1-A",
+      "cid": 9,
+      "ocid": 130,
+      "closedConsulta": 131,
+      "n": 1
+    },
+    "centro_pediatrico": {
+      "agendaDate": "2027-07-30",
+      "pidB": 120,
+      "pid": 117,
+      "doc": "E2E-AUDIT-20261109D-2-A",
+      "cid": 7,
+      "ocid": 113,
+      "closedConsulta": 114,
+      "n": 2
+    },
+    "laboratorio_clinico": {
+      "agendaDate": "2027-07-31",
+      "pidB": 124,
+      "pid": 121,
+      "doc": "E2E-AUDIT-20261109D-3-A",
+      "cid": 7,
+      "ocid": 117,
+      "closedConsulta": 118,
+      "n": 3
+    },
+    "clinica_odontologica": {
+      "agendaDate": "2027-08-01",
+      "pidB": 126,
+      "pid": 123,
+      "doc": "E2E-AUDIT-20261109D-4-A",
+      "cid": 7,
+      "ocid": 119,
+      "closedConsulta": 120,
+      "n": 4
+    }
+  }
+}
