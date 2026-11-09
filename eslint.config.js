@@ -8,7 +8,6 @@ export default tseslint.config(
       '**/dist/**',
       '**/node_modules/**',
       '**/coverage/**',
-      'docs/**',
       'infra/**',
       'web/vite.config.ts',
       '.dependency-cruiser.cjs',

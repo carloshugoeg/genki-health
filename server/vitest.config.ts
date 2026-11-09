@@ -22,6 +22,7 @@ if (!testEngines) {
     'src/adapters/firebase/**/*.test.ts',
     'test/seeds.test.ts',
     'test/persistence.test.ts',
+    'test/full/*.persistence.test.ts',
     'test/security/**',
   );
 }

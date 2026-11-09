@@ -1,0 +1,82 @@
+%% Reconstruido desde el esquema textual de la Entrega I.
+%% No es la figura PNG original del PDF.
+%% Los tipos int/string son marcadores lógicos. El supuesto 15 deja los tipos físicos para la Entrega II.
+%% Una columna UK marcada aquí es única por sí sola. Las claves únicas compuestas van en comentarios.
+
+%% Módulo institucional y de acceso. Sección 7.4. Común a Hospital (PostgreSQL) y Centro pediátrico (MySQL).
+erDiagram
+    INSTITUCION {
+        int id_institucion PK
+        string nombre UK
+        string tipo
+        string nit UK
+        string direccion
+        string telefono
+        string correo
+        string motor_datos
+        bool activo
+    }
+    ESPECIALIDAD {
+        int id_especialidad PK
+        string nombre UK
+        string descripcion
+    }
+    PROFESIONAL {
+        int id_profesional PK
+        int id_institucion FK
+        int id_especialidad FK
+        string numero_colegiado UK
+        string nombres
+        string apellidos
+        string telefono
+        string correo
+        bool activo
+    }
+    ROL {
+        int id_rol PK
+        string nombre UK
+        string descripcion
+    }
+    PERMISO {
+        int id_permiso PK
+        string codigo UK
+        string descripcion
+        string nivel_dato
+    }
+    ROL_PERMISO {
+        int id_rol PK
+        int id_permiso PK
+    }
+    USUARIO {
+        int id_usuario PK
+        int id_institucion FK
+        int id_profesional FK
+        int id_rol FK
+        string nombre_usuario UK
+        string correo UK
+        string hash_contrasena
+        string estado
+        int intentos_fallidos
+        string ultimo_acceso
+    }
+    BITACORA {
+        int id_bitacora PK
+        int id_usuario FK
+        string entidad
+        int id_registro
+        string accion
+        string fecha_hora
+        string direccion_ip
+        string detalle
+    }
+    INSTITUCION ||--o{ PROFESIONAL : "emplea"
+    ESPECIALIDAD |o--o{ PROFESIONAL : "especialidad"
+    INSTITUCION ||--o{ USUARIO : "cuenta"
+    PROFESIONAL |o--o| USUARIO : "credencial"
+    ROL ||--o{ USUARIO : "asigna"
+    ROL ||--o{ ROL_PERMISO : "tiene"
+    PERMISO ||--o{ ROL_PERMISO : "otorga"
+    USUARIO ||--o{ BITACORA : "audita"
+%% PROFESIONAL en 7.4 omite id_tipo_personal, modalidad_contrato y fecha_ingreso (corrección de modelado, opción B). Siguen en sección 5.1 para análisis/Chen.
+%% ROL_PERMISO: clave primaria compuesta (id_rol, id_permiso). Sin columnas propias.
+%% numero_colegiado: UNIQUE entre no nulos; NULL si no requiere_colegiado; nunca "". DDL concreto en Entrega II (corrección de modelado).

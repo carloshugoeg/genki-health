@@ -40,8 +40,7 @@ function checksum(contents: string): string {
 
 /**
  * Discover ordered migration files and compute checksums for the ledger.
- * Applying DDL against live engines lands with later P3/P4 tickets; empty
- * migration dirs are a successful no-op here.
+ * Empty migration dirs are a successful no-op here.
  */
 export async function migrateEngine(engine: DataEngine): Promise<void> {
   if (!ENGINES.includes(engine)) {

@@ -1,5 +1,5 @@
 /**
- * Auth contracts locked by Carlos 2026-10-19 (see poteto-mode/decisions/locked.md).
+ * Auth contracts (fixed 2026-10-19): email + password, Argon2id, access JWT + refresh JWT.
  */
 
 import type { DataEngine, InstitutionKind } from './engines.js';

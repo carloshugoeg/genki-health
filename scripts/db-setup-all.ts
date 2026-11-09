@@ -78,6 +78,8 @@ async function main(): Promise<void> {
   await run('npm', ['run', 'db:bootstrap']);
 
   await run('npm', ['run', 'db:seed']);
+  // PostgreSQL demo beds/services reference the institution row that db:seed creates.
+  await run('npx', ['tsx', '--import', 'dotenv/config', 'scripts/db-bootstrap.ts', '--demo-data']);
   for (const engine of ENGINES) {
     await run('npx', ['tsx', 'server/test/full/charges/manage.ts', 'seed', engine]);
   }

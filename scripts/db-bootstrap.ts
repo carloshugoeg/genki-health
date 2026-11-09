@@ -27,6 +27,34 @@ const PG_LOGINS = {
   },
 } as const;
 
+/** `NNNN-*-seed-*.sql` files insert demo rows that reference seeded institutions. */
+const isDemoDataSql = (name: string): boolean => /-seed-/.test(name);
+
+function hospitalAdminUrl(adminUrl: string): string {
+  const url = new URL(adminUrl);
+  url.pathname = process.env.DATABASE_URL
+    ? new URL(process.env.DATABASE_URL).pathname
+    : `/${process.env.POSTGRES_DB ?? 'genki_hospital'}`;
+  return url.toString();
+}
+
+/** Apply the idempotent PostgreSQL demo-data migrations; run after `db:seed`. */
+export async function applyPostgresDemoData(): Promise<void> {
+  const adminUrl = requireEnv('PG_ADMIN_URL');
+  const { readdirSync } = await import('node:fs');
+  const pg = await import('pg');
+  const dir = join(ROOT, 'server', 'src', 'adapters', 'postgres', 'migrations');
+  const client = new pg.default.Client({ connectionString: hospitalAdminUrl(adminUrl) });
+  await client.connect();
+  try {
+    for (const file of readdirSync(dir).filter(isDemoDataSql).sort()) {
+      await client.query(readFileSync(join(dir, file), 'utf8'));
+    }
+  } finally {
+    await client.end();
+  }
+}
+
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -109,6 +137,11 @@ async function bootstrapPostgres(): Promise<void> {
   const client = new pg.default.Client({ connectionString: adminUrl });
   await client.connect();
   try {
+    // Group roles first: a fresh cluster has none, and the logins below are granted into them.
+    for (const role of ROLE_ALLOWLIST.postgres) {
+      const found = await client.query('SELECT 1 FROM pg_roles WHERE rolname = $1', [role]);
+      if ((found.rowCount ?? 0) === 0) await client.query(`CREATE ROLE ${role} NOLOGIN`);
+    }
     for (const [login, meta] of Object.entries(PG_LOGINS)) {
       const password = requireEnv(meta.passwordEnv);
       const passwordLiteral = client.escapeLiteral(password);
@@ -128,18 +161,21 @@ async function bootstrapPostgres(): Promise<void> {
   // Table GRANTs must run on the hospital database, not the maintenance DB, and always
   // as the owner/admin principal. DATABASE_URL is the least-privilege runtime login
   // (genki_app_login), which cannot CREATE ROLE / GRANT; only its database name is reused.
-  const hospitalUrl = (() => {
-    const url = new URL(adminUrl);
-    if (process.env.DATABASE_URL) {
-      url.pathname = new URL(process.env.DATABASE_URL).pathname;
-    } else {
-      url.pathname = `/${process.env.POSTGRES_DB ?? 'genki_hospital'}`;
-    }
-    return url.toString();
-  })();
+  const hospitalUrl = hospitalAdminUrl(adminUrl);
   const hospital = new pg.default.Client({ connectionString: hospitalUrl });
   await hospital.connect();
   try {
+    // A fresh database gets the core schema (top-level migrations, in order) exactly once.
+    const core = await hospital.query(`SELECT to_regclass('public.paciente') AS t`);
+    if (core.rows[0]?.t == null) {
+      const { readdirSync } = await import('node:fs');
+      const dir = join(ROOT, 'server', 'src', 'adapters', 'postgres', 'migrations');
+      for (const file of readdirSync(dir)
+        .filter((name) => name.endsWith('.sql') && !isDemoDataSql(name))
+        .sort()) {
+        await hospital.query(readFileSync(join(dir, file), 'utf8'));
+      }
+    }
     const securitySql = readFileSync(
       join(ROOT, 'server', 'src', 'adapters', 'postgres', 'security.sql'),
       'utf8',
@@ -216,6 +252,10 @@ async function bootstrapMongo(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  if (process.argv.includes('--demo-data')) {
+    await applyPostgresDemoData();
+    return;
+  }
   const filter = process.env.ENGINE as DataEngine | undefined;
   if (filter) {
     await bootstrapEngine(filter);

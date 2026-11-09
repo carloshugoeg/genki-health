@@ -1,42 +1,97 @@
 # Genki Health
 
-Plataforma compartida de historiales clínicos para cuatro instituciones médicas independientes. Proyecto final de Bases de Datos II, Universidad Rafael Landívar.
+Plataforma compartida de historiales clínicos para cuatro instituciones médicas independientes.
 
-El enunciado está en `PROJECT-DESC.md`. Entrega I vive en `docs/entregas/entrega-1/`. Entrega II tiene el scaffold en `main` (PR #10); el trabajo restante está indexado como tickets **E2-P***. E1-05 (Chen pediátrico) corre en paralelo y no bloquea E2. Los adaptadores reales siguen incompletos.
+- **Curso:** Bases de Datos II — Universidad Rafael Landívar
+- **Equipo:** Carlos Hugo Escobar Gómez · Héctor Jordin Adolfo García Coyoy
 
-## Arranque local (Phase 0)
+## Descripción
 
-```bash
-npm install
-npm run validate          # o: bash scripts/validate.sh
-npm run build -w @genki/shared
-npm run dev -w @genki/server   # API en :3000
-npm run dev -w @genki/web      # SPA en :5173
-```
+Cada institución registra pacientes, abre su expediente y mantiene su historial clínico (consultas, diagnósticos, tratamientos y recetas), con archivo y reactivación del expediente. Las cuatro instituciones usan la misma API y la misma interfaz web, pero cada una guarda sus datos en un motor de base de datos distinto. Al iniciar sesión, cada usuario queda enrutado al motor de su institución.
 
-Motores opcionales:
+| Id | Institución | Motor |
+| --- | --- | --- |
+| 1 | Hospital general | PostgreSQL |
+| 2 | Centro médico pediátrico | MySQL |
+| 3 | Laboratorio clínico | MongoDB |
+| 4 | Clínica odontológica | Firebase (Firestore) |
 
-```bash
-docker compose -f infra/docker-compose.yml up -d
-```
+La justificación de cada asignación está en `ENTREGA-II/documento-comparativo.pdf` (sección 1).
 
-Auth (Carlos 2026-10-19): `POST /api/auth/login` con email, password e `institution_kind`. Access JWT 30m + refresh 14d. Demo email `hospital@genki.local` (análogos por institución). Requiere `JWT_SECRET` y `SEED_PASSWORD` en `.env` (ver `.env.example`; sin valores de ejemplo en el repo).
+## Estructura del repositorio
 
-## Layout
-
-| Ruta | Rol |
+| Ruta | Contenido |
 | --- | --- |
-| `server/` | Fastify + hexagonal (domain / application / ports / adapters / config) |
-| `web/` | React + Vite SPA |
-| `shared/` | DTOs y asignación institución → motor |
-| `infra/` | Docker Compose + emulador Firebase |
-| `scripts/validate.sh` | Compuerta local (= CI) |
-| `poteto-mode/` | Cola de tickets y decisiones |
+| `ENTREGA-I/` | Entrega I: análisis, modelo entidad-relación y modelo relacional (PDF, transcripción y diagramas). |
+| `ENTREGA-II/` | Entrega II: documento comparativo, arquitectura, decisiones (ADR) y la tabla «Rúbrica → evidencia» (`ENTREGA-II/README.md`). |
+| `server/` | API Fastify con arquitectura hexagonal: `domain/`, `application/`, `ports/`, `adapters/` (uno por motor) y `config/`. |
+| `web/` | Cliente React + Vite (misma interfaz para las cuatro instituciones). |
+| `shared/` | Tipos compartidos y asignación institución → motor. |
+| `infra/` | Contenedores Docker de los motores y configuración del emulador de Firestore. |
+| `scripts/` | Migraciones, semillas de demostración y compuerta de validación. |
+| `tests/` | Auditoría de punta a punta contra la aplicación levantada (`tests/e2e-audit/`). |
 
-## Qué hacer ahora
+## Cómo levantarlo
 
-1. Leer `AGENTS.md`.
-2. Leer `poteto-mode/queue/NOW.md`.
-3. Hacer ese ticket y nada más.
+Requisitos: **Docker** (con Compose v2, p. ej. Docker Desktop encendido) y **Node.js ≥ 20**. No se necesitan credenciales de Google: la clínica odontológica corre sobre el emulador oficial de Firestore dentro de Docker.
 
-Carlos (Cursor) posee Hospital general (PostgreSQL) y Laboratorio clínico (MongoDB), más CI. Jordin (Claude) posee Centro pediátrico (MySQL) y Clínica odontológica (Firebase), más la suite de contratos.
+```bash
+git clone https://github.com/carloshugoeg/genki-health.git
+cd genki-health
+bash levantar.sh
+```
+
+`levantar.sh` hace todo de una vez y se puede volver a ejecutar sin problema:
+
+1. Verifica Docker y Node.
+2. Genera `.env` con contraseñas locales aleatorias.
+3. Levanta PostgreSQL, MySQL, MongoDB (replica set `rs0`) y el emulador de Firestore.
+4. Instala dependencias.
+5. Crea esquemas, permisos y datos de demostración en los cuatro motores.
+6. Inicia la API y la web, y comprueba un inicio de sesión.
+
+La primera vez tarda varios minutos porque descarga las imágenes.
+
+- Aplicación web: <http://127.0.0.1:5173>
+- API: <http://127.0.0.1:3000/health>
+- Detener: `bash detener.sh` (conserva los datos) o `bash detener.sh --borrar-datos`.
+- Logs: `.runtime/logs/`. Si un puerto está ocupado, cámbialo en `.env` y vuelve a ejecutar `bash levantar.sh`.
+
+Con Claude Code basta con pedirle: *«levanta https://github.com/carloshugoeg/genki-health»*. El `CLAUDE.md` del repositorio le indica que ejecute `bash levantar.sh`.
+
+## Usuarios de demostración
+
+Contraseña de todos: `admin123!`. Los datos son sintéticos.
+
+| Usuario | Institución | Motor |
+| --- | --- | --- |
+| `demo-1-administrador@example.invalid`, `demo-1-medico@example.invalid` | Hospital general | PostgreSQL |
+| `demo-2-administrador@example.invalid`, `demo-2-medico@example.invalid` | Centro médico pediátrico | MySQL |
+| `demo-3-administrador@example.invalid`, `demo-3-medico@example.invalid` | Laboratorio clínico | MongoDB |
+| `demo-4-administrador@example.invalid`, `demo-4-medico@example.invalid`, `demo-4-odontologo@example.invalid` | Clínica odontológica | Firebase (Firestore) |
+| `superadmin@example.invalid` | Elige la institución desde `/panel` | El de la institución elegida |
+
+## Pruebas
+
+```bash
+npm test               # pruebas unitarias y de contrato (shared, server, web)
+npm run typecheck      # TypeScript sin emitir
+npm run lint           # ESLint
+npm run depcruise      # reglas de dependencia de la arquitectura hexagonal
+npm run test:repo      # sin secretos versionados y configuración segura de los contenedores
+bash scripts/validate.sh   # todo lo anterior más build, igual que el CI
+```
+
+Con la aplicación levantada, la auditoría de punta a punta recorre el flujo completo en las cuatro instituciones, el aislamiento entre ellas, la persistencia tras reiniciar y la interfaz web: ver `tests/e2e-audit/README.md`.
+
+Las suites contra los motores reales (`server/test/contracts/` y las pruebas de cada adaptador) se activan con `TEST_ENGINES=1` y necesitan los motores corriendo y sus URL de administración en `.env` (`PG_ADMIN_URL`, `MYSQL_ADMIN_URL`, `MONGO_ADMIN_URI`, `FIRESTORE_EMULATOR_HOST`); usan bases desechables `genki_test_*`.
+
+## Arquitectura en breve
+
+1. El cliente web (React) habla solo con la API REST; nunca con una base de datos.
+2. Al iniciar sesión, el JWT lleva la institución y su motor (`institucion_kind`, `motor`).
+3. En cada solicitud, el registro de adaptadores (`server/src/config/adapter-registry.ts`) entrega el conjunto de adaptadores de esa institución.
+4. Los casos de uso (`server/src/application/`) dependen solo de puertos, así que la lógica es la misma para los cuatro motores.
+5. Cada adaptador (`server/src/adapters/{postgres,mysql,mongodb,firebase}/`) usa el driver nativo del motor, con SQL y modelo documental escritos a mano, sin ORM.
+
+Detalle en `ENTREGA-II/arquitectura.md`.

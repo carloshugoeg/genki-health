@@ -1219,7 +1219,12 @@ async function specialty(i, A, s, ta, tm, pid, idProf) {
       const pz = await req('PUT', `/api/odontogramas/${oid}/piezas/11`, {
         token: tOdo,
         headers: H(),
-        body: { estado: 'caries', superficies: ['oclusal'] },
+        body: {
+          estado: 'caries',
+          superficies: { oclusal: 'caries' },
+          movilidad: 0,
+          expected_revision: 0,
+        },
       });
       rec(A, 'odontología: actualizar pieza 11', [200, 201].includes(pz.status), {
         status: pz.status,
@@ -1269,10 +1274,10 @@ async function specialty(i, A, s, ta, tm, pid, idProf) {
         token: tOdo,
         headers: H(),
         body: {
-          id_profesional: idProf,
-          fecha_hora: new Date().toISOString(),
+          fecha: new Date().toISOString().slice(0, 10),
           lineas: [1],
-          notas: `${TAG} sesión`,
+          expected_revision: 0,
+          observaciones: `${TAG} sesión`,
         },
       });
       rec(A, 'odontología: sesión', [200, 201].includes(se.status), {

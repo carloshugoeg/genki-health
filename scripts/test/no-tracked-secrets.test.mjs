@@ -56,8 +56,6 @@ function trackedFiles() {
     .filter(Boolean)
     .filter((rel) => {
       if (rel === selfRel) return false;
-      if (rel.startsWith('poteto-mode/queue/tickets/')) return false;
-      if (rel.startsWith('docs/progress/journal/')) return false;
       return (
         rel.startsWith('server/src/') ||
         rel.startsWith('web/src/') ||
@@ -184,9 +182,15 @@ test('callers_use_memory_identity_store', () => {
   const compose = read('server/src/config/compose-memory.ts');
   const authTest = read('server/src/ports/auth.test.ts');
   const memoryAuth = read('server/src/adapters/memory/auth.ts');
+  const identityAdmin = read('server/src/adapters/memory/identity-admin.ts');
 
   assert.match(memoryAuth, /export class MemoryIdentityStore/, 'MemoryIdentityStore must exist');
-  assert.match(compose, /MemoryIdentityStore/, 'compose-memory must wire MemoryIdentityStore');
+  assert.match(
+    identityAdmin,
+    /MemoryIdentityStore/,
+    'memory identity admin (used by compose-memory) must wire MemoryIdentityStore',
+  );
+  assert.match(compose, /createMemoryIdentityAdmin/, 'compose-memory must use the identity admin');
   assert.doesNotMatch(
     compose,
     /MemoryAuthAdapter|new\s+MemoryAuth\b/,
