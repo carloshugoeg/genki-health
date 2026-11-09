@@ -297,19 +297,38 @@ export function seedConfiguration(env: NodeJS.ProcessEnv) {
     if (name === 'MONGO_ADMIN_URI') url.searchParams.set('directConnection', 'true');
     return url.toString();
   });
-  const emulatorHost = required(env, 'FIRESTORE_EMULATOR_HOST');
-  if (
-    !/^(127\.0\.0\.1|localhost|\[::1\]):[0-9]+$/.test(emulatorHost) ||
-    required(env, 'GCLOUD_PROJECT') !== 'demo-genki-health'
-  )
-    throw new Error('Fixed demo project and loopback emulator required');
-  const firebase: FirestoreOptions = {
-    id_institucion: asInstitutionId(4),
-    kind: 'clinica_odontologica',
-    projectId: 'demo-genki-health',
-    emulatorHost,
-    clock: { nowIso: () => SEED_TIME },
-  };
+  const firestoreMode = (env.FIRESTORE_MODE ?? 'emulator').trim() || 'emulator';
+  if (firestoreMode !== 'emulator' && firestoreMode !== 'real')
+    throw new Error('FIRESTORE_MODE must be emulator or real');
+  let firebase: FirestoreOptions;
+  if (firestoreMode === 'real') {
+    const projectId = required(env, 'GCLOUD_PROJECT');
+    if (projectId === 'demo-genki-health' || /^demo-[a-z0-9-]+$/.test(projectId))
+      throw new Error('FIRESTORE_MODE=real requires a non-demo GCLOUD_PROJECT');
+    if (!required(env, 'GOOGLE_APPLICATION_CREDENTIALS').trim())
+      throw new Error('FIRESTORE_MODE=real requires GOOGLE_APPLICATION_CREDENTIALS');
+    firebase = {
+      id_institucion: asInstitutionId(4),
+      kind: 'clinica_odontologica',
+      projectId,
+      emulatorHost: '',
+      clock: { nowIso: () => SEED_TIME },
+    };
+  } else {
+    const emulatorHost = required(env, 'FIRESTORE_EMULATOR_HOST');
+    if (
+      !/^(127\.0\.0\.1|localhost|\[::1\]):[0-9]+$/.test(emulatorHost) ||
+      required(env, 'GCLOUD_PROJECT') !== 'demo-genki-health'
+    )
+      throw new Error('Fixed demo project and loopback emulator required');
+    firebase = {
+      id_institucion: asInstitutionId(4),
+      kind: 'clinica_odontologica',
+      projectId: 'demo-genki-health',
+      emulatorHost,
+      clock: { nowIso: () => SEED_TIME },
+    };
+  }
   return { password, urls, firebase };
 }
 

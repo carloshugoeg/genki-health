@@ -88,7 +88,7 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env): RuntimeEnv {
   const mysql = database(source, 'MYSQL_URL', ['mysql:'], 'genki_app_login');
   const mongo = database(source, 'MONGODB_URI', ['mongodb:'], 'genkiApp');
   mongo.searchParams.set('directConnection', 'true');
-  const firestoreMode = (source.FIRESTORE_MODE ?? 'emulator').trim();
+  const firestoreMode = (source.FIRESTORE_MODE ?? 'emulator').trim() || 'emulator';
   if (firestoreMode !== 'emulator' && firestoreMode !== 'real')
     throw new Error('FIRESTORE_MODE must be emulator or real');
   const projectId = required(source, 'GCLOUD_PROJECT');
