@@ -1,0 +1,161 @@
+---
+title: "Genki session and refresh tokens"
+---
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: signed-in
+    lg1: needs-refresh
+    lg2: revoked
+    lg3: signed-out
+    lg4: Breaks AuthenticatedIsConsistent or RevokedNeverAuthenticated
+    lg5: Breaks AccessSurvivesLogout in some cases
+    lg6: Path to the AccessSurvivesLogout or AuthenticatedIsConsistent or RevokedNeverAuthenticated bug
+  }
+  class lg0 teal
+  class lg1 orange
+  class lg2 pink
+  class lg3 blue
+  class lg4 breaks
+  class lg5 mayBreak
+  class lg6 bugPath
+  state "Signed out" as s0 {
+    state "No refresh on file" as s1 {
+      state "Access gone" as s2 {
+        s3: User active
+        s4: User disabled
+      }
+    }
+    state "Refresh on file" as s5 {
+      state "Access gone" as s6 {
+        s7: User active
+        s8: User disabled
+      }
+    }
+    state "Refresh revoked on file" as s9 {
+      state "Access gone" as s10 {
+        s11: User active
+        s12: User disabled
+      }
+      state "Access still valid" as s13 {
+        s14: User active
+        s15: User disabled
+      }
+    }
+    state "Refresh expired on file" as s16 {
+      state "Access gone" as s17 {
+        s18: User active
+        s19: User disabled
+      }
+    }
+  }
+  state "Signed in" as s20 {
+    state "Refresh on file" as s21 {
+      state "Access still valid" as s22 {
+        s23: User active
+      }
+    }
+    state "Refresh revoked on file" as s24 {
+      state "Access still valid" as s25 {
+        s26: User disabled
+        s27: User active
+      }
+    }
+  }
+  state "Needs refresh" as s28 {
+    state "Refresh on file" as s29 {
+      state "Access gone" as s30 {
+        s31: User disabled
+        s32: User active
+      }
+    }
+    state "Refresh expired on file" as s33 {
+      state "Access gone" as s34 {
+        s35: User active
+        s36: User disabled
+      }
+    }
+    state "Refresh revoked on file" as s37 {
+      state "Access gone" as s38 {
+        s39: User disabled
+        s40: User active
+      }
+    }
+  }
+  [*] --> s3
+  s3 --> s4: an admin disables the user
+  s3 --> s23: you sign in with a valid account
+  s23 --> s31: an admin disables the user
+  s23 --> s7: you sign out with a bad refresh token
+  s23 --> s32: the access token expires or your access token is rejected
+  s23 --> s35: the refresh token expires
+  s23 --> s11: BUG: sign-out also kills the access token
+  s23 --> s14: you sign out
+  s31 --> s8: you sign out with a bad refresh token
+  s31 --> s36: the refresh token expires
+  s31 --> s12: you refresh after expiry or a disabled user
+  s31 --> s39: another device signs you out
+  s7 --> s8: an admin disables the user
+  s7 --> s18: the refresh token expires
+  s7 --> s23: you sign in with a valid account
+  s32 --> s31: an admin disables the user
+  s32 --> s7: you sign out with a bad refresh token
+  s32 --> s35: the refresh token expires
+  s32 --> s40: another device signs you out
+  s32 --> s23: you refresh with the current token
+  s35 --> s36: an admin disables the user
+  s35 --> s18: you sign out with a bad refresh token
+  s35 --> s11: you refresh after expiry or a disabled user
+  s35 --> s40: another device signs you out
+  s11 --> s12: an admin disables the user
+  s11 --> s23: you sign in with a valid account
+  s14 --> s11: the access token expires or you sign out with a bad refresh token
+  s14 --> s15: an admin disables the user
+  s14 --> s23: you sign in with a valid account
+  s8 --> s19: the refresh token expires
+  s36 --> s19: you sign out with a bad refresh token
+  s36 --> s12: you refresh after expiry or a disabled user
+  s36 --> s39: another device signs you out
+  s39 --> s12: you sign out with a bad refresh token or you refresh after expiry or a disabled user or you reuse an old refresh token
+  s39 --> s26: BUG: an old refresh token is accepted again
+  s18 --> s19: an admin disables the user
+  s18 --> s23: you sign in with a valid account
+  s40 --> s39: an admin disables the user
+  s40 --> s11: you sign out with a bad refresh token or you reuse an old refresh token or you refresh after expiry or a disabled user
+  s40 --> s27: BUG: an old refresh token is accepted again
+  s15 --> s12: the access token expires or you sign out with a bad refresh token
+  s26 --> s12: you sign out with a bad refresh token
+  s26 --> s39: the access token expires or your access token is rejected
+  s27 --> s39: an admin disables the user
+  s27 --> s11: you sign out with a bad refresh token
+  s27 --> s40: the access token expires or your access token is rejected
+  classDef breaks fill:#ffecee,stroke:#e72e3b,stroke-width:2.5px,color:#cd2834
+  classDef mayBreak fill:#fff3e6,stroke:#e8730c,stroke-width:2.5px,color:#b85a06
+  class s3 blue
+  class s3 bugPath
+  class s4 blue
+  class s7 blue
+  class s8 blue
+  class s11 pink
+  class s11 mayBreak
+  class s11 bugPath
+  class s12 pink
+  class s12 mayBreak
+  class s14 pink
+  class s15 pink
+  class s18 blue
+  class s19 blue
+  class s23 teal
+  class s23 bugPath
+  class s26 teal
+  class s26 breaks
+  class s27 teal
+  class s27 breaks
+  class s27 bugPath
+  class s31 orange
+  class s32 orange
+  class s32 bugPath
+  class s35 orange
+  class s36 orange
+  class s39 orange
+  class s40 orange
+  class s40 bugPath

@@ -1,8 +1,33 @@
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
-import { type AuthPrincipalDto, type InstitutionKind, type LoginRequestDto } from '@genki/shared';
+import {
+  asPacienteId,
+  type AuthPrincipalDto,
+  type CloseConsultaRequest,
+  type InstitutionKind,
+  type LoginRequestDto,
+  type RegisterPacienteRequest,
+} from '@genki/shared';
+import { archiveExpediente } from '../../application/archive-expediente.js';
+import { closeConsulta } from '../../application/close-consulta.js';
+import { getHistorial } from '../../application/get-historial.js';
+import { listPacientes } from '../../application/list-pacientes.js';
 import { registerPaciente } from '../../application/register-paciente.js';
 import type { InstitutionAdapterRegistry } from '../../config/adapter-registry.js';
 import { AuthError, isInstitutionKind, type AuthPort } from '../../ports/index.js';
+import {
+  forbiddenError,
+  invalidBodyError,
+  invalidQueryError,
+  notFoundEnvelope,
+  toErrorDto,
+} from './errors.js';
+import {
+  archiveSchema,
+  closeSchema,
+  paramsSchema,
+  registerSchema,
+  searchSchema,
+} from './schemas.js';
 
 export interface HttpAppOptions {
   registry: InstitutionAdapterRegistry;
@@ -15,6 +40,8 @@ declare module 'fastify' {
   }
 }
 
+const BODY_LIMIT_BYTES = 256 * 1024;
+
 function bearerToken(header: string | undefined): string | null {
   if (!header) {
     return null;
@@ -26,23 +53,101 @@ function bearerToken(header: string | undefined): string | null {
   return token;
 }
 
-function authErrorStatus(error: AuthError): number {
-  switch (error.code) {
-    case 'password_policy':
-      return 400;
-    case 'invalid_credentials':
-      return 401;
-    case 'invalid_token':
-      return 401;
-    case 'misconfigured':
-      return 500;
-    default:
-      return 401;
-  }
+function hasAnyRole(principal: AuthPrincipalDto, roles: readonly string[]): boolean {
+  return principal.roles.some((role) => roles.includes(role));
+}
+
+function toRegisterInput(data: ReturnType<typeof registerSchema.parse>): RegisterPacienteRequest {
+  const responsables = data.responsables?.map((row) => ({
+    tipo_documento: row.tipo_documento,
+    numero_documento: row.numero_documento,
+    nombre_completo: row.nombre_completo,
+    parentesco: row.parentesco,
+    telefono: row.telefono,
+    es_principal: row.es_principal,
+    ...(row.correo !== undefined ? { correo: row.correo } : {}),
+    ...(row.direccion !== undefined ? { direccion: row.direccion } : {}),
+  }));
+  return {
+    tipo_documento: data.tipo_documento,
+    numero_documento: data.numero_documento,
+    primer_nombre: data.primer_nombre,
+    primer_apellido: data.primer_apellido,
+    fecha_nacimiento: data.fecha_nacimiento,
+    sexo: data.sexo,
+    ...(data.segundo_nombre !== undefined ? { segundo_nombre: data.segundo_nombre } : {}),
+    ...(data.segundo_apellido !== undefined ? { segundo_apellido: data.segundo_apellido } : {}),
+    ...(data.tipo_sangre !== undefined ? { tipo_sangre: data.tipo_sangre } : {}),
+    ...(data.telefono !== undefined ? { telefono: data.telefono } : {}),
+    ...(data.correo !== undefined ? { correo: data.correo } : {}),
+    ...(data.direccion !== undefined ? { direccion: data.direccion } : {}),
+    ...(data.id_municipio !== undefined ? { id_municipio: data.id_municipio } : {}),
+    ...(responsables !== undefined ? { responsables } : {}),
+  };
+}
+
+function toCloseInput(data: ReturnType<typeof closeSchema.parse>): CloseConsultaRequest {
+  return {
+    id_profesional: data.id_profesional,
+    fecha_hora_inicio: data.fecha_hora_inicio,
+    tipo: data.tipo,
+    motivo_consulta: data.motivo_consulta,
+    diagnosticos: data.diagnosticos.map((dx) => ({
+      descripcion: dx.descripcion,
+      tipo: dx.tipo,
+      es_principal: dx.es_principal,
+      ...(dx.codigo_cie10 !== undefined ? { codigo_cie10: dx.codigo_cie10 } : {}),
+    })),
+    tratamientos: data.tratamientos.map((tx) => ({
+      diagnostico_index: tx.diagnostico_index,
+      tipo: tx.tipo,
+      descripcion: tx.descripcion,
+      fecha_inicio: tx.fecha_inicio,
+      estado: tx.estado,
+      ...(tx.indicaciones !== undefined ? { indicaciones: tx.indicaciones } : {}),
+      ...(tx.fecha_fin_estimada !== undefined ? { fecha_fin_estimada: tx.fecha_fin_estimada } : {}),
+    })),
+    ...(data.enfermedad_actual !== undefined ? { enfermedad_actual: data.enfermedad_actual } : {}),
+    ...(data.exploracion_fisica !== undefined
+      ? { exploracion_fisica: data.exploracion_fisica }
+      : {}),
+    ...(data.plan !== undefined ? { plan: data.plan } : {}),
+    ...(data.receta !== undefined
+      ? {
+          receta: {
+            detalles: data.receta.detalles.map((d) => ({
+              id_medicamento: d.id_medicamento,
+              dosis: d.dosis,
+              via_administracion: d.via_administracion,
+              frecuencia_horas: d.frecuencia_horas,
+              duracion_dias: d.duracion_dias,
+              cantidad: d.cantidad,
+              indicaciones: d.indicaciones ?? null,
+            })),
+            ...(data.receta.observaciones !== undefined
+              ? { observaciones: data.receta.observaciones }
+              : {}),
+          },
+        }
+      : {}),
+  };
+}
+
+async function sendMapped(reply: FastifyReply, error: unknown) {
+  const mapped = toErrorDto(error);
+  return reply.code(mapped.status).send(mapped.body);
 }
 
 export function buildHttpApp(options: HttpAppOptions) {
-  const app = Fastify({ logger: false });
+  const app = Fastify({ logger: false, bodyLimit: BODY_LIMIT_BYTES });
+
+  app.setNotFoundHandler(async (_request, reply) => {
+    return reply.code(404).send(notFoundEnvelope());
+  });
+
+  app.setErrorHandler(async (error, _request, reply) => {
+    return sendMapped(reply, error);
+  });
 
   async function requirePrincipal(
     request: FastifyRequest,
@@ -61,9 +166,7 @@ export function buildHttpApp(options: HttpAppOptions) {
       return principal;
     } catch (error) {
       if (error instanceof AuthError) {
-        await reply
-          .code(authErrorStatus(error))
-          .send({ error: error.code, message: error.message });
+        await sendMapped(reply, error);
         return null;
       }
       throw error;
@@ -90,10 +193,8 @@ export function buildHttpApp(options: HttpAppOptions) {
       typeof body.institution_kind !== 'string' ||
       !isInstitutionKind(body.institution_kind)
     ) {
-      return reply.code(400).send({
-        error: 'invalid_body',
-        message: 'email, password, and institution_kind are required',
-      });
+      const mapped = invalidBodyError();
+      return reply.code(mapped.status).send(mapped.body);
     }
 
     try {
@@ -104,30 +205,34 @@ export function buildHttpApp(options: HttpAppOptions) {
       });
       return reply.code(200).send(tokens);
     } catch (error) {
-      if (error instanceof AuthError) {
-        return reply
-          .code(authErrorStatus(error))
-          .send({ error: error.code, message: error.message });
-      }
-      throw error;
+      return sendMapped(reply, error);
     }
   });
 
   app.post<{ Body: { refresh_token?: string } }>('/api/auth/refresh', async (request, reply) => {
     const refresh_token = request.body?.refresh_token;
     if (!refresh_token || typeof refresh_token !== 'string') {
-      return reply.code(400).send({ error: 'invalid_body', message: 'refresh_token is required' });
+      const mapped = invalidBodyError();
+      return reply.code(mapped.status).send(mapped.body);
     }
     try {
       const tokens = await options.auth.refresh(refresh_token);
       return reply.code(200).send(tokens);
     } catch (error) {
-      if (error instanceof AuthError) {
-        return reply
-          .code(authErrorStatus(error))
-          .send({ error: error.code, message: error.message });
-      }
-      throw error;
+      return sendMapped(reply, error);
+    }
+  });
+
+  app.post<{ Body: { refresh_token?: string } }>('/api/auth/logout', async (request, reply) => {
+    const refresh_token = request.body?.refresh_token;
+    if (!refresh_token || typeof refresh_token !== 'string') {
+      return reply.code(400).send({ error: 'invalid_body', message: 'refresh_token is required' });
+    }
+    try {
+      await options.auth.logout(refresh_token);
+      return reply.code(204).send();
+    } catch (error) {
+      return sendMapped(reply, error);
     }
   });
 
@@ -139,23 +244,165 @@ export function buildHttpApp(options: HttpAppOptions) {
     return principal;
   });
 
-  app.post<{
-    Body: {
-      tipo_documento: string;
-      numero_documento: string;
-      primer_nombre: string;
-      primer_apellido: string;
-      fecha_nacimiento: string;
-      sexo: 'M' | 'F' | 'X';
-    };
-  }>('/api/pacientes', async (request, reply) => {
+  app.get('/api/catalogos', async (request, reply) => {
     const principal = await requirePrincipal(request, reply);
     if (!principal) {
       return;
     }
-    const adapters = options.registry.resolve(principal.institution_kind, principal.id_institucion);
-    const result = await registerPaciente(adapters.pacientes, request.body);
-    return reply.code(201).send(result);
+    try {
+      const adapters = options.registry.resolve(
+        principal.institution_kind,
+        principal.id_institucion,
+      );
+      return adapters.catalogos.list();
+    } catch (error) {
+      return sendMapped(reply, error);
+    }
+  });
+
+  app.post('/api/pacientes', async (request, reply) => {
+    const principal = await requirePrincipal(request, reply);
+    if (!principal) {
+      return;
+    }
+    if (!hasAnyRole(principal, ['administrador', 'recepcion'])) {
+      const mapped = forbiddenError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    const parsed = registerSchema.safeParse(request.body);
+    if (!parsed.success) {
+      const mapped = invalidBodyError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    try {
+      const adapters = options.registry.resolve(
+        principal.institution_kind,
+        principal.id_institucion,
+      );
+      const result = await registerPaciente(adapters.pacientes, toRegisterInput(parsed.data));
+      return reply.code(201).send(result);
+    } catch (error) {
+      return sendMapped(reply, error);
+    }
+  });
+
+  app.get('/api/pacientes', async (request, reply) => {
+    const principal = await requirePrincipal(request, reply);
+    if (!principal) {
+      return;
+    }
+    const parsed = searchSchema.safeParse(request.query);
+    if (!parsed.success) {
+      const mapped = invalidQueryError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    try {
+      const adapters = options.registry.resolve(
+        principal.institution_kind,
+        principal.id_institucion,
+      );
+      return listPacientes(adapters.pacientes, parsed.data);
+    } catch (error) {
+      return sendMapped(reply, error);
+    }
+  });
+
+  app.get('/api/pacientes/:id', async (request, reply) => {
+    const principal = await requirePrincipal(request, reply);
+    if (!principal) {
+      return;
+    }
+    const parsed = paramsSchema.safeParse(request.params);
+    if (!parsed.success) {
+      const mapped = invalidQueryError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    try {
+      const adapters = options.registry.resolve(
+        principal.institution_kind,
+        principal.id_institucion,
+      );
+      return getHistorial(adapters.pacientes, adapters.consultas, asPacienteId(parsed.data.id));
+    } catch (error) {
+      return sendMapped(reply, error);
+    }
+  });
+
+  app.post('/api/pacientes/:id/consultas', async (request, reply) => {
+    const principal = await requirePrincipal(request, reply);
+    if (!principal) {
+      return;
+    }
+    if (!hasAnyRole(principal, ['administrador', 'medico'])) {
+      const mapped = forbiddenError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    const params = paramsSchema.safeParse(request.params);
+    if (!params.success) {
+      const mapped = invalidQueryError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    const body = closeSchema.safeParse(request.body);
+    if (!body.success) {
+      const mapped = invalidBodyError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    try {
+      const adapters = options.registry.resolve(
+        principal.institution_kind,
+        principal.id_institucion,
+      );
+      const result = await closeConsulta(adapters, {
+        id_paciente: asPacienteId(params.data.id),
+        body: toCloseInput(body.data),
+      });
+      return reply.code(201).send(result);
+    } catch (error) {
+      return sendMapped(reply, error);
+    }
+  });
+
+  app.post('/api/pacientes/:id/archivo', async (request, reply) => {
+    const principal = await requirePrincipal(request, reply);
+    if (!principal) {
+      return;
+    }
+    if (!hasAnyRole(principal, ['administrador', 'recepcion'])) {
+      const mapped = forbiddenError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    const params = paramsSchema.safeParse(request.params);
+    if (!params.success) {
+      const mapped = invalidQueryError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    const body = archiveSchema.safeParse(request.body);
+    if (!body.success) {
+      const mapped = invalidBodyError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    try {
+      const adapters = options.registry.resolve(
+        principal.institution_kind,
+        principal.id_institucion,
+      );
+      const id_paciente = asPacienteId(params.data.id);
+      const expediente = await adapters.pacientes.findExpedienteByPaciente(id_paciente);
+      if (!expediente) {
+        return reply.code(404).send(notFoundEnvelope());
+      }
+      const archived = await archiveExpediente(adapters.pacientes, adapters.clock, {
+        id_paciente,
+        id_expediente: expediente.id_expediente,
+        motivo_archivo: body.data.motivo_archivo,
+        ...(body.data.observacion_archivo !== undefined
+          ? { observacion_archivo: body.data.observacion_archivo }
+          : {}),
+      });
+      return reply.code(200).send(archived);
+    } catch (error) {
+      return sendMapped(reply, error);
+    }
   });
 
   return app;

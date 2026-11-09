@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import type { UnitOfWorkPort } from '../../ports/index.js';
+import { ensureMemoryExtensions } from './full-state.js';
 import { cloneMemoryMaps, type MemoryInstitutionState, type MemoryMaps } from './state.js';
 
 interface MemoryTxStore {
@@ -38,6 +39,7 @@ export class MemoryUnitOfWork implements UnitOfWorkPort {
 
   private async runOuter<T>(work: () => Promise<T>): Promise<T> {
     const working = cloneMemoryMaps(this.state.getPublished());
+    ensureMemoryExtensions(working);
     const result = await memoryTx.run({ state: this.state, working }, work);
     this.state.publish(working);
     return result;

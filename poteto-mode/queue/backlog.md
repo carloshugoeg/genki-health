@@ -1,6 +1,6 @@
 # Backlog
 
-**Next:** E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (ready, not claimed). E2-P2-09 and E2-P3A-02 are also dependency-ready in parallel.
+**Next:** E2-P3A-02 — Create PostgreSQL migrations, type mapping and scoped transaction wrapper (ready when claimed).
 
 
 
@@ -27,10 +27,10 @@ Order is the order a single agent follows when dependencies are satisfied. E1-05
 | 17 | E2-P2-04 | Complete memory patient registration, guardians, search and archive | done | agent | E2-P2-03 |
 | 18 | E2-P2-05 | Implement pure consultation bundle invariants | done | agent | E2-P2-01 |
 | 19 | E2-P2-06 | Implement memory closed consultation aggregate and turn contract suite green | done | agent | E2-P2-04, E2-P2-05 |
-| 20 | E2-P2-07 | Expose patient search, detail, catalog and archive HTTP slices | backlog | agent | E2-P2-06, E2-P2-01 |
-| 21 | E2-P2-08 | Wire atomic consultation use case and HTTP save | backlog | agent | E2-P2-06, E2-P2-07 |
-| 22 | E2-P2-09 | Extract storage-neutral JWT service with persistent-session port | backlog | agent | E2-P2-01 |
-| 23 | E2-P2-10 | Close the core memory gate with coverage and API isolation tests | backlog | agent | E2-P2-09, E2-P2-08 |
+| 20 | E2-P2-07 | Expose patient search, detail, catalog and archive HTTP slices | done | agent | E2-P2-06, E2-P2-01 |
+| 21 | E2-P2-08 | Wire atomic consultation use case and HTTP save | done | agent | E2-P2-06, E2-P2-07 |
+| 22 | E2-P2-09 | Extract storage-neutral JWT service with persistent-session port | done | agent | E2-P2-01 |
+| 23 | E2-P2-10 | Close the core memory gate with coverage and API isolation tests | done | agent | E2-P2-09, E2-P2-08 |
 | 24 | E2-P3A-01 | Provision deterministic local engines and safe bootstrap commands | done | agent | E2-P1-03, E2-P2-02 |
 | 25 | E2-P3A-02 | Create PostgreSQL migrations, type mapping and scoped transaction wrapper | backlog | agent | E2-P3A-01, E2-P1-02, E2-P2-06 |
 | 26 | E2-P3A-03 | Implement PostgreSQL patient registration, read/search and archive | backlog | agent | E2-P3A-02 |

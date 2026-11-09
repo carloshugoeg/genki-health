@@ -1,4 +1,9 @@
 import type { ExpedienteDto, PacienteDto, PacienteId } from '@genki/shared';
+import {
+  cloneExtensionMaps,
+  createEmptyExtensionMaps,
+  type MemoryExtensionNamespace,
+} from './full-state.js';
 
 export interface MemoryMaps {
   pacientes: Map<PacienteId, PacienteDto>;
@@ -16,6 +21,8 @@ export interface MemoryMaps {
     cie10: Map<string, unknown>;
     medicamentos: Map<number, unknown>;
   };
+  /** Additive full-system module namespaces on the same snapshot. */
+  extensions: Map<string, MemoryExtensionNamespace>;
 }
 
 export function createEmptyMemoryMaps(): MemoryMaps {
@@ -35,6 +42,7 @@ export function createEmptyMemoryMaps(): MemoryMaps {
       cie10: new Map<string, unknown>(),
       medicamentos: new Map(),
     },
+    extensions: createEmptyExtensionMaps(),
   };
 }
 
@@ -63,6 +71,7 @@ export function cloneMemoryMaps(source: MemoryMaps): MemoryMaps {
       cie10: cloneMap(source.catalogs.cie10),
       medicamentos: cloneMap(source.catalogs.medicamentos),
     },
+    extensions: cloneExtensionMaps(source.extensions ?? createEmptyExtensionMaps()),
   };
 }
 
