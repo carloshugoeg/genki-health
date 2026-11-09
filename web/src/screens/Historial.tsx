@@ -3,6 +3,7 @@ import type { AuthPrincipalDto, CatalogosDto, HistorialDto } from '@genki/shared
 import { api, errorMessage } from '../api';
 import { navigate } from '../router';
 import { ArchiveDialog } from '../components/ArchiveDialog';
+import { FichaLane1 } from '../full/FichaLane1';
 import { Consulta } from './Consulta';
 
 const labels: Record<string, string> = {
@@ -132,6 +133,7 @@ export function HistoryContent({
         </p>
         <Fields value={history.expediente} />
       </section>
+      <FichaLane1 patientId={history.paciente.id_paciente} />
       <section>
         <h3>Historial de consultas</h3>
         <p className="muted">

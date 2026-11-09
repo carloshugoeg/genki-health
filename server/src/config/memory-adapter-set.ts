@@ -14,6 +14,7 @@ import {
 } from '../adapters/memory/state.js';
 import type { IdPort, PersistenceCheckpoint } from '../ports/index.js';
 import type { AdapterSet } from './adapter-registry.js';
+import { attachMemoryFullModules } from './full-modules.js';
 
 export interface MemoryAdapterOptions {
   /** Inject a shared sequence domain for institutions in one simulated physical store. */
@@ -58,7 +59,7 @@ export function openMemoryAdapterSet(
     ),
     catalogos: new MemoryCatalogoRepository(state),
   };
-  return { set, state };
+  return { set: attachMemoryFullModules(set, state), state };
 }
 
 export function buildMemoryAdapterSet(

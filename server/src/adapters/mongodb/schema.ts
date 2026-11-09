@@ -97,6 +97,44 @@ export const MONGO_INDEXES: Record<string, IndexSpec[]> = {
       options: { unique: true, name: 'uq_inst_id_medicamento' },
     },
   ],
+  antecedentes: [
+    {
+      keys: { institution_id: 1, id_antecedente: 1 },
+      options: { unique: true, name: 'uq_inst_id_antecedente' },
+    },
+  ],
+  alergias: [
+    {
+      keys: { institution_id: 1, id_alergia: 1 },
+      options: { unique: true, name: 'uq_inst_id_alergia' },
+    },
+    {
+      keys: { institution_id: 1, id_expediente: 1, sustancia_norm: 1 },
+      options: { unique: true, name: 'uq_inst_alergia_sustancia' },
+    },
+  ],
+  documentos_adjuntos: [
+    {
+      keys: { institution_id: 1, id_documento: 1 },
+      options: { unique: true, name: 'uq_inst_id_documento' },
+    },
+  ],
+  signos_vitales: [
+    {
+      keys: { institution_id: 1, id_signos: 1 },
+      options: { unique: true, name: 'uq_inst_id_signos' },
+    },
+    {
+      keys: { institution_id: 1, id_consulta: 1 },
+      options: { unique: true, name: 'uq_inst_signos_consulta' },
+    },
+  ],
+  consulta_borradores: [
+    {
+      keys: { institution_id: 1, id_consulta: 1 },
+      options: { unique: true, name: 'uq_inst_borrador_consulta' },
+    },
+  ],
   catalogo_cie10: [
     {
       keys: { institution_id: 1, codigo_cie10: 1 },

@@ -7,10 +7,10 @@
 
 ## Agent lane (dependency-ready)
 
-- **Next:** E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (depends on E2-P2-06 + E2-P2-01; ready when claimed).
+- **Next:** E2-P3A-02 — Create PostgreSQL migrations, type mapping and scoped transaction wrapper (depends on E2-P3A-01 + E2-P1-02 + E2-P2-06; ready when claimed).
+- E2-P2-07 — Expose patient search, detail, catalog and archive HTTP slices (depends on E2-P2-06 + E2-P2-01; ready when claimed).
 - E2-P2-09 — Extract storage-neutral JWT service with persistent-session port (depends on E2-P2-01; ready when claimed).
 - E2-P3A-04 — Implement PostgreSQL atomic consultation bundle and pass shared suite (depends on E2-P3A-03; ready when claimed).
-- E2-P3A-02 — Create PostgreSQL migrations, type mapping and scoped transaction wrapper (depends on E2-P3A-01 + E2-P1-02 + E2-P2-06; ready when claimed).
 - E2-P4B-01 — Pin Firestore emulator, collection indexes and tested deny-by-default rules (depends on E2-P1-03 + E2-P3A-01; ready when claimed).
 - E2-P4B-02 — Implement Firestore buffered read-before-write UoW and integer mapping (depends on E2-P4B-01 + E2-P2-06; ready when claimed).
 - E2-01 scaffold history remains on PR #9 until ship marks it superseded; content is already on `main` via PR #10.
