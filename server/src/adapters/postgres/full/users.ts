@@ -5,6 +5,7 @@ import type { Page } from '@genki/shared/full/schema';
 import type { BitacoraSafe, UsuarioAdminResult } from '@genki/shared/full/users';
 import { ClinicalError } from '../../../domain/clinical-error.js';
 import { generateTemporalPassword } from '../../../domain/full/account.js';
+import { assertLastActiveAdminGuard } from '../../../domain/full/users.js';
 import type { OperationContext } from '../../../ports/full/context.js';
 import type {
   Op05Request,
@@ -21,6 +22,21 @@ interface UsuarioRow {
   correo: string;
   estado: string;
   rol: string;
+}
+
+function safeDetalle(value: unknown): BitacoraSafe['detalle'] {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return { campos: [], op: 0, resultado: 'ok' };
+  }
+  const row = value as { campos?: unknown; op?: unknown; resultado?: unknown };
+  const campos = Array.isArray(row.campos)
+    ? row.campos.filter((item): item is string => typeof item === 'string')
+    : [];
+  return {
+    campos,
+    op: typeof row.op === 'number' ? row.op : 0,
+    resultado: typeof row.resultado === 'string' ? row.resultado : 'ok',
+  };
 }
 
 function mapPublic(row: UsuarioRow) {
@@ -58,7 +74,7 @@ export function createPostgresUsersRepository(pool: pg.Pool): UsersRepositoryPor
              RETURNING id_usuario, id_institucion, id_profesional, nombre_usuario, correo, estado`,
             [
               context.id_institucion,
-              body.id_profesional ?? null,
+              body.vinculo_profesional?.id_profesional ?? body.id_profesional ?? null,
               rol.rows[0].id_rol,
               body.nombre_usuario,
               body.correo,
@@ -67,13 +83,14 @@ export function createPostgresUsersRepository(pool: pg.Pool): UsersRepositoryPor
           );
           const row = inserted.rows[0]!;
           await client.query(
-            `INSERT INTO bitacora (id_usuario, entidad, id_registro, accion, fecha_hora, detalle)
-             VALUES ($1, 'usuario', $2, 'create', $3::timestamptz, $4::jsonb)`,
+            `INSERT INTO bitacora (id_usuario, entidad, id_registro, accion, fecha_hora, detalle, id_institucion)
+             VALUES ($1, 'usuario', $2, 'create', $3::timestamptz, $4::jsonb, $5)`,
             [
               context.id_usuario,
               String(row.id_usuario),
               toPgTimestamptz(context.now),
               JSON.stringify({ campos: ['correo', 'rol', 'nombre_usuario'], op: 5, resultado: 'ok' }),
+              context.id_institucion,
             ],
           );
           await client.query('COMMIT');
@@ -84,25 +101,24 @@ export function createPostgresUsersRepository(pool: pg.Pool): UsersRepositoryPor
           `SELECT u.id_usuario, u.id_institucion, u.id_profesional, u.nombre_usuario, u.correo,
                   u.estado, r.nombre AS rol
              FROM usuario u JOIN rol r ON r.id_rol = u.id_rol
-            WHERE u.id_usuario = $1 FOR UPDATE OF u`,
-          [body.id],
+            WHERE u.id_usuario = $1 AND u.id_institucion = $2 FOR UPDATE OF u`,
+          [body.id, context.id_institucion],
         );
         const target = current.rows[0];
         if (!target) throw new ClinicalError('not_found', 'Recurso no encontrado');
-
-        if (body.action === 'deactivate' || body.estado === 'inactivo') {
-          if (target.rol === 'administrador' && target.estado === 'activo') {
-            const admins = await client.query<{ n: string }>(
-              `SELECT count(*)::text AS n FROM usuario u
-                 JOIN rol r ON r.id_rol = u.id_rol
-                WHERE u.id_institucion = $1 AND u.estado = 'activo' AND r.nombre = 'administrador'`,
-              [target.id_institucion],
-            );
-            if (Number(admins.rows[0]?.n ?? 0) <= 1) {
-              throw new ClinicalError('conflict', 'Conflicto de recurso');
-            }
-          }
-        }
+        const admins = await client.query<{ n: string }>(
+          `SELECT count(*)::text AS n FROM usuario u
+             JOIN rol r ON r.id_rol = u.id_rol
+            WHERE u.id_institucion = $1 AND u.estado = 'activo' AND r.nombre = 'administrador'`,
+          [target.id_institucion],
+        );
+        assertLastActiveAdminGuard({
+          targetRol: target.rol,
+          targetEstado: target.estado,
+          nextRol: body.action === 'deactivate' ? target.rol : (body.rol ?? target.rol),
+          nextEstado: body.action === 'deactivate' ? 'inactivo' : (body.estado ?? target.estado),
+          activeAdminCount: Number(admins.rows[0]?.n ?? 0),
+        });
 
         if (body.action === 'deactivate') {
           const updated = await client.query<UsuarioRow>(
@@ -116,13 +132,14 @@ export function createPostgresUsersRepository(pool: pg.Pool): UsersRepositoryPor
             [target.id_usuario, toPgTimestamptz(context.now)],
           );
           await client.query(
-            `INSERT INTO bitacora (id_usuario, entidad, id_registro, accion, fecha_hora, detalle)
-             VALUES ($1, 'usuario', $2, 'deactivate', $3::timestamptz, $4::jsonb)`,
+            `INSERT INTO bitacora (id_usuario, entidad, id_registro, accion, fecha_hora, detalle, id_institucion)
+             VALUES ($1, 'usuario', $2, 'deactivate', $3::timestamptz, $4::jsonb, $5)`,
             [
               context.id_usuario,
               String(target.id_usuario),
               toPgTimestamptz(context.now),
               JSON.stringify({ campos: ['estado'], op: 5, resultado: 'ok' }),
+              context.id_institucion,
             ],
           );
           await client.query('COMMIT');
@@ -151,14 +168,16 @@ export function createPostgresUsersRepository(pool: pg.Pool): UsersRepositoryPor
             target.id_usuario,
             body.nombre_usuario ?? null,
             body.correo ?? null,
-            body.id_profesional === undefined ? null : body.id_profesional,
+            (body.vinculo_profesional?.id_profesional ?? body.id_profesional) === undefined
+              ? null
+              : (body.vinculo_profesional?.id_profesional ?? body.id_profesional),
             id_rol ?? null,
             body.estado ?? null,
           ],
         );
         await client.query(
-          `INSERT INTO bitacora (id_usuario, entidad, id_registro, accion, fecha_hora, detalle)
-           VALUES ($1, 'usuario', $2, 'update', $3::timestamptz, $4::jsonb)`,
+          `INSERT INTO bitacora (id_usuario, entidad, id_registro, accion, fecha_hora, detalle, id_institucion)
+           VALUES ($1, 'usuario', $2, 'update', $3::timestamptz, $4::jsonb, $5)`,
           [
             context.id_usuario,
             String(target.id_usuario),
@@ -168,6 +187,7 @@ export function createPostgresUsersRepository(pool: pg.Pool): UsersRepositoryPor
               op: 5,
               resultado: 'ok',
             }),
+            context.id_institucion,
           ],
         );
         await client.query('COMMIT');
@@ -188,39 +208,50 @@ export function createPostgresUsersRepository(pool: pg.Pool): UsersRepositoryPor
         ) {
           throw new ClinicalError('conflict', 'Conflicto de recurso');
         }
+        if (
+          typeof err === 'object' &&
+          err !== null &&
+          'code' in err &&
+          (err as { code: string }).code === '23503'
+        ) {
+          throw new ClinicalError('not_found', 'Recurso no encontrado');
+        }
         throw err;
       } finally {
         client.release();
       }
     },
 
-    async op06(input: Op06Request): Promise<Page<BitacoraSafe>> {
+    async op06(input: Op06Request, context: OperationContext): Promise<Page<BitacoraSafe>> {
       const q = input.query;
-      const clauses: string[] = [];
-      const params: unknown[] = [];
+      const clauses: string[] = [
+        '(b.id_institucion = $1 OR (b.id_institucion IS NULL AND u.id_institucion = $1))',
+      ];
+      const params: unknown[] = [context.id_institucion];
       if (q.id_usuario !== undefined) {
         params.push(q.id_usuario);
-        clauses.push(`id_usuario = $${params.length}`);
+        clauses.push(`b.id_usuario = $${params.length}`);
       }
       if (q.entidad) {
         params.push(q.entidad);
-        clauses.push(`entidad = $${params.length}`);
+        clauses.push(`b.entidad = $${params.length}`);
       }
       if (q.id_registro) {
         params.push(q.id_registro);
-        clauses.push(`id_registro = $${params.length}`);
+        clauses.push(`b.id_registro = $${params.length}`);
       }
       if (q.desde) {
         params.push(q.desde);
-        clauses.push(`fecha_hora >= $${params.length}::timestamptz`);
+        clauses.push(`b.fecha_hora >= $${params.length}::timestamptz`);
       }
       if (q.hasta) {
         params.push(q.hasta);
-        clauses.push(`fecha_hora <= $${params.length}::timestamptz`);
+        clauses.push(`b.fecha_hora <= $${params.length}::timestamptz`);
       }
-      const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+      const where = `WHERE ${clauses.join(' AND ')}`;
+      const from = `FROM bitacora b JOIN usuario u ON u.id_usuario = b.id_usuario ${where}`;
       const total = await pool.query<{ n: string }>(
-        `SELECT count(*)::text AS n FROM bitacora ${where}`,
+        `SELECT count(*)::text AS n ${from}`,
         params,
       );
       const page = q.page ?? 1;
@@ -236,9 +267,9 @@ export function createPostgresUsersRepository(pool: pg.Pool): UsersRepositoryPor
         fecha_hora: Date | string;
         detalle: BitacoraSafe['detalle'] | null;
       }>(
-        `SELECT id_bitacora::text, id_usuario, entidad, id_registro, accion, fecha_hora, detalle
-           FROM bitacora ${where}
-           ORDER BY fecha_hora ASC, id_bitacora ASC
+        `SELECT b.id_bitacora::text, b.id_usuario, b.entidad, b.id_registro, b.accion, b.fecha_hora, b.detalle
+           ${from}
+           ORDER BY b.fecha_hora ASC, b.id_bitacora ASC
            LIMIT $${params.length - 1} OFFSET $${params.length}`,
         params,
       );
@@ -253,7 +284,7 @@ export function createPostgresUsersRepository(pool: pg.Pool): UsersRepositoryPor
             typeof row.fecha_hora === 'string'
               ? row.fecha_hora
               : new Date(row.fecha_hora).toISOString(),
-          detalle: row.detalle ?? { campos: [], op: 0, resultado: 'ok' },
+          detalle: safeDetalle(row.detalle),
         })),
         page,
         page_size,

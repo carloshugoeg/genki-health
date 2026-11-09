@@ -31,14 +31,19 @@ export function createPostgresAccountRepository(pool: pg.Pool): AccountRepositor
         await client.query('BEGIN');
         const found = await client.query<UserAuthRow>(
           `SELECT id_usuario, hash_contrasena, estado FROM usuario
-            WHERE id_usuario = $1 FOR UPDATE`,
-          [context.id_usuario],
+            WHERE id_usuario = $1 AND id_institucion = $2 FOR UPDATE`,
+          [context.id_usuario, context.id_institucion],
         );
         const user = found.rows[0];
         if (!user || user.estado !== 'activo') {
           throw new ClinicalError('invalid_credentials', 'Credenciales inválidas');
         }
-        const ok = await argon2.verify(user.hash_contrasena, input.body.anterior);
+        let ok = false;
+        try {
+          ok = await argon2.verify(user.hash_contrasena, input.body.anterior);
+        } catch {
+          ok = false;
+        }
         if (!ok) {
           throw new ClinicalError('invalid_credentials', 'Credenciales inválidas');
         }
@@ -58,6 +63,17 @@ export function createPostgresAccountRepository(pool: pg.Pool): AccountRepositor
             WHERE id_usuario = $1 AND revoked_at IS NULL`,
           [user.id_usuario, toPgTimestamptz(context.now)],
         );
+        await client.query(
+          `INSERT INTO bitacora (id_usuario, entidad, id_registro, accion, fecha_hora, detalle, id_institucion)
+           VALUES ($1, 'usuario', $2, 'password', $3::timestamptz, $4::jsonb, $5)`,
+          [
+            context.id_usuario,
+            String(user.id_usuario),
+            toPgTimestamptz(context.now),
+            JSON.stringify({ campos: ['contrasena'], op: 3, resultado: 'ok' }),
+            context.id_institucion,
+          ],
+        );
         await client.query('COMMIT');
       } catch (err) {
         await client.query('ROLLBACK').catch(() => undefined);
@@ -72,8 +88,8 @@ export function createPostgresAccountRepository(pool: pg.Pool): AccountRepositor
         await client.query('BEGIN');
         const found = await client.query<UserAuthRow>(
           `SELECT id_usuario, hash_contrasena, estado FROM usuario
-            WHERE id_usuario = $1 FOR UPDATE`,
-          [input.params.id],
+            WHERE id_usuario = $1 AND id_institucion = $2 FOR UPDATE`,
+          [input.params.id, context.id_institucion],
         );
         const user = found.rows[0];
         if (!user) {
@@ -86,7 +102,8 @@ export function createPostgresAccountRepository(pool: pg.Pool): AccountRepositor
               SET hash_contrasena = $2,
                   debe_cambiar_contrasena = true,
                   intentos_fallidos = 0,
-                  auth_version = auth_version + 1
+                  auth_version = auth_version + 1,
+                  estado = CASE WHEN estado = 'bloqueado' THEN 'activo' ELSE estado END
             WHERE id_usuario = $1`,
           [user.id_usuario, hash],
         );
@@ -95,6 +112,17 @@ export function createPostgresAccountRepository(pool: pg.Pool): AccountRepositor
               SET revoked_at = COALESCE(revoked_at, $2::timestamptz)
             WHERE id_usuario = $1 AND revoked_at IS NULL`,
           [user.id_usuario, toPgTimestamptz(context.now)],
+        );
+        await client.query(
+          `INSERT INTO bitacora (id_usuario, entidad, id_registro, accion, fecha_hora, detalle, id_institucion)
+           VALUES ($1, 'usuario', $2, 'reset', $3::timestamptz, $4::jsonb, $5)`,
+          [
+            context.id_usuario,
+            String(user.id_usuario),
+            toPgTimestamptz(context.now),
+            JSON.stringify({ campos: ['debe_cambiar_contrasena'], op: 4, resultado: 'ok' }),
+            context.id_institucion,
+          ],
         );
         await client.query('COMMIT');
         return { temporal };

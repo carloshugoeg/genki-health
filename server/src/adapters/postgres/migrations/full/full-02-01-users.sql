@@ -25,3 +25,7 @@ CREATE TABLE IF NOT EXISTS bitacora (
 
 CREATE INDEX IF NOT EXISTS ix_bitacora_tiempo ON bitacora (fecha_hora DESC, id_bitacora DESC);
 CREATE INDEX IF NOT EXISTS ix_bitacora_entidad ON bitacora (entidad, id_registro);
+ALTER TABLE bitacora
+  ADD COLUMN IF NOT EXISTS id_institucion INTEGER REFERENCES institucion(id_institucion);
+CREATE INDEX IF NOT EXISTS ix_bitacora_institucion
+  ON bitacora (id_institucion, fecha_hora, id_bitacora);

@@ -24,7 +24,12 @@ export function createMemoryAccountRepository(admin: MemoryIdentityAdmin): Accou
       if (!user || user.estado !== 'activo') {
         throw new ClinicalError('invalid_credentials', 'Credenciales inválidas');
       }
-      const ok = await argon2.verify(user.hash_contrasena, input.body.anterior);
+      let ok = false;
+      try {
+        ok = await argon2.verify(user.hash_contrasena, input.body.anterior);
+      } catch {
+        ok = false;
+      }
       if (!ok) {
         throw new ClinicalError('invalid_credentials', 'Credenciales inválidas');
       }
@@ -47,7 +52,7 @@ export function createMemoryAccountRepository(admin: MemoryIdentityAdmin): Accou
     },
     async op04(input: Op04Request, context: OperationContext): Promise<{ temporal: string }> {
       const user = admin.getUser(input.params.id);
-      if (!user) {
+      if (!user || user.id_institucion !== context.id_institucion) {
         throw new ClinicalError('not_found', 'Recurso no encontrado');
       }
       const temporal = generateTemporalPassword(randomBytes(24));
@@ -58,7 +63,17 @@ export function createMemoryAccountRepository(admin: MemoryIdentityAdmin): Accou
         clearIntentos: true,
         bumpAuthVersion: true,
       });
+      if (user.estado === 'bloqueado') admin.updateUser(user.id_usuario, { estado: 'activo' });
       await admin.revokeAllSessions(user.id_usuario, context.now);
+      admin.appendBitacora({
+        id_usuario: context.id_usuario,
+        id_institucion: context.id_institucion,
+        entidad: 'usuario',
+        id_registro: String(user.id_usuario),
+        accion: 'reset',
+        fecha_hora: context.now,
+        detalle: { campos: ['debe_cambiar_contrasena'], op: 4, resultado: 'ok' },
+      });
       return { temporal };
     },
   };
