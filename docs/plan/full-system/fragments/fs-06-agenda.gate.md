@@ -60,3 +60,21 @@ La UI se probó standalone con Chromium y un harness de contrato: agendar,
 llegada, reprogramar, cancelar, disponibilidad, escritorio 1280 y móvil 390,
 sin errores JS ni desbordamiento horizontal. No se presenta como UI integrada
 con motores nativos ni como gate global de todo el full-system.
+
+## Resultado del gate general
+
+`VALIDATE_FULL=1 JOURNAL_GATE_BASE=7786ec4c52cb355c530a89f960010961a354fdb9 bash scripts/validate.sh`
+pasa instalación, formato, lint, build shared, typecheck, depcruise y suites
+(107 tests server + 8 web; los 20 nativos se ejecutan por separado).
+La fase protocol da 37/38: falla exclusivamente `trackers_name_same_next_ticket`.
+Se reprodujo el mismo fallo en un worktree limpio del SHA base: NOW nombra
+E2-P2-07 y el test espera E2-P3A-02. No es una regresión de agenda. Los archivos
+globales de trackers/tests quedan intactos por el alcance del brief.
+
+`npm run build` (shared/server/web) y journal gate se ejecutaron aparte con éxito,
+ya que validate aborta antes de llegar al build web. No se declara validate verde.
+
+Persistencia final ejecutada secuencialmente: **PG 5/5, MySQL 5/5, Mongo 5/5,
+Firestore 5/5**. Todos incluyen contrato OP20–25, prueba física y rollback.
+CLI migrate + seed doble verificado en MongoDB; funciones de migración y seed
+doble ejecutadas por las suites de cada uno de los cuatro motores.

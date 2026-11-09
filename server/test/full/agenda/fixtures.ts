@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { Pool } from 'pg';
+import pg from 'pg';
 import mysql from 'mysql2/promise';
 import { MongoClient } from 'mongodb';
 import { initializeApp, deleteApp } from 'firebase-admin/app';
@@ -23,6 +23,7 @@ import {
 import type { AgendaOptions } from '../../../src/application/full/agenda.js';
 import type { CITA } from '@genki/shared/full/agenda';
 
+const { Pool } = pg;
 export type Engine = 'postgres' | 'mysql' | 'mongodb' | 'firebase';
 function required(name: string): string {
   const value = process.env[name];
