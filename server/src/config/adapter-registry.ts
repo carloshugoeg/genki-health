@@ -8,6 +8,9 @@ import type {
   PacienteRepositoryPort,
   UnitOfWorkPort,
 } from '../ports/index.js';
+import type { Lane1FullModules } from '../ports/adapter-resource.js';
+
+export type { Lane1FullModules };
 
 export interface AdapterSet {
   readonly engine: DataEngine;
@@ -17,6 +20,8 @@ export interface AdapterSet {
   readonly pacientes: PacienteRepositoryPort;
   readonly consultas: ConsultaRepositoryPort;
   readonly catalogos: CatalogoRepositoryPort;
+  /** Lane-1 clinical shared modules (record / attachments / consultation). */
+  readonly full?: Lane1FullModules;
 }
 
 export type AdapterSetFactory = (institutionId: InstitutionId) => AdapterSet;

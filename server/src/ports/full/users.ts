@@ -26,4 +26,6 @@ export type Op06Response = Page<BitacoraSafe>;
 export interface UsersRepositoryPort {
   op05(input: Op05Request, context: OperationContext): Promise<Op05Response>;
   op06(input: Op06Request, context: OperationContext): Promise<Op06Response>;
+  /** USUARIO.id_profesional of a user, for attributing clinical acts (null when not linked). */
+  profesionalDeUsuario?(id_usuario: number): Promise<number | null>;
 }

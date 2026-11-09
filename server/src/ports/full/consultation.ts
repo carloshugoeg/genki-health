@@ -6,13 +6,17 @@ import type {
   ConsultaCompleta,
   ConsultaDto,
   DiagnosticoInput,
+  ExpedienteEstado,
   TratamientoInput,
 } from '@genki/shared';
+import type { ClinicalItemEntity, ItemPatch } from '../../domain/full/clinical-maintenance.js';
+import type { CloseConsultaBundle } from '../consulta-repository.js';
 import type {
   SIGNOS_VITALES,
   SIGNOS_VITALESInput,
   OpenConsultaInput,
   ConsultaDraft,
+  ClinicalItemDto,
   Page,
   PageQuery,
 } from '@genki/shared/full/consultation';
@@ -73,6 +77,53 @@ export type Op33Request = {
 };
 export type Op33Response = Page<ConsultaCompleta>;
 
+/** Read model used to close an open consultation inside the caller's unit of work. */
+export interface ConsultaParaCierre {
+  consulta: ConsultaDto;
+  expediente_estado: ExpedienteEstado;
+}
+
+/** Children and annotations persisted when an open consultation becomes `cerrada` (OP-31). */
+export interface CierreConsultaBundle {
+  fecha_hora_fin: string;
+  enfermedad_actual: string | null;
+  exploracion_fisica: string | null;
+  plan: string | null;
+  diagnosticos: CloseConsultaBundle['diagnosticos'];
+  tratamientos: CloseConsultaBundle['tratamientos'];
+  receta?: CloseConsultaBundle['receta'];
+}
+
+/** Current state of a diagnosis / treatment / prescription plus its consultation context. */
+export interface ClinicalItemSnapshot {
+  item: ClinicalItemDto;
+  id_consulta: number;
+  consulta_estado: string;
+  expediente_estado: ExpedienteEstado;
+}
+
+/** Status/annotation columns only; identity, links and dates of record never change. */
+export type ClinicalItemPatch = { id: number } & ItemPatch;
+
+/** BITACORA row (Entrega I): written in the same transaction as the clinical change. */
+export interface BitacoraClinicaEntry {
+  id_usuario: number;
+  entidad: 'consulta' | ClinicalItemEntity;
+  id_registro: string;
+  accion: 'modificacion';
+  fecha_hora: string;
+  detalle: {
+    op: number;
+    resultado: 'ok';
+    operacion: 'cierre' | 'modificacion' | 'anulacion';
+    campos: string[];
+    motivo: string | null;
+    id_consulta: number;
+    antes: Record<string, string | null>;
+    despues: Record<string, string | null>;
+  };
+}
+
 export interface ConsultationRepositoryPort {
   op26(input: Op26Request, context: OperationContext): Promise<Op26Response>;
   op27(input: Op27Request, context: OperationContext): Promise<Op27Response>;
@@ -82,4 +133,18 @@ export interface ConsultationRepositoryPort {
   op31(input: Op31Request, context: OperationContext): Promise<Op31Response>;
   op32(input: Op32Request, context: OperationContext): Promise<Op32Response>;
   op33(input: Op33Request, context: OperationContext): Promise<Op33Response>;
+
+  /*
+   * Clinical maintenance (OP-31 close + corrections). Each method runs inside the caller's
+   * `unitOfWork.runInTransaction`, is scoped to the adapter's institution (null otherwise) and
+   * locks/reads what it returns so archive and correction serialize on the expediente.
+   */
+  findConsultaParaCierre(id_consulta: number): Promise<ConsultaParaCierre | null>;
+  guardarCierreConsulta(
+    id_consulta: number,
+    bundle: CierreConsultaBundle,
+  ): Promise<ConsultaCompleta>;
+  findClinicalItem(entidad: ClinicalItemEntity, id: number): Promise<ClinicalItemSnapshot | null>;
+  updateClinicalItem(patch: ClinicalItemPatch): Promise<ClinicalItemDto>;
+  appendBitacora(entry: BitacoraClinicaEntry): Promise<void>;
 }

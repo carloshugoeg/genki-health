@@ -1,0 +1,89 @@
+# Motores de Genki Health para la entrega (los levanta `bash levantar.sh`).
+# Proyecto Compose dedicado (genki-entrega), puertos solo en 127.0.0.1 y configurables desde .env.
+# Las contraseñas vienen de .env (generado localmente con valores aleatorios); nunca se escriben aquí.
+name: genki-entrega
+
+services:
+  # Institución 1 — Hospital general (también guarda identidades/auth).
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-genki_test_hospital}
+      POSTGRES_USER: genki
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-55432}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # -h 127.0.0.1 evita reportar "listo" durante la inicialización (que solo escucha por socket).
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U genki -d "$$POSTGRES_DB"']
+      interval: 3s
+      timeout: 5s
+      retries: 40
+
+  # Institución 2 — Centro médico pediátrico.
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-genki_test_pediatrico}
+      MYSQL_USER: genki
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - '127.0.0.1:${MYSQL_PORT:-53306}:3306'
+    volumes:
+      - mysqldata:/var/lib/mysql
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" || exit 1']
+      interval: 3s
+      timeout: 5s
+      retries: 60
+
+  # Institución 3 — Laboratorio clínico: replica set rs0 de un nodo, con auth y keyfile
+  # (el keyfile se genera dentro del contenedor; ver infra/mongodb/start-rs.sh).
+  mongodb:
+    image: mongo:7
+    environment:
+      MONGO_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    ports:
+      - '127.0.0.1:${MONGO_PORT:-57017}:27017'
+    volumes:
+      - ../mongodb/start-rs.sh:/start-rs.sh:ro
+      - mongodata:/data/db
+      - mongoconfig:/data/configdb
+    entrypoint: ['bash', '/start-rs.sh']
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'mongosh -u root -p "$$MONGO_ROOT_PASSWORD" --authenticationDatabase admin --quiet --eval "db.hello().isWritablePrimary === true" | grep -q true',
+        ]
+      interval: 3s
+      timeout: 10s
+      retries: 60
+      start_period: 60s
+
+  # Institución 4 — Clínica odontológica: emulador de Firestore (proyecto demo-*, sin credenciales).
+  firestore:
+    build: ./firestore
+    init: true
+    ports:
+      - '127.0.0.1:${FIRESTORE_PORT:-58080}:8080'
+    volumes:
+      - firestoredata:/data
+    stop_grace_period: 60s
+    healthcheck:
+      # La imagen es de Java (sin Node); curl viene incluido en eclipse-temurin.
+      test: ['CMD', 'curl', '-fsS', '-o', '/dev/null', 'http://127.0.0.1:8080/']
+      interval: 3s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+
+volumes:
+  pgdata:
+  mysqldata:
+  mongodata:
+  mongoconfig:
+  firestoredata:

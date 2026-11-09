@@ -8,7 +8,6 @@ export default tseslint.config(
       '**/dist/**',
       '**/node_modules/**',
       '**/coverage/**',
-      'docs/**',
       'infra/**',
       'web/vite.config.ts',
       '.dependency-cruiser.cjs',
@@ -30,6 +29,19 @@ export default tseslint.config(
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
+    },
+  },
+  {
+    files: ['tests/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+        Buffer: 'readonly',
+        fetch: 'readonly',
+        Blob: 'readonly',
+        FormData: 'readonly',
+      },
     },
   },
 );

@@ -12,7 +12,10 @@ export type {
 import type {
   CloseConsultaRequest,
   ConsultaDto,
+  DiagnosticoDto,
   DiagnosticoInput,
+  RecetaDto,
+  TratamientoDto,
   TratamientoInput,
 } from '@genki/shared';
 
@@ -49,3 +52,43 @@ export function isFullConsultaDto(value: unknown): value is FullConsultaDto {
     (tipo === 'primera_vez' || tipo === 'seguimiento' || tipo === 'emergencia')
   );
 }
+
+/**
+ * OP-31 "Cerrar consulta" for a consultation opened with OP-26: the same atomic composer as the
+ * closed-consultation flow, minus the header fields already stored on the open consultation.
+ */
+export type CerrarConsultaInput = {
+  enfermedad_actual?: string | null;
+  exploracion_fisica?: string | null;
+  plan?: string | null;
+  diagnosticos: DiagnosticoInput[];
+  tratamientos: TratamientoInput[];
+  receta?: CloseConsultaRequest['receta'];
+};
+
+/** Clinical children that can be corrected after the consultation is closed (never deleted). */
+export type ClinicalItemEntity = 'diagnostico' | 'tratamiento' | 'receta';
+export type AccionMantenimiento = 'modificacion' | 'anulacion';
+
+/** DIAGNOSTICO.tipo domain: presuntivo, definitivo, descartado (anulación = descartado). */
+export type DiagnosticoCambios = { tipo?: 'presuntivo' | 'definitivo'; descripcion?: string };
+/** TRATAMIENTO.estado domain: activo (vigente), finalizado, suspendido (anulación = suspendido). */
+export type TratamientoCambios = {
+  estado?: 'activo' | 'finalizado';
+  indicaciones?: string | null;
+  fecha_fin_estimada?: string | null;
+};
+/** RECETA.estado domain: emitida, anulada. */
+export type RecetaCambios = { observaciones?: string | null };
+
+export type ModificacionClinicaInput =
+  | { entidad: 'diagnostico'; motivo: string; cambios: DiagnosticoCambios }
+  | { entidad: 'tratamiento'; motivo: string; cambios: TratamientoCambios }
+  | { entidad: 'receta'; motivo: string; cambios: RecetaCambios };
+
+export type AnulacionClinicaInput = { entidad: ClinicalItemEntity; motivo: string };
+
+export type ClinicalItemDto =
+  | { entidad: 'diagnostico'; item: DiagnosticoDto }
+  | { entidad: 'tratamiento'; item: TratamientoDto }
+  | { entidad: 'receta'; item: RecetaDto };

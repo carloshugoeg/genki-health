@@ -2,12 +2,7 @@
 
 export type { JsonValue, Page, PageQuery } from './schema.js';
 
-export type {
-  PROFESIONAL_CONTRATO,
-  TIPO_PERSONAL,
-  TARIFA_HONORARIO,
-  TARIFA_HONORARIOInput,
-} from './schema.js';
+export type { PROFESIONAL_CONTRATO, TIPO_PERSONAL, TARIFA_HONORARIO } from './schema.js';
 
 import type { PROFESIONAL, PROFESIONAL_CONTRATO } from './schema.js';
 
@@ -25,3 +20,6 @@ export type PersonalInput = {
   fecha_ingreso?: string;
 };
 export type PersonalDto = { profesional: PROFESIONAL; contrato: PROFESIONAL_CONTRATO };
+
+import type { TARIFA_HONORARIOInput as BaseTarifaInput } from './schema.js';
+export type TARIFA_HONORARIOInput = BaseTarifaInput & { vigente_hasta?: string | null };

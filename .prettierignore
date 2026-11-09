@@ -1,17 +1,16 @@
 node_modules
 dist
 coverage
-docs
-poteto-mode
-PROJECT-DESC.md
+package-lock.json
+.audit
 AGENTS.md
 CLAUDE.md
 README.md
-.github/ISSUE_TEMPLATE
-.github/CODEOWNERS
-.github/PULL_REQUEST_TEMPLATE.md
+ENTREGA-I
+ENTREGA-II
 *.png
 *.dot
 *.mmd
-package-lock.json
-.audit
+# Copia literal del esquema de validación de MongoDB; se conserva su formato.
+server/src/adapters/mongodb/schema.json
+tests/e2e-audit/results

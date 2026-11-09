@@ -6,6 +6,7 @@ import type {
   PacienteId,
   PacientePage,
   PacienteResumen,
+  ReactivateExpedienteInput,
   RegisterPacienteRequest,
 } from '@genki/shared';
 
@@ -26,4 +27,5 @@ export interface PacienteRepositoryPort {
   findExpedienteById(id: ExpedienteId): Promise<ExpedienteDto | null>;
   list(input: SearchPacientesInput): Promise<PacientePage>;
   archiveExpediente(input: ArchiveExpedienteInput): Promise<ExpedienteDto>;
+  reactivateExpediente(input: ReactivateExpedienteInput): Promise<ExpedienteDto>;
 }

@@ -2,11 +2,13 @@ import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 import {
   asPacienteId,
   type AuthPrincipalDto,
+  type CloseConsultaRequest,
   type InstitutionKind,
   type LoginRequestDto,
   type RegisterPacienteRequest,
 } from '@genki/shared';
 import { archiveExpediente } from '../../application/archive-expediente.js';
+import { closeConsulta } from '../../application/close-consulta.js';
 import { getHistorial } from '../../application/get-historial.js';
 import { listPacientes } from '../../application/list-pacientes.js';
 import { registerPaciente } from '../../application/register-paciente.js';
@@ -19,11 +21,30 @@ import {
   notFoundEnvelope,
   toErrorDto,
 } from './errors.js';
-import { archiveSchema, paramsSchema, registerSchema, searchSchema } from './schemas.js';
+import { archiveViaOp18, registerFullClinicalRoutes } from './full-routes.js';
+import { registerAccountRoutes } from './full/account.js';
+import { registerUsersRoutes } from './full/users.js';
+import { registerLaneABRoutes } from './lane-ab-routes.js';
+import { registerSpecialtyRoutes } from './specialty-routes.js';
+import { createProfesionalResolver } from './actor.js';
+import { registerClinicalMaintenanceRoutes } from './clinical-maintenance-routes.js';
+import {
+  archiveSchema,
+  closeSchema,
+  paramsSchema,
+  registerSchema,
+  searchSchema,
+} from './schemas.js';
+import type { AdapterSetWithFull } from '../../config/full-modules.js';
+import type { AccountRepositoryPort } from '../../ports/full/account.js';
+import type { UsersRepositoryPort } from '../../ports/full/users.js';
 
 export interface HttpAppOptions {
   registry: InstitutionAdapterRegistry;
   auth: AuthPort;
+  account?: AccountRepositoryPort;
+  users?: UsersRepositoryPort;
+  nowIso?: () => string;
 }
 
 declare module 'fastify' {
@@ -46,6 +67,9 @@ function bearerToken(header: string | undefined): string | null {
 }
 
 function hasAnyRole(principal: AuthPrincipalDto, roles: readonly string[]): boolean {
+  if (principal.roles.includes('superadministrador')) {
+    return true;
+  }
   return principal.roles.some((role) => roles.includes(role));
 }
 
@@ -78,6 +102,53 @@ function toRegisterInput(data: ReturnType<typeof registerSchema.parse>): Registe
   };
 }
 
+function toCloseInput(data: ReturnType<typeof closeSchema.parse>): CloseConsultaRequest {
+  return {
+    id_profesional: data.id_profesional,
+    fecha_hora_inicio: data.fecha_hora_inicio,
+    tipo: data.tipo,
+    motivo_consulta: data.motivo_consulta,
+    diagnosticos: data.diagnosticos.map((dx) => ({
+      descripcion: dx.descripcion,
+      tipo: dx.tipo,
+      es_principal: dx.es_principal,
+      ...(dx.codigo_cie10 !== undefined ? { codigo_cie10: dx.codigo_cie10 } : {}),
+    })),
+    tratamientos: data.tratamientos.map((tx) => ({
+      diagnostico_index: tx.diagnostico_index,
+      tipo: tx.tipo,
+      descripcion: tx.descripcion,
+      fecha_inicio: tx.fecha_inicio,
+      estado: tx.estado,
+      ...(tx.indicaciones !== undefined ? { indicaciones: tx.indicaciones } : {}),
+      ...(tx.fecha_fin_estimada !== undefined ? { fecha_fin_estimada: tx.fecha_fin_estimada } : {}),
+    })),
+    ...(data.enfermedad_actual !== undefined ? { enfermedad_actual: data.enfermedad_actual } : {}),
+    ...(data.exploracion_fisica !== undefined
+      ? { exploracion_fisica: data.exploracion_fisica }
+      : {}),
+    ...(data.plan !== undefined ? { plan: data.plan } : {}),
+    ...(data.receta !== undefined
+      ? {
+          receta: {
+            detalles: data.receta.detalles.map((d) => ({
+              id_medicamento: d.id_medicamento,
+              dosis: d.dosis,
+              via_administracion: d.via_administracion,
+              frecuencia_horas: d.frecuencia_horas,
+              duracion_dias: d.duracion_dias,
+              cantidad: d.cantidad,
+              indicaciones: d.indicaciones ?? null,
+            })),
+            ...(data.receta.observaciones !== undefined
+              ? { observaciones: data.receta.observaciones }
+              : {}),
+          },
+        }
+      : {}),
+  };
+}
+
 async function sendMapped(reply: FastifyReply, error: unknown) {
   const mapped = toErrorDto(error);
   return reply.code(mapped.status).send(mapped.body);
@@ -94,6 +165,24 @@ export function buildHttpApp(options: HttpAppOptions) {
     return sendMapped(reply, error);
   });
 
+  // USUARIO.id_profesional for attribution (JWT claims unchanged); cached per user for 60 s.
+  const profesionales = createProfesionalResolver(
+    options.users?.profesionalDeUsuario
+      ? (id_usuario) => options.users!.profesionalDeUsuario!(id_usuario)
+      : undefined,
+    {
+      superadminFallback: async (principal) => {
+        const adapters = options.registry.resolve(
+          principal.institution_kind,
+          principal.id_institucion,
+        );
+        const { profesionales: rows } = await adapters.catalogos.list();
+        const ids = rows.map((row) => row.id_profesional).sort((a, b) => a - b);
+        return ids[0] ?? null;
+      },
+    },
+  );
+
   async function requirePrincipal(
     request: FastifyRequest,
     reply: FastifyReply,
@@ -107,6 +196,7 @@ export function buildHttpApp(options: HttpAppOptions) {
     }
     try {
       const principal = await options.auth.verifyAccessToken(token);
+      await profesionales.attach(principal);
       request.principal = principal;
       return principal;
     } catch (error) {
@@ -188,6 +278,42 @@ export function buildHttpApp(options: HttpAppOptions) {
     }
     return principal;
   });
+
+  app.post<{ Body: { institution_kind?: string; refresh_token?: string } }>(
+    '/api/auth/select-institution',
+    async (request, reply) => {
+      const principal = await requirePrincipal(request, reply);
+      if (!principal) {
+        return;
+      }
+      const body = request.body;
+      if (
+        !body ||
+        typeof body.institution_kind !== 'string' ||
+        !isInstitutionKind(body.institution_kind) ||
+        typeof body.refresh_token !== 'string'
+      ) {
+        const mapped = invalidBodyError();
+        return reply.code(mapped.status).send(mapped.body);
+      }
+      const token = bearerToken(request.headers.authorization);
+      if (!token) {
+        return reply
+          .code(401)
+          .send({ error: 'missing_bearer', message: 'Authorization Bearer required' });
+      }
+      try {
+        const tokens = await options.auth.selectInstitution(
+          token,
+          body.refresh_token,
+          body.institution_kind,
+        );
+        return reply.code(200).send(tokens);
+      } catch (error) {
+        return sendMapped(reply, error);
+      }
+    },
+  );
 
   app.get('/api/catalogos', async (request, reply) => {
     const principal = await requirePrincipal(request, reply);
@@ -273,6 +399,40 @@ export function buildHttpApp(options: HttpAppOptions) {
     }
   });
 
+  app.post('/api/pacientes/:id/consultas', async (request, reply) => {
+    const principal = await requirePrincipal(request, reply);
+    if (!principal) {
+      return;
+    }
+    if (!hasAnyRole(principal, ['administrador', 'medico'])) {
+      const mapped = forbiddenError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    const params = paramsSchema.safeParse(request.params);
+    if (!params.success) {
+      const mapped = invalidQueryError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    const body = closeSchema.safeParse(request.body);
+    if (!body.success) {
+      const mapped = invalidBodyError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    try {
+      const adapters = options.registry.resolve(
+        principal.institution_kind,
+        principal.id_institucion,
+      );
+      const result = await closeConsulta(adapters, {
+        id_paciente: asPacienteId(params.data.id),
+        body: toCloseInput(body.data),
+      });
+      return reply.code(201).send(result);
+    } catch (error) {
+      return sendMapped(reply, error);
+    }
+  });
+
   app.post('/api/pacientes/:id/archivo', async (request, reply) => {
     const principal = await requirePrincipal(request, reply);
     if (!principal) {
@@ -296,7 +456,18 @@ export function buildHttpApp(options: HttpAppOptions) {
       const adapters = options.registry.resolve(
         principal.institution_kind,
         principal.id_institucion,
-      );
+      ) as AdapterSetWithFull;
+      if (adapters.full) {
+        const idem = request.headers['idempotency-key'];
+        const archived = await archiveViaOp18(
+          adapters,
+          principal,
+          params.data.id,
+          body.data,
+          typeof idem === 'string' ? idem : `archive-${params.data.id}-${Date.now()}`,
+        );
+        return reply.code(200).send(archived);
+      }
       const id_paciente = asPacienteId(params.data.id);
       const expediente = await adapters.pacientes.findExpedienteByPaciente(id_paciente);
       if (!expediente) {
@@ -315,6 +486,25 @@ export function buildHttpApp(options: HttpAppOptions) {
       return sendMapped(reply, error);
     }
   });
+
+  registerFullClinicalRoutes(app, { registry: options.registry, requirePrincipal });
+  registerSpecialtyRoutes(app, { registry: options.registry, requirePrincipal });
+  registerLaneABRoutes(app, { registry: options.registry, requirePrincipal });
+  registerClinicalMaintenanceRoutes(app, { registry: options.registry, requirePrincipal });
+  if (options.account) {
+    registerAccountRoutes(app, {
+      account: options.account,
+      requirePrincipal,
+      nowIso: options.nowIso ?? (() => new Date().toISOString()),
+    });
+  }
+  if (options.users) {
+    registerUsersRoutes(app, {
+      users: options.users,
+      requirePrincipal,
+      nowIso: options.nowIso ?? (() => new Date().toISOString()),
+    });
+  }
 
   return app;
 }

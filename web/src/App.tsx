@@ -1,161 +1,216 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import {
-  INSTITUTION_ENGINE_ASSIGNMENTS,
-  type AuthTokensDto,
-  type InstitutionKind,
-} from '@genki/shared';
-import { clearSession, loadSession, saveSession } from './session';
+import { useEffect, useState, type ReactNode } from 'react';
+import { INSTITUTION_ENGINE_ASSIGNMENTS, type AuthPrincipalDto } from '@genki/shared';
+import { api, errorMessage, logout } from './api';
+import { loadSession } from './session';
+import { navigate, route } from './router';
+import { Login } from './screens/Login';
+import { Panel } from './screens/Panel';
+import { Pacientes } from './screens/Pacientes';
+import { RegisterPaciente } from './screens/RegisterPaciente';
+import { Historial } from './screens/Historial';
+import { Inicio } from './screens/Inicio';
+import { Agenda } from './full/agenda/Agenda';
+import { ChargesPage } from './full/charges';
+import { InventoryPage } from './full/inventory';
+import { HonorariaPage } from './full/honoraria';
+import { InvoicingPage } from './full/invoicing';
+import { PaymentsPage } from './full/payments';
+import { PersonnelPage } from './full/personnel';
+import { ProcedurePage } from './full/procedure';
+import { DentalSessionPage } from './full/dental-session';
+import { AccountPage } from './full/account';
+import { UsersPage } from './full/users';
+import { AppShell } from './components/AppShell';
+import type { EconomicClient } from './full/charges/EconomicPage';
 
-interface MeResponse {
-  email: string;
-  institution_kind: InstitutionKind;
-  motor: string;
-  roles: string[];
+function isSuperadmin(principal: AuthPrincipalDto): boolean {
+  return principal.roles.includes('superadministrador');
+}
+
+function economicClient(): EconomicClient {
+  return ((path, init) => {
+    const requestInit: RequestInit = {
+      method: init.method,
+      headers: init.headers,
+    };
+    if (init.body !== undefined) requestInit.body = init.body;
+    return api(path, requestInit);
+  }) as EconomicClient;
+}
+
+function Brand({ children }: { children?: ReactNode }) {
+  return (
+    <header className="brand">
+      <p className="eyebrow">Bases de Datos II</p>
+      <h1>Genki Health</h1>
+      <p className="lede">Historiales clínicos por institución</p>
+      {children}
+    </header>
+  );
 }
 
 export function App() {
-  const [email, setEmail] = useState('hospital@genki.local');
-  const [password, setPassword] = useState('');
-  const [institutionKind, setInstitutionKind] = useState<InstitutionKind>('hospital_general');
-  const [error, setError] = useState<string | null>(null);
-  const [me, setMe] = useState<MeResponse | null>(null);
+  const [location, setLocation] = useState(() => window.location.pathname + window.location.search);
+  const [principal, setPrincipal] = useState<AuthPrincipalDto | null>(null);
+  const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
   const [busy, setBusy] = useState(false);
-
+  const path = location.split('?')[0] ?? '';
+  const current = route(path);
+  const session = loadSession();
   useEffect(() => {
-    const session = loadSession();
-    if (!session.access_token) {
+    const update = () => setLocation(window.location.pathname + window.location.search);
+    window.addEventListener('popstate', update);
+    return () => window.removeEventListener('popstate', update);
+  }, []);
+  useEffect(() => {
+    if (!session.access_token && current !== 'login') navigate('/login', true);
+  }, [current, session.access_token]);
+  useEffect(() => {
+    if (!session.access_token || !principal) return;
+    if (current === 'login' || current === 'unknown') {
+      navigate(isSuperadmin(principal) ? '/panel' : '/inicio', true);
       return;
     }
-    void (async () => {
-      const response = await fetch('/api/auth/me', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+    if (current === 'home' && path === '/') {
+      navigate(isSuperadmin(principal) ? '/panel' : '/inicio', true);
+      return;
+    }
+    if (current === 'panel' && !isSuperadmin(principal)) navigate('/inicio', true);
+  }, [principal, current, path, session.access_token]);
+  useEffect(() => {
+    if (!session.access_token) {
+      setPrincipal(null);
+      return;
+    }
+    let active = true;
+    setError('');
+    setPrincipal(null);
+    void api<AuthPrincipalDto>('/api/auth/me')
+      .then((p) => {
+        if (active) setPrincipal(p);
+      })
+      .catch((e) => {
+        if (active) setError(errorMessage(e));
       });
-      if (!response.ok) {
-        clearSession();
-        return;
-      }
-      setMe((await response.json()) as MeResponse);
-    })();
-  }, []);
-
-  async function onSubmit(event: FormEvent) {
-    event.preventDefault();
+    return () => {
+      active = false;
+    };
+  }, [session.institution_kind, !!session.access_token, retry]);
+  async function signOut() {
     setBusy(true);
-    setError(null);
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          institution_kind: institutionKind,
-        }),
-      });
-      const body = (await response.json()) as AuthTokensDto & { message?: string };
-      if (!response.ok) {
-        setError(body.message ?? 'Login failed');
-        return;
-      }
-      saveSession(body, institutionKind);
-      const meResponse = await fetch('/api/auth/me', {
-        headers: { Authorization: `Bearer ${body.access_token}` },
-      });
-      setMe((await meResponse.json()) as MeResponse);
+      await logout();
     } catch {
-      setError('No se pudo contactar la API. ¿Está corriendo el servidor?');
+      /* Session is cleared even when revocation fails. */
     } finally {
       setBusy(false);
     }
   }
+  const institution = INSTITUTION_ENGINE_ASSIGNMENTS.find(
+    (i) => i.kind === principal?.institution_kind,
+  );
+  const client = economicClient();
+  const screen =
+    current === 'home' ? (
+      <Inicio />
+    ) : current === 'patients' ? (
+      <Pacientes search={location.includes('?') ? location.slice(location.indexOf('?')) : ''} />
+    ) : current === 'register' ? (
+      <RegisterPaciente />
+    ) : (current === 'record' || current === 'consultation') && principal ? (
+      <Historial
+        key={`${principal.id_institucion}:${path.split('/')[2]}`}
+        patientId={Number(path.split('/')[2])}
+        composing={current === 'consultation'}
+        principal={principal}
+      />
+    ) : current === 'agenda' ? (
+      <Agenda request={(requestPath, init) => api(requestPath, init)} />
+    ) : current === 'economia' ? (
+      <ChargesPage client={client} />
+    ) : current === 'inventario' ? (
+      <InventoryPage client={client} />
+    ) : current === 'honorarios' ? (
+      <HonorariaPage client={client} />
+    ) : current === 'facturacion' ? (
+      <InvoicingPage client={client} />
+    ) : current === 'caja' ? (
+      <PaymentsPage client={client} />
+    ) : current === 'personal' ? (
+      <PersonnelPage client={client} />
+    ) : current === 'procedimientos' ? (
+      <ProcedurePage client={client} />
+    ) : current === 'sesiones-dentales' ? (
+      <DentalSessionPage client={client} />
+    ) : current === 'cuenta' ? (
+      <AccountPage client={client} />
+    ) : current === 'usuarios' ? (
+      <UsersPage client={client} />
+    ) : null;
 
-  function onLogout() {
-    clearSession();
-    setMe(null);
+  if (current === 'login' && !session.access_token) {
+    return (
+      <main className="shell">
+        <Brand />
+        <Login />
+      </main>
+    );
   }
-
+  if (!session.access_token) return null;
+  if (error) {
+    return (
+      <main className="shell">
+        <Brand>
+          <button disabled={busy} onClick={() => void signOut()}>
+            Cerrar sesión
+          </button>
+        </Brand>
+        <div role="alert">
+          <p className="error">{error}</p>
+          <button onClick={() => setRetry((n) => n + 1)}>Reintentar</button>
+        </div>
+      </main>
+    );
+  }
+  if (!principal) {
+    return (
+      <main className="shell">
+        <Brand>
+          <button disabled={busy} onClick={() => void signOut()}>
+            Cerrar sesión
+          </button>
+        </Brand>
+        <p role="status">Verificando sesión…</p>
+      </main>
+    );
+  }
+  if (current === 'panel' && isSuperadmin(principal)) {
+    return (
+      <main className="shell">
+        <Brand>
+          <button disabled={busy} onClick={() => void signOut()}>
+            Cerrar sesión
+          </button>
+        </Brand>
+        <Panel />
+      </main>
+    );
+  }
   return (
-    <main className="shell">
-      <header className="brand">
-        <p className="eyebrow">Bases de Datos II</p>
-        <h1>Genki Health</h1>
-        <p className="lede">
-          Historiales clínicos por institución. Login con correo, contraseña e institución (Auth
-          locked 2026-10-19).
-        </p>
-      </header>
-
-      <section className="engines" aria-labelledby="engines-title">
-        <h2 id="engines-title">Instituciones y motores</h2>
-        <ul>
-          {INSTITUTION_ENGINE_ASSIGNMENTS.map((row) => (
-            <li key={row.kind}>
-              <strong>{row.nombre}</strong> → {row.engine}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="auth-block" aria-labelledby="auth-title">
-        <h2 id="auth-title">Autenticación</h2>
-        {me ? (
-          <div className="session">
-            <p>
-              Sesión: <strong>{me.email}</strong> · {me.institution_kind} · motor{' '}
-              <strong>{me.motor}</strong>
-            </p>
-            <p className="muted">Roles: {me.roles.join(', ')}</p>
-            <button type="button" onClick={onLogout}>
-              Cerrar sesión
-            </button>
-          </div>
-        ) : (
-          <form className="login-form" onSubmit={onSubmit}>
-            <label>
-              Correo
-              <input
-                type="email"
-                autoComplete="username"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-              />
-            </label>
-            <label>
-              Contraseña
-              <input
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                required
-                minLength={8}
-              />
-            </label>
-            <label>
-              Institución
-              <select
-                value={institutionKind}
-                onChange={(event) => setInstitutionKind(event.target.value as InstitutionKind)}
-              >
-                {INSTITUTION_ENGINE_ASSIGNMENTS.map((row) => (
-                  <option key={row.kind} value={row.kind}>
-                    {row.nombre}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {error ? <p className="error">{error}</p> : null}
-            <button type="submit" disabled={busy}>
-              {busy ? 'Entrando…' : 'Iniciar sesión'}
-            </button>
-            <p className="muted">
-              Demo: hospital@genki.local (y análogos por institución). Usa el SEED_PASSWORD de tu
-              .env local.
-            </p>
-          </form>
-        )}
-      </section>
-    </main>
+    <AppShell
+      institutionName={institution?.nombre ?? 'Institución'}
+      userLabel={principal.email}
+      superadmin={isSuperadmin(principal)}
+      busy={busy}
+      current={current}
+      onLogout={() => void signOut()}
+    >
+      {screen}
+      <details className="out-of-scope">
+        <summary>Fuera del alcance de esta entrega</summary>
+        <p>Operaciones clínicas especializadas no montadas en este panel.</p>
+      </details>
+    </AppShell>
   );
 }

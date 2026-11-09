@@ -1,0 +1,160 @@
+// Chen detallado. Sección 6.4.10. Personal, roles y honorarios (núcleo común).
+// Símbolos: ver clave Graphviz en README.md (sección 6.1).
+// TARIFA_HONORARIO es el rombo entre PROFESIONAL y SERVICIO_FACTURABLE (6.4.10).
+// Atributos del rombo: modalidad, monto_fijo, porcentaje, vigente_desde, vigente_hasta.
+// Sin id_tarifa. vigente_desde no se subraya. Cardinalidad M:N. Participación parcial en ambos lados.
+// La UK (id_profesional, codigo_servicio, vigente_desde) es de 5.1 y no entra en la etiqueta.
+// Papel copia la arista "papel" de rel-personal-insumos.mmd.
+// ROL_CLINICO 1 parcial. PARTICIPACION N total. PARTICIPACION es entidad fuerte.
+// id_profesional, id_consulta e id_procedimiento son elipses. No hay rombo para ellas.
+// 5.1: exactamente una de id_consulta o id_procedimiento. Esa frase no entra en la etiqueta.
+// PROFESIONAL incluye id_tipo_personal, modalidad_contrato y fecha_ingreso (5.1, corrección de modelado B).
+// Esos tres no se agregan a rel-*.mmd. numero_colegiado no se subraya.
+// TIPO_PERSONAL va completa y sin arista. 6.4.10 y rel-personal-insumos.mmd no nombran el vínculo.
+// No se dibuja ESPECIALIDAD. SERVICIO_FACTURABLE tiene en esta hoja su lista completa.
+// honorario_calculado va punteado porque 6.4.10 lo llama derivado.
+digraph chen_6_4_10 {
+  rankdir=LR;
+  splines=true;
+  overlap=false;
+  nodesep=0.35;
+  ranksep=0.55;
+  graph [
+    fontname="Helvetica",
+    label="6.4.10 Personal, roles y honorarios (núcleo común)\nNadie cumple dos veces el mismo rol en el mismo acto clínico.\nSolo el personal cuyo tipo tiene genera_honorario puede tener tarifas y devengar pago por acto; quien está en planilla, no.\nSubir la tarifa de un médico no puede cambiar lo que se le pagó el mes pasado.\nhonorario_calculado se obtiene de la tarifa del profesional por el factor_honorario del rol.",
+    labelloc=t,
+    fontsize=13
+  ];
+  node [fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9, arrowhead=none];
+
+  // Entidades fuertes
+  node [shape=box, style=solid, peripheries=1];
+  PROFESIONAL;
+  TIPO_PERSONAL;
+  ROL_CLINICO;
+  PARTICIPACION;
+  SERVICIO_FACTURABLE;
+
+  // Relaciones
+  node [shape=diamond, style=solid, peripheries=1, height=0.7, width=1.1];
+  TARIFA_HONORARIO [label="TARIFA_HONORARIO"];
+  Papel [label="Papel"];
+
+  // Atributos
+  node [shape=ellipse, style=solid, peripheries=1, width=0, height=0];
+
+  // PROFESIONAL
+  id_profesional [label=<<U>id_profesional</U>>];
+  id_institucion_prof [label="id_institucion"];
+  id_tipo_personal_prof [label="id_tipo_personal"];
+  numero_colegiado;
+  nombres;
+  apellidos;
+  id_especialidad;
+  telefono_prof [label="telefono"];
+  correo_prof [label="correo"];
+  modalidad_contrato;
+  fecha_ingreso;
+  activo_prof [label="activo"];
+
+  // TIPO_PERSONAL. Sin arista.
+  id_tipo_personal [label=<<U>id_tipo_personal</U>>];
+  nombre_tipo [label="nombre"];
+  requiere_colegiado;
+  genera_honorario;
+
+  // ROL_CLINICO
+  codigo_rol [label=<<U>codigo_rol</U>>];
+  nombre_rol [label="nombre"];
+  factor_honorario;
+  descripcion_rol [label="descripcion"];
+
+  // SERVICIO_FACTURABLE
+  codigo_servicio [label=<<U>codigo_servicio</U>>];
+  id_institucion_serv [label="id_institucion"];
+  nombre_serv [label="nombre"];
+  tipo_serv [label="tipo"];
+  precio_unitario_serv [label="precio_unitario"];
+  unidad;
+  afecto_iva;
+  vigente;
+
+  // TARIFA_HONORARIO. Sin id_tarifa. vigente_desde no se subraya.
+  modalidad;
+  monto_fijo;
+  porcentaje;
+  vigente_desde;
+  vigente_hasta;
+
+  // PARTICIPACION. Sin codigo_rol.
+  id_participacion [label=<<U>id_participacion</U>>];
+  id_profesional_part [label="id_profesional"];
+  id_consulta_part [label="id_consulta"];
+  id_procedimiento_part [label="id_procedimiento"];
+  fecha_hora_inicio;
+  fecha_hora_fin;
+  observacion;
+  honorario_calculado [label="honorario_calculado", style=dashed];
+
+  // PROFESIONAL a TARIFA_HONORARIO a SERVICIO_FACTURABLE. M:N parcial.
+  PROFESIONAL -> TARIFA_HONORARIO [penwidth=1, headlabel="M"];
+  TARIFA_HONORARIO -> SERVICIO_FACTURABLE [penwidth=1, taillabel="N"];
+
+  // ROL_CLINICO a Papel a PARTICIPACION. Rol parcial. Participación total.
+  ROL_CLINICO -> Papel [penwidth=1, headlabel="1"];
+  Papel -> PARTICIPACION [penwidth=3, taillabel="N"];
+
+  // Atributos a PROFESIONAL
+  id_profesional -> PROFESIONAL;
+  id_institucion_prof -> PROFESIONAL;
+  id_tipo_personal_prof -> PROFESIONAL;
+  numero_colegiado -> PROFESIONAL;
+  nombres -> PROFESIONAL;
+  apellidos -> PROFESIONAL;
+  id_especialidad -> PROFESIONAL;
+  telefono_prof -> PROFESIONAL;
+  correo_prof -> PROFESIONAL;
+  modalidad_contrato -> PROFESIONAL;
+  fecha_ingreso -> PROFESIONAL;
+  activo_prof -> PROFESIONAL;
+
+  // Atributos a TIPO_PERSONAL
+  id_tipo_personal -> TIPO_PERSONAL;
+  nombre_tipo -> TIPO_PERSONAL;
+  requiere_colegiado -> TIPO_PERSONAL;
+  genera_honorario -> TIPO_PERSONAL;
+
+  // Atributos a ROL_CLINICO
+  codigo_rol -> ROL_CLINICO;
+  nombre_rol -> ROL_CLINICO;
+  factor_honorario -> ROL_CLINICO;
+  descripcion_rol -> ROL_CLINICO;
+
+  // Atributos a SERVICIO_FACTURABLE
+  codigo_servicio -> SERVICIO_FACTURABLE;
+  id_institucion_serv -> SERVICIO_FACTURABLE;
+  nombre_serv -> SERVICIO_FACTURABLE;
+  tipo_serv -> SERVICIO_FACTURABLE;
+  precio_unitario_serv -> SERVICIO_FACTURABLE;
+  unidad -> SERVICIO_FACTURABLE;
+  afecto_iva -> SERVICIO_FACTURABLE;
+  vigente -> SERVICIO_FACTURABLE;
+
+  // Atributos al rombo TARIFA_HONORARIO
+  modalidad -> TARIFA_HONORARIO;
+  monto_fijo -> TARIFA_HONORARIO;
+  porcentaje -> TARIFA_HONORARIO;
+  vigente_desde -> TARIFA_HONORARIO;
+  vigente_hasta -> TARIFA_HONORARIO;
+
+  // Atributos a PARTICIPACION
+  id_participacion -> PARTICIPACION;
+  id_profesional_part -> PARTICIPACION;
+  id_consulta_part -> PARTICIPACION;
+  id_procedimiento_part -> PARTICIPACION;
+  fecha_hora_inicio -> PARTICIPACION;
+  fecha_hora_fin -> PARTICIPACION;
+  observacion -> PARTICIPACION;
+  honorario_calculado -> PARTICIPACION;
+}

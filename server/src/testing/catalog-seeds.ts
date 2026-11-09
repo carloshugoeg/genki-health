@@ -22,6 +22,7 @@ export function expectedPrimaryCatalog(): CatalogosDto {
       { id_medicamento: SEED_MEDICAMENTO_1, nombre_generico: 'Medicamento didáctico A' },
       { id_medicamento: SEED_MEDICAMENTO_2, nombre_generico: 'Medicamento didáctico B' },
     ],
+    cie10: [{ codigo_cie10: SEED_CIE10, descripcion: 'Examen general' }],
   };
 }
 
@@ -39,6 +40,7 @@ export function expectedInstitution99Catalog(): CatalogosDto {
       { id_medicamento: SEED_MEDICAMENTO_1, nombre_generico: 'Medicamento didáctico A' },
       { id_medicamento: SEED_MEDICAMENTO_2, nombre_generico: 'Medicamento didáctico B' },
     ],
+    cie10: [{ codigo_cie10: SEED_CIE10, descripcion: 'Examen general' }],
   };
 }
 

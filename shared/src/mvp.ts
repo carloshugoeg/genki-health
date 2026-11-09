@@ -97,6 +97,8 @@ export interface CatalogosDto {
   municipios: { id_municipio: number; nombre: string }[];
   profesionales: { id_profesional: number; nombres: string; apellidos: string }[];
   medicamentos: { id_medicamento: number; nombre_generico: string }[];
+  /** CATALOGO_CIE10 rows valid for `diagnosticos[].codigo_cie10`, sorted by code. */
+  cie10: { codigo_cie10: string; descripcion: string }[];
 }
 
 export interface ArchiveRequest {
@@ -118,6 +120,7 @@ export type ClinicalErrorCode =
   | 'invalid_guardians'
   | 'expediente_archived'
   | 'already_archived'
+  | 'consulta_abierta'
   | 'invalid_bundle'
   | 'reference_not_found'
   | 'conflict'

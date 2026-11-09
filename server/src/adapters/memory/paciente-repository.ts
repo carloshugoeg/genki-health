@@ -8,6 +8,7 @@ import type {
   PacienteId,
   PacientePage,
   PacienteResumen,
+  ReactivateExpedienteInput,
   ResponsableInput,
 } from '@genki/shared';
 import { asExpedienteId, asPacienteId } from '@genki/shared';
@@ -30,6 +31,7 @@ const GUARDIAN_REQUIRED = 'Se requiere responsable principal';
 const INVALID_GUARDIANS = 'Debe existir exactamente un responsable principal';
 const ALREADY_ARCHIVED = 'El expediente ya está archivado';
 const NOT_FOUND = 'Recurso no encontrado';
+const CONFLICT = 'Conflicto de recurso';
 
 interface ResponsableRecord {
   id_responsable: number;
@@ -272,6 +274,30 @@ export class MemoryPacienteRepository implements PacienteRepositoryPort {
           fecha_archivo: input.fecha_archivo,
           motivo_archivo: input.motivo_archivo,
           observacion_archivo: input.observacion_archivo ?? null,
+        };
+        maps.expedientes.set(pacienteId, next);
+        return cloneDto(next);
+      }
+      throw new ClinicalError('not_found', NOT_FOUND);
+    });
+  }
+
+  async reactivateExpediente(input: ReactivateExpedienteInput): Promise<ExpedienteDto> {
+    return this.unitOfWork.runInTransaction(async () => {
+      const maps = activeMemoryMaps(this.state);
+      for (const [pacienteId, expediente] of maps.expedientes.entries()) {
+        if (expediente.id_expediente !== input.id_expediente) {
+          continue;
+        }
+        if (expediente.estado !== 'archivado') {
+          throw new ClinicalError('conflict', CONFLICT);
+        }
+        const next: ExpedienteDto = {
+          ...expediente,
+          estado: 'activo',
+          fecha_archivo: null,
+          motivo_archivo: null,
+          observacion_archivo: null,
         };
         maps.expedientes.set(pacienteId, next);
         return cloneDto(next);

@@ -22,6 +22,7 @@ if (!testEngines) {
     'src/adapters/firebase/**/*.test.ts',
     'test/seeds.test.ts',
     'test/persistence.test.ts',
+    'test/full/*.persistence.test.ts',
     'test/security/**',
   );
 }
@@ -37,5 +38,14 @@ export default defineConfig({
           fileParallelism: false,
         }
       : {}),
+    coverage: {
+      provider: 'v8',
+      include: ['src/domain/**/*.ts', 'src/application/**/*.ts'],
+      exclude: ['src/**/*.test.ts', 'src/adapters/**'],
+      thresholds: {
+        lines: 80,
+      },
+      reporter: ['text', 'json-summary'],
+    },
   },
 });

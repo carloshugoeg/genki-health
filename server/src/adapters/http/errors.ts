@@ -14,6 +14,7 @@ const CLINICAL_STATUS: Record<ClinicalErrorCode, number> = {
   duplicate_document: 409,
   expediente_archived: 409,
   already_archived: 409,
+  consulta_abierta: 409,
   conflict: 409,
   guardian_required: 422,
   invalid_guardians: 422,
@@ -24,9 +25,47 @@ const CLINICAL_STATUS: Record<ClinicalErrorCode, number> = {
   internal_error: 500,
 };
 
+/**
+ * Transport-only codes produced before a route runs (body parser / media type / size).
+ * They are not domain codes, so they stay out of the shared `ClinicalErrorCode` union.
+ */
+export type TransportErrorCode = 'unsupported_media_type' | 'payload_too_large';
+
+export interface HttpErrorBody {
+  error: ClinicalErrorCode | TransportErrorCode;
+  message: string;
+}
+
 export interface MappedHttpError {
   status: number;
-  body: ErrorDto;
+  body: ErrorDto | HttpErrorBody;
+}
+
+/**
+ * Fastify raises 4xx errors before the handler runs: malformed JSON (`SyntaxError` with
+ * statusCode 400), `FST_ERR_CTP_EMPTY_JSON_BODY`, `FST_ERR_CTP_INVALID_MEDIA_TYPE` (415),
+ * `FST_ERR_CTP_BODY_TOO_LARGE` (413), `FST_ERR_CTP_INVALID_CONTENT_LENGTH`, etc. They are the
+ * client's fault, so they must never surface as `internal_error`.
+ */
+function fastifyClientError(error: unknown): MappedHttpError | null {
+  if (typeof error !== 'object' || error === null) return null;
+  const { statusCode, code } = error as { statusCode?: unknown; code?: unknown };
+  if (typeof statusCode !== 'number' || statusCode < 400 || statusCode > 499) return null;
+  const isFastify = typeof code === 'string' && code.startsWith('FST_');
+  if (!isFastify && !(error instanceof SyntaxError)) return null;
+  if (statusCode === 413 || code === 'FST_ERR_CTP_BODY_TOO_LARGE') {
+    return {
+      status: 413,
+      body: { error: 'payload_too_large', message: 'La solicitud excede el tamaño permitido' },
+    };
+  }
+  if (statusCode === 415 || code === 'FST_ERR_CTP_INVALID_MEDIA_TYPE') {
+    return {
+      status: 415,
+      body: { error: 'unsupported_media_type', message: 'Tipo de contenido no soportado' },
+    };
+  }
+  return invalidBodyError();
 }
 
 export function toErrorDto(error: unknown): MappedHttpError {
@@ -38,7 +77,13 @@ export function toErrorDto(error: unknown): MappedHttpError {
   }
   if (error instanceof AuthError) {
     const status =
-      error.code === 'password_policy' ? 400 : error.code === 'misconfigured' ? 500 : 401;
+      error.code === 'password_policy'
+        ? 400
+        : error.code === 'forbidden'
+          ? 403
+          : error.code === 'misconfigured'
+            ? 500
+            : 401;
     return {
       status,
       body: {
@@ -47,16 +92,9 @@ export function toErrorDto(error: unknown): MappedHttpError {
       },
     };
   }
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: string }).code === 'FST_ERR_CTP_BODY_TOO_LARGE'
-  ) {
-    return {
-      status: 400,
-      body: { error: 'invalid_body', message: 'Solicitud inválida' },
-    };
+  const client = fastifyClientError(error);
+  if (client) {
+    return client;
   }
   return {
     status: 500,

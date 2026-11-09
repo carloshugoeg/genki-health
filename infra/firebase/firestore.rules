@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  function member(i) {
+   return request.auth != null && request.auth.token.institution_id == i;
+  }
+  match /institutions/{i}/reportes/{id} {
+   allow read: if member(i) && request.auth.token.role == 'reporter';
+   allow write: if false;
+  }
+  match /institutions/{i}/{document=**} { allow read, write: if false; }
+ }
+}

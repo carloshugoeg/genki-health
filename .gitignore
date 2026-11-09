@@ -18,3 +18,6 @@ ui-debug.log
 .audit/
 infra/mongodb/mongo-keyfile
 infra/mongodb/keyfile
+.local-runtime/
+*-firebase-adminsdk-*.json
+.runtime/

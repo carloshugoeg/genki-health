@@ -197,4 +197,91 @@ describe('closeConsulta', () => {
       expect((closeResult.reason as ClinicalError).code).toBe('expediente_archived');
     }
   });
+
+  it('close_on_active_record', async () => {
+    const adapters = createTestMemoryAdapterSet('hospital_general', 1);
+    adapters.memoryState.getPublished().catalogs.cie10.set(SEED_CIE10, {
+      codigo_cie10: SEED_CIE10,
+      descripcion: 'Examen general',
+    });
+    adapters.memoryState.getPublished().catalogs.profesionales.set(SEED_PROFESIONAL_ID, {
+      id_profesional: SEED_PROFESIONAL_ID,
+      nombres: 'Prof',
+      apellidos: 'Uno',
+      activo: true,
+    });
+    const { paciente, expediente } = await adapters.pacientes.createWithExpediente(
+      adult('CLOSE-ACT-1'),
+    );
+    expect(expediente.estado).toBe('activo');
+    const completa = await closeConsulta(adapters, {
+      id_paciente: paciente.id_paciente,
+      body: closeBody(false),
+    });
+    expect(completa.consulta.estado).toBe('cerrada');
+    expect(completa.consulta.id_expediente).toBe(expediente.id_expediente);
+    expect(completa.diagnosticos.length).toBeGreaterThanOrEqual(1);
+    expect(completa.tratamientos.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('close_failure_preserves_record', async () => {
+    const adapters = createTestMemoryAdapterSet('hospital_general', 1, {
+      afterDiagnostico: () => {
+        throw new Error('forced mid-write failure');
+      },
+    });
+    adapters.memoryState.getPublished().catalogs.cie10.set(SEED_CIE10, {
+      codigo_cie10: SEED_CIE10,
+      descripcion: 'Examen general',
+    });
+    adapters.memoryState.getPublished().catalogs.profesionales.set(SEED_PROFESIONAL_ID, {
+      id_profesional: SEED_PROFESIONAL_ID,
+      nombres: 'Prof',
+      apellidos: 'Uno',
+      activo: true,
+    });
+    const { paciente, expediente } = await adapters.pacientes.createWithExpediente(
+      adult('CLOSE-FAIL-1'),
+    );
+    await expect(
+      closeConsulta(adapters, {
+        id_paciente: paciente.id_paciente,
+        body: closeBody(false),
+      }),
+    ).rejects.toBeTruthy();
+    expect(adapters.memoryState.getPublished().consultas.size).toBe(0);
+    expect(adapters.memoryState.getPublished().diagnosticos.size).toBe(0);
+    expect(adapters.memoryState.getPublished().tratamientos.size).toBe(0);
+    const still = await adapters.pacientes.findExpedienteById(expediente.id_expediente);
+    expect(still?.estado).toBe('activo');
+  });
+
+  it('close_on_archived_record_rejected', async () => {
+    const adapters = createTestMemoryAdapterSet('hospital_general', 1);
+    adapters.memoryState.getPublished().catalogs.cie10.set(SEED_CIE10, {
+      codigo_cie10: SEED_CIE10,
+      descripcion: 'Examen general',
+    });
+    adapters.memoryState.getPublished().catalogs.profesionales.set(SEED_PROFESIONAL_ID, {
+      id_profesional: SEED_PROFESIONAL_ID,
+      nombres: 'Prof',
+      apellidos: 'Uno',
+      activo: true,
+    });
+    const { paciente, expediente } = await adapters.pacientes.createWithExpediente(
+      adult('CLOSE-ARCH-1'),
+    );
+    await adapters.pacientes.archiveExpediente({
+      id_expediente: expediente.id_expediente,
+      motivo_archivo: 'administrativo',
+      fecha_archivo: adapters.clock.nowIso(),
+    });
+    await expect(
+      closeConsulta(adapters, {
+        id_paciente: paciente.id_paciente,
+        body: closeBody(false),
+      }),
+    ).rejects.toMatchObject({ code: 'expediente_archived' });
+    expect(adapters.memoryState.getPublished().consultas.size).toBe(0);
+  });
 });

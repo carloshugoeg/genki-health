@@ -53,3 +53,19 @@ export interface AgendaRepositoryPort {
   op24(input: Op24Request, context: OperationContext): Promise<Op24Response>;
   op25(input: Op25Request, context: OperationContext): Promise<Op25Response>;
 }
+
+/** Native storage seam. All callback reads/writes share one native transaction. */
+export interface AgendaTransaction {
+  list(): Promise<CITA[]>;
+  nextId(): Promise<number>;
+  put(cita: CITA): Promise<void>;
+}
+export interface AgendaStore {
+  list(institution: number): Promise<CITA[]>;
+  /** Sorted lock keys include institution/professional/Guatemala day. */
+  transaction<T>(
+    institution: number,
+    keys: readonly string[],
+    work: (tx: AgendaTransaction) => Promise<T>,
+  ): Promise<T>;
+}

@@ -1,0 +1,937 @@
+{
+  "pacientes": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_paciente",
+        "id_institucion",
+        "tipo_documento",
+        "numero_documento",
+        "primer_nombre",
+        "primer_apellido",
+        "fecha_nacimiento",
+        "sexo",
+        "estado",
+        "segundo_nombre",
+        "segundo_apellido",
+        "tipo_sangre",
+        "telefono",
+        "correo",
+        "direccion",
+        "id_municipio",
+        "fecha_registro"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_paciente": {
+          "bsonType": "int"
+        },
+        "id_institucion": {
+          "bsonType": "int"
+        },
+        "tipo_documento": {
+          "bsonType": "string"
+        },
+        "numero_documento": {
+          "bsonType": "string"
+        },
+        "primer_nombre": {
+          "bsonType": "string"
+        },
+        "primer_apellido": {
+          "bsonType": "string"
+        },
+        "fecha_nacimiento": {
+          "bsonType": "string"
+        },
+        "sexo": {
+          "bsonType": "string",
+          "enum": [
+            "M",
+            "F",
+            "X"
+          ]
+        },
+        "estado": {
+          "bsonType": "string",
+          "enum": [
+            "activo",
+            "inactivo"
+          ]
+        },
+        "segundo_nombre": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "segundo_apellido": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "tipo_sangre": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "telefono": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "correo": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "direccion": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "id_municipio": {
+          "bsonType": [
+            "int",
+            "null"
+          ]
+        },
+        "fecha_registro": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "expedientes": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_expediente",
+        "id_paciente",
+        "numero_expediente",
+        "fecha_apertura",
+        "estado",
+        "fecha_archivo",
+        "motivo_archivo",
+        "observacion_archivo",
+        "_rev"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_expediente": {
+          "bsonType": "int"
+        },
+        "id_paciente": {
+          "bsonType": "int"
+        },
+        "numero_expediente": {
+          "bsonType": "string"
+        },
+        "fecha_apertura": {
+          "bsonType": "date"
+        },
+        "estado": {
+          "bsonType": "string",
+          "enum": [
+            "activo",
+            "archivado"
+          ]
+        },
+        "fecha_archivo": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        },
+        "motivo_archivo": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "observacion_archivo": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "_rev": {
+          "bsonType": "int"
+        }
+      }
+    }
+  },
+  "responsables": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_responsable",
+        "id_paciente",
+        "tipo_documento",
+        "numero_documento",
+        "nombre_completo",
+        "parentesco",
+        "telefono",
+        "correo",
+        "direccion",
+        "es_principal"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_responsable": {
+          "bsonType": "int"
+        },
+        "id_paciente": {
+          "bsonType": "int"
+        },
+        "tipo_documento": {
+          "bsonType": "string"
+        },
+        "numero_documento": {
+          "bsonType": "string"
+        },
+        "nombre_completo": {
+          "bsonType": "string"
+        },
+        "parentesco": {
+          "bsonType": "string"
+        },
+        "telefono": {
+          "bsonType": "string"
+        },
+        "correo": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "direccion": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "es_principal": {
+          "bsonType": "bool"
+        }
+      }
+    }
+  },
+  "consultas": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_consulta",
+        "id_expediente",
+        "id_profesional",
+        "id_cita",
+        "fecha_hora_inicio",
+        "fecha_hora_fin",
+        "tipo",
+        "motivo_consulta",
+        "enfermedad_actual",
+        "exploracion_fisica",
+        "plan",
+        "estado",
+        "diagnosticos",
+        "tratamientos",
+        "receta",
+        "detalles"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_consulta": {
+          "bsonType": "int"
+        },
+        "id_expediente": {
+          "bsonType": "int"
+        },
+        "id_profesional": {
+          "bsonType": "int"
+        },
+        "id_cita": {
+          "bsonType": [
+            "int",
+            "null"
+          ]
+        },
+        "fecha_hora_inicio": {
+          "bsonType": "date"
+        },
+        "fecha_hora_fin": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        },
+        "tipo": {
+          "bsonType": "string",
+          "enum": [
+            "primera_vez",
+            "seguimiento",
+            "emergencia"
+          ]
+        },
+        "motivo_consulta": {
+          "bsonType": "string"
+        },
+        "enfermedad_actual": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "exploracion_fisica": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "plan": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "estado": {
+          "bsonType": "string",
+          "enum": [
+            "abierta",
+            "cerrada",
+            "anulada"
+          ]
+        },
+        "diagnosticos": {
+          "bsonType": "array",
+          "minItems": 0,
+          "maxItems": 10,
+          "items": {
+            "bsonType": "object",
+            "required": [
+              "id_diagnostico",
+              "id_consulta",
+              "codigo_cie10",
+              "descripcion",
+              "tipo",
+              "es_principal",
+              "fecha_registro"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id_diagnostico": {
+                "bsonType": "int"
+              },
+              "id_consulta": {
+                "bsonType": "int"
+              },
+              "codigo_cie10": {
+                "bsonType": [
+                  "string",
+                  "null"
+                ]
+              },
+              "descripcion": {
+                "bsonType": "string"
+              },
+              "tipo": {
+                "bsonType": "string",
+                "enum": [
+                  "presuntivo",
+                  "definitivo",
+                  "descartado"
+                ]
+              },
+              "es_principal": {
+                "bsonType": "bool"
+              },
+              "fecha_registro": {
+                "bsonType": "date"
+              }
+            }
+          }
+        },
+        "tratamientos": {
+          "bsonType": "array",
+          "minItems": 0,
+          "maxItems": 20,
+          "items": {
+            "bsonType": "object",
+            "required": [
+              "id_tratamiento",
+              "id_diagnostico",
+              "tipo",
+              "descripcion",
+              "indicaciones",
+              "fecha_inicio",
+              "fecha_fin_estimada",
+              "estado"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id_tratamiento": {
+                "bsonType": "int"
+              },
+              "id_diagnostico": {
+                "bsonType": "int"
+              },
+              "tipo": {
+                "bsonType": "string",
+                "enum": [
+                  "farmacologico",
+                  "procedimiento",
+                  "terapia",
+                  "reposo",
+                  "dieta"
+                ]
+              },
+              "descripcion": {
+                "bsonType": "string"
+              },
+              "indicaciones": {
+                "bsonType": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fecha_inicio": {
+                "bsonType": "string"
+              },
+              "fecha_fin_estimada": {
+                "bsonType": [
+                  "string",
+                  "null"
+                ]
+              },
+              "estado": {
+                "bsonType": "string",
+                "enum": [
+                  "activo",
+                  "finalizado",
+                  "suspendido"
+                ]
+              }
+            }
+          }
+        },
+        "receta": {
+          "anyOf": [
+            {
+              "bsonType": "object",
+              "required": [
+                "id_receta",
+                "id_consulta",
+                "id_profesional",
+                "folio",
+                "fecha_emision",
+                "observaciones",
+                "estado"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "id_receta": {
+                  "bsonType": "int"
+                },
+                "id_consulta": {
+                  "bsonType": "int"
+                },
+                "id_profesional": {
+                  "bsonType": "int"
+                },
+                "folio": {
+                  "bsonType": "string"
+                },
+                "fecha_emision": {
+                  "bsonType": "date"
+                },
+                "observaciones": {
+                  "bsonType": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "estado": {
+                  "bsonType": "string",
+                  "enum": [
+                    "emitida",
+                    "anulada"
+                  ]
+                }
+              }
+            },
+            {
+              "bsonType": "null"
+            }
+          ]
+        },
+        "detalles": {
+          "bsonType": "array",
+          "minItems": 0,
+          "maxItems": 20,
+          "items": {
+            "bsonType": "object",
+            "required": [
+              "id_receta",
+              "id_medicamento",
+              "dosis",
+              "via_administracion",
+              "frecuencia_horas",
+              "duracion_dias",
+              "cantidad",
+              "indicaciones"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id_receta": {
+                "bsonType": "int"
+              },
+              "id_medicamento": {
+                "bsonType": "int"
+              },
+              "dosis": {
+                "bsonType": "string"
+              },
+              "via_administracion": {
+                "bsonType": "string"
+              },
+              "frecuencia_horas": {
+                "bsonType": "int"
+              },
+              "duracion_dias": {
+                "bsonType": "int"
+              },
+              "cantidad": {
+                "bsonType": [
+                  "double",
+                  "decimal",
+                  "int"
+                ],
+                "minimum": 0.01,
+                "maximum": 999999.99
+              },
+              "indicaciones": {
+                "bsonType": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "borrador": {
+          "bsonType": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        },
+        "signos_vitales": {
+          "bsonType": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        }
+      }
+    }
+  },
+  "municipios": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_municipio",
+        "nombre"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_municipio": {
+          "bsonType": "int"
+        },
+        "nombre": {
+          "bsonType": "string"
+        }
+      }
+    }
+  },
+  "profesionales": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_profesional",
+        "nombres",
+        "apellidos",
+        "numero_colegiado",
+        "activo"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_profesional": {
+          "bsonType": "int"
+        },
+        "nombres": {
+          "bsonType": "string"
+        },
+        "apellidos": {
+          "bsonType": "string"
+        },
+        "numero_colegiado": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "activo": {
+          "bsonType": "bool"
+        }
+      }
+    }
+  },
+  "medicamentos": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_medicamento",
+        "nombre_generico",
+        "activo"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_medicamento": {
+          "bsonType": "int"
+        },
+        "nombre_generico": {
+          "bsonType": "string"
+        },
+        "activo": {
+          "bsonType": "bool"
+        }
+      }
+    }
+  },
+  "catalogo_cie10": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "codigo_cie10",
+        "descripcion"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "codigo_cie10": {
+          "bsonType": "string"
+        },
+        "descripcion": {
+          "bsonType": "string"
+        }
+      }
+    }
+  },
+  "counters": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "name",
+        "next"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "name": {
+          "bsonType": "string"
+        },
+        "next": {
+          "bsonType": "int"
+        }
+      }
+    }
+  },
+  "antecedentes": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_antecedente"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_antecedente": {
+          "bsonType": "int"
+        }
+      }
+    }
+  },
+  "alergias": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_alergia"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_alergia": {
+          "bsonType": "int"
+        }
+      }
+    }
+  },
+  "documentos_adjuntos": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_documento"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_documento": {
+          "bsonType": "int"
+        }
+      }
+    }
+  },
+  "signos_vitales": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_signos"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_signos": {
+          "bsonType": "int"
+        }
+      }
+    }
+  },
+  "consulta_borradores": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_consulta"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_consulta": {
+          "bsonType": "int"
+        }
+      }
+    }
+  },
+  "ordenes_examen": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "institution_id"
+      ],
+      "properties": {
+        "institution_id": {
+          "bsonType": "int"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "muestras": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "institution_id"
+      ],
+      "properties": {
+        "institution_id": {
+          "bsonType": "int"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "resultados": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "institution_id"
+      ],
+      "properties": {
+        "institution_id": {
+          "bsonType": "int"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "bitacora": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_bitacora",
+        "id_usuario",
+        "entidad",
+        "id_registro",
+        "accion",
+        "fecha_hora",
+        "direccion_ip",
+        "detalle"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_bitacora": {
+          "bsonType": "int"
+        },
+        "id_usuario": {
+          "bsonType": "int"
+        },
+        "entidad": {
+          "bsonType": "string",
+          "enum": [
+            "consulta",
+            "diagnostico",
+            "tratamiento",
+            "receta"
+          ]
+        },
+        "id_registro": {
+          "bsonType": "string"
+        },
+        "accion": {
+          "bsonType": "string",
+          "enum": [
+            "modificacion"
+          ]
+        },
+        "fecha_hora": {
+          "bsonType": "date"
+        },
+        "direccion_ip": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "detalle": {
+          "bsonType": "object"
+        }
+      }
+    }
+  }
+}

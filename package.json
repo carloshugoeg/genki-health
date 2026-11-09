@@ -14,15 +14,16 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm run test -w @genki/shared && npm run test -w @genki/server",
-    "test:protocol": "node --test scripts/test/*.test.mjs",
-    "test:contract-red": "bash scripts/expect-contract-red.sh",
+    "test": "npm run test -w @genki/shared && npm run test -w @genki/server && npm run test -w @genki/web",
+    "test:repo": "node --test scripts/test/*.test.mjs",
     "db:bootstrap": "tsx --import dotenv/config scripts/db-bootstrap.ts",
     "db:migrate": "tsx --import dotenv/config scripts/db-migrate.ts",
     "db:reset:test": "tsx --import dotenv/config scripts/db-migrate.ts --reset",
     "firebase:start": "firebase emulators:start --only firestore --project demo-genki-health --config infra/firebase/firebase.json",
     "depcruise": "dependency-cruiser --config .dependency-cruiser.cjs server/src",
-    "validate": "bash scripts/validate.sh"
+    "validate": "bash scripts/validate.sh",
+    "db:seed": "tsx --import dotenv/config scripts/seed.ts",
+    "db:setup:all": "tsx --import dotenv/config scripts/db-setup-all.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.12.0",

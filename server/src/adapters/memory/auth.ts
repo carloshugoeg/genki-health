@@ -40,6 +40,12 @@ export const DEMO_AUTH_USERS: ReadonlyArray<{
     id_institucion: 4,
     roles: ['secretaria'],
   },
+  {
+    email: 'superadmin@example.invalid',
+    institution_kind: 'hospital_general',
+    id_institucion: 1,
+    roles: ['superadministrador'],
+  },
 ];
 
 export async function buildDemoUsers(
@@ -153,6 +159,17 @@ export class MemoryIdentityStore implements IdentityStorePort {
       }
       if (current.revoked_at === null) {
         current.revoked_at = nowIso;
+      }
+    });
+  }
+
+  /** Concrete helper for OP-03/04 — not part of IdentityStorePort. */
+  async revokeAllForUser(id_usuario: number, nowIso: string): Promise<void> {
+    await this.enqueue(async () => {
+      for (const row of this.sessions.values()) {
+        if (row.id_usuario === id_usuario && row.revoked_at === null) {
+          row.revoked_at = nowIso;
+        }
       }
     });
   }

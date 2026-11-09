@@ -26,6 +26,8 @@ const INSTITUTION_ID_BY_KIND: Record<InstitutionKind, number> = {
   clinica_odontologica: 4,
 };
 
+const SUPERADMIN_ROLE = 'superadministrador';
+
 export interface AuthClock {
   nowMs(): number;
 }
@@ -49,15 +51,28 @@ function isInstitutionKind(value: unknown): value is InstitutionKind {
   );
 }
 
+function isSuperadmin(user: IdentityUser): boolean {
+  return user.roles.includes(SUPERADMIN_ROLE);
+}
+
+/** Normal users must match home institution; superadmin may carry any valid pair. */
 function claimsMatchUser(
   user: IdentityUser,
   institucion_id: number,
   institucion_kind: InstitutionKind,
 ): boolean {
+  if (INSTITUTION_ID_BY_KIND[institucion_kind] !== institucion_id) {
+    return false;
+  }
+  if (isSuperadmin(user)) {
+    return (
+      user.id_institucion === INSTITUTION_ID_BY_KIND.hospital_general &&
+      user.institution_kind === 'hospital_general'
+    );
+  }
   return (
     user.id_institucion === institucion_id &&
     user.institution_kind === institucion_kind &&
-    INSTITUTION_ID_BY_KIND[institucion_kind] === institucion_id &&
     INSTITUTION_ID_BY_KIND[user.institution_kind] === user.id_institucion
   );
 }
@@ -73,9 +88,12 @@ export function createAuthService(options: AuthServiceOptions): AuthPort {
   const nowIso = () => new Date(nowMs()).toISOString();
   const nowSec = () => Math.floor(nowMs() / 1000);
 
-  async function issueTokens(user: IdentityUser): Promise<AuthTokensDto> {
+  async function issueTokens(
+    user: IdentityUser,
+    active: { institucion_id: number; institucion_kind: InstitutionKind },
+  ): Promise<AuthTokensDto> {
     const issuedAt = nowSec();
-    const motor = engineForKind(user.institution_kind);
+    const motor = engineForKind(active.institucion_kind);
     const jti = randomUUID();
     const created = nowIso();
     const expires_at = new Date(nowMs() + REFRESH_TOKEN_TTL_SECONDS * 1000).toISOString();
@@ -89,8 +107,8 @@ export function createAuthService(options: AuthServiceOptions): AuthPort {
 
     const access_token = await new SignJWT({
       email: user.email,
-      institucion_id: user.id_institucion,
-      institucion_kind: user.institution_kind,
+      institucion_id: active.institucion_id,
+      institucion_kind: active.institucion_kind,
       roles: user.roles,
       motor,
       typ: ACCESS_TOKEN_TYP,
@@ -102,9 +120,67 @@ export function createAuthService(options: AuthServiceOptions): AuthPort {
       .sign(secret);
 
     const refresh_token = await new SignJWT({
-      institucion_id: user.id_institucion,
-      institucion_kind: user.institution_kind,
+      institucion_id: active.institucion_id,
+      institucion_kind: active.institucion_kind,
       jti,
+      typ: REFRESH_TOKEN_TYP,
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject(String(user.id_usuario))
+      .setIssuedAt(issuedAt)
+      .setExpirationTime(issuedAt + REFRESH_TOKEN_TTL_SECONDS)
+      .sign(secret);
+
+    return {
+      access_token,
+      refresh_token,
+      token_type: 'Bearer',
+      expires_in: ACCESS_TOKEN_TTL_SECONDS,
+    };
+  }
+
+  async function rotateAndIssue(
+    user: IdentityUser,
+    oldJti: string,
+    active: { institucion_id: number; institucion_kind: InstitutionKind },
+  ): Promise<AuthTokensDto> {
+    const nextJti = randomUUID();
+    const created = nowIso();
+    const expires_at = new Date(nowMs() + REFRESH_TOKEN_TTL_SECONDS * 1000).toISOString();
+    const won = await identities.rotateRefresh(
+      sha256Hex(oldJti),
+      {
+        jti_hash: sha256Hex(nextJti),
+        id_usuario: user.id_usuario,
+        created_at: created,
+        expires_at,
+      },
+      created,
+    );
+    if (!won) {
+      throw new AuthError('Refresh token revoked or unknown', 'invalid_token');
+    }
+
+    const issuedAt = nowSec();
+    const motor = engineForKind(active.institucion_kind);
+    const access_token = await new SignJWT({
+      email: user.email,
+      institucion_id: active.institucion_id,
+      institucion_kind: active.institucion_kind,
+      roles: user.roles,
+      motor,
+      typ: ACCESS_TOKEN_TYP,
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject(String(user.id_usuario))
+      .setIssuedAt(issuedAt)
+      .setExpirationTime(issuedAt + ACCESS_TOKEN_TTL_SECONDS)
+      .sign(secret);
+
+    const refresh_token = await new SignJWT({
+      institucion_id: active.institucion_id,
+      institucion_kind: active.institucion_kind,
+      jti: nextJti,
       typ: REFRESH_TOKEN_TYP,
     })
       .setProtectedHeader({ alg: 'HS256' })
@@ -168,11 +244,76 @@ export function createAuthService(options: AuthServiceOptions): AuthPort {
     };
   }
 
+  async function verifyAccess(accessToken: string): Promise<AuthPrincipalDto> {
+    let payload: Record<string, unknown>;
+    try {
+      const verified = await jwtVerify(accessToken, secret, {
+        algorithms: ['HS256'],
+        currentDate: new Date(nowMs()),
+      });
+      payload = verified.payload as Record<string, unknown>;
+    } catch {
+      throw new AuthError('Invalid access token', 'invalid_token');
+    }
+
+    if (payload.typ !== ACCESS_TOKEN_TYP) {
+      throw new AuthError('Invalid access token', 'invalid_token');
+    }
+    if (typeof payload.sub !== 'string' && typeof payload.sub !== 'number') {
+      throw new AuthError('Invalid access token', 'invalid_token');
+    }
+    if (typeof payload.email !== 'string' || !payload.email) {
+      throw new AuthError('Invalid access token', 'invalid_token');
+    }
+    if (!isInstitutionKind(payload.institucion_kind)) {
+      throw new AuthError('Invalid access token', 'invalid_token');
+    }
+    if (typeof payload.institucion_id !== 'number' || !Number.isInteger(payload.institucion_id)) {
+      throw new AuthError('Invalid access token', 'invalid_token');
+    }
+    if (!Array.isArray(payload.roles) || !payload.roles.every((r) => typeof r === 'string')) {
+      throw new AuthError('Invalid access token', 'invalid_token');
+    }
+
+    const sub = typeof payload.sub === 'number' ? payload.sub : Number(payload.sub);
+    if (!Number.isInteger(sub)) {
+      throw new AuthError('Invalid access token', 'invalid_token');
+    }
+
+    const institucion_kind = payload.institucion_kind;
+    const institucion_id = payload.institucion_id;
+    if (INSTITUTION_ID_BY_KIND[institucion_kind] !== institucion_id) {
+      throw new AuthError('Invalid access token', 'invalid_token');
+    }
+    if (payload.motor !== engineForKind(institucion_kind)) {
+      throw new AuthError('Token motor does not match institution', 'invalid_token');
+    }
+
+    const user = await identities.findUserById(sub);
+    if (!user || user.estado !== 'activo') {
+      throw new AuthError('Invalid access token', 'invalid_token');
+    }
+    if (!claimsMatchUser(user, institucion_id, institucion_kind)) {
+      throw new AuthError('Invalid access token', 'invalid_token');
+    }
+
+    return {
+      id_usuario: asUsuarioId(sub),
+      email: payload.email,
+      id_institucion: asInstitutionId(institucion_id),
+      institution_kind: institucion_kind,
+      roles: payload.roles.map(String),
+      motor: engineForKind(institucion_kind),
+    };
+  }
+
   return {
     async login(input: LoginRequestDto): Promise<AuthTokensDto> {
-      const policyError = validatePasswordPolicy(input.password);
-      if (policyError) {
-        throw new AuthError(policyError, 'password_policy');
+      // Password policy applies only when a password is set or changed. On login a
+      // non-compliant password is simply a wrong credential: answering `password_policy`
+      // here would reveal the policy and let callers tell bad input from bad credentials.
+      if (validatePasswordPolicy(input.password)) {
+        throw new AuthError('Invalid email, password, or institution', 'invalid_credentials');
       }
 
       const email = input.email.trim().toLowerCase();
@@ -189,7 +330,10 @@ export function createAuthService(options: AuthServiceOptions): AuthPort {
         throw new AuthError('Invalid email, password, or institution', 'invalid_credentials');
       }
 
-      return issueTokens(user);
+      return issueTokens(user, {
+        institucion_id: user.id_institucion,
+        institucion_kind: user.institution_kind,
+      });
     },
 
     async refresh(refreshToken: string): Promise<AuthTokensDto> {
@@ -202,125 +346,46 @@ export function createAuthService(options: AuthServiceOptions): AuthPort {
         throw new AuthError('Invalid refresh token', 'invalid_token');
       }
 
-      const nextJti = randomUUID();
-      const created = nowIso();
-      const expires_at = new Date(nowMs() + REFRESH_TOKEN_TTL_SECONDS * 1000).toISOString();
-      const won = await identities.rotateRefresh(
-        sha256Hex(claims.jti),
-        {
-          jti_hash: sha256Hex(nextJti),
-          id_usuario: user.id_usuario,
-          created_at: created,
-          expires_at,
-        },
-        created,
-      );
-      if (!won) {
-        throw new AuthError('Refresh token revoked or unknown', 'invalid_token');
-      }
-
-      const issuedAt = nowSec();
-      const motor = engineForKind(user.institution_kind);
-      const access_token = await new SignJWT({
-        email: user.email,
-        institucion_id: user.id_institucion,
-        institucion_kind: user.institution_kind,
-        roles: user.roles,
-        motor,
-        typ: ACCESS_TOKEN_TYP,
-      })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setSubject(String(user.id_usuario))
-        .setIssuedAt(issuedAt)
-        .setExpirationTime(issuedAt + ACCESS_TOKEN_TTL_SECONDS)
-        .sign(secret);
-
-      const refresh_token = await new SignJWT({
-        institucion_id: user.id_institucion,
-        institucion_kind: user.institution_kind,
-        jti: nextJti,
-        typ: REFRESH_TOKEN_TYP,
-      })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setSubject(String(user.id_usuario))
-        .setIssuedAt(issuedAt)
-        .setExpirationTime(issuedAt + REFRESH_TOKEN_TTL_SECONDS)
-        .sign(secret);
-
-      return {
-        access_token,
-        refresh_token,
-        token_type: 'Bearer',
-        expires_in: ACCESS_TOKEN_TTL_SECONDS,
-      };
+      return rotateAndIssue(user, claims.jti, {
+        institucion_id: claims.institucion_id,
+        institucion_kind: claims.institucion_kind,
+      });
     },
 
     async verifyAccessToken(accessToken: string): Promise<AuthPrincipalDto> {
-      let payload: Record<string, unknown>;
-      try {
-        const verified = await jwtVerify(accessToken, secret, {
-          algorithms: ['HS256'],
-          currentDate: new Date(nowMs()),
-        });
-        payload = verified.payload as Record<string, unknown>;
-      } catch {
-        throw new AuthError('Invalid access token', 'invalid_token');
-      }
-
-      if (payload.typ !== ACCESS_TOKEN_TYP) {
-        throw new AuthError('Invalid access token', 'invalid_token');
-      }
-      if (typeof payload.sub !== 'string' && typeof payload.sub !== 'number') {
-        throw new AuthError('Invalid access token', 'invalid_token');
-      }
-      if (typeof payload.email !== 'string' || !payload.email) {
-        throw new AuthError('Invalid access token', 'invalid_token');
-      }
-      if (!isInstitutionKind(payload.institucion_kind)) {
-        throw new AuthError('Invalid access token', 'invalid_token');
-      }
-      if (typeof payload.institucion_id !== 'number' || !Number.isInteger(payload.institucion_id)) {
-        throw new AuthError('Invalid access token', 'invalid_token');
-      }
-      if (!Array.isArray(payload.roles) || !payload.roles.every((r) => typeof r === 'string')) {
-        throw new AuthError('Invalid access token', 'invalid_token');
-      }
-
-      const sub = typeof payload.sub === 'number' ? payload.sub : Number(payload.sub);
-      if (!Number.isInteger(sub)) {
-        throw new AuthError('Invalid access token', 'invalid_token');
-      }
-
-      const institucion_kind = payload.institucion_kind;
-      const institucion_id = payload.institucion_id;
-      if (INSTITUTION_ID_BY_KIND[institucion_kind] !== institucion_id) {
-        throw new AuthError('Invalid access token', 'invalid_token');
-      }
-      if (payload.motor !== engineForKind(institucion_kind)) {
-        throw new AuthError('Token motor does not match institution', 'invalid_token');
-      }
-
-      const user = await identities.findUserById(sub);
-      if (!user || user.estado !== 'activo') {
-        throw new AuthError('Invalid access token', 'invalid_token');
-      }
-      if (!claimsMatchUser(user, institucion_id, institucion_kind)) {
-        throw new AuthError('Invalid access token', 'invalid_token');
-      }
-
-      return {
-        id_usuario: asUsuarioId(sub),
-        email: payload.email,
-        id_institucion: asInstitutionId(institucion_id),
-        institution_kind: institucion_kind,
-        roles: payload.roles.map(String),
-        motor: engineForKind(institucion_kind),
-      };
+      return verifyAccess(accessToken);
     },
 
     async logout(refreshToken: string): Promise<void> {
       const claims = await verifyRefreshJwt(refreshToken);
       await identities.revokeRefresh(sha256Hex(claims.jti), nowIso());
+    },
+
+    async selectInstitution(
+      accessToken: string,
+      refreshToken: string,
+      institution_kind: InstitutionKind,
+    ): Promise<AuthTokensDto> {
+      const principal = await verifyAccess(accessToken);
+      if (!principal.roles.includes(SUPERADMIN_ROLE)) {
+        throw new AuthError('Solo el superadministrador puede cambiar de institución', 'forbidden');
+      }
+      const claims = await verifyRefreshJwt(refreshToken);
+      if (claims.sub !== principal.id_usuario) {
+        throw new AuthError('Invalid refresh token', 'invalid_token');
+      }
+      const user = await identities.findUserById(principal.id_usuario);
+      if (!user || user.estado !== 'activo' || !isSuperadmin(user)) {
+        throw new AuthError('Solo el superadministrador puede cambiar de institución', 'forbidden');
+      }
+      const institucion_id = INSTITUTION_ID_BY_KIND[institution_kind];
+      if (!claimsMatchUser(user, institucion_id, institution_kind)) {
+        throw new AuthError('Invalid institution selection', 'invalid_token');
+      }
+      return rotateAndIssue(user, claims.jti, {
+        institucion_id,
+        institucion_kind: institution_kind,
+      });
     },
   };
 }
