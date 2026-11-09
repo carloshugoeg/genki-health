@@ -37,18 +37,36 @@ export function Pacientes({ search }: { search: string }) {
     const form = new FormData(event.currentTarget);
     go(1, String(form.get('q')).trim(), String(form.get('estado')));
   }
+  const pages = result ? Math.max(1, Math.ceil(result.total / result.page_size)) : 1;
   return (
-    <section>
-      <div className="actions">
-        <h2>Pacientes</h2>
-        <button data-testid="patient-register" onClick={() => navigate('/pacientes/nuevo')}>
-          Registrar paciente
-        </button>
-      </div>
-      <form className="search-form" onSubmit={submit} key={`${q}:${estado}`}>
+    <section className="pacientes">
+      <header className="page-header">
+        <div>
+          <h2>Pacientes</h2>
+          <p className="muted">Busque por documento, número de expediente o nombre.</p>
+        </div>
+        <div className="page-actions">
+          <button
+            type="button"
+            className="btn-primary"
+            data-testid="patient-register"
+            onClick={() => navigate('/pacientes/nuevo')}
+          >
+            Registrar paciente
+          </button>
+        </div>
+      </header>
+      <form className="search-form" role="search" onSubmit={submit} key={`${q}:${estado}`}>
         <label>
           Documento, expediente o nombre
-          <input name="q" data-testid="patient-search" defaultValue={q} maxLength={100} />
+          <input
+            name="q"
+            type="search"
+            data-testid="patient-search"
+            defaultValue={q}
+            maxLength={100}
+            placeholder="Ej. EXP-101 o un apellido"
+          />
         </label>
         <label>
           Estado
@@ -61,32 +79,53 @@ export function Pacientes({ search }: { search: string }) {
         <button>Buscar</button>
       </form>
       {error ? (
-        <div role="alert">
+        <div role="alert" className="state-panel state-panel--error">
           <p className="error">{error}</p>
-          <button onClick={() => setRetry((n) => n + 1)}>Reintentar</button>
+          <button type="button" className="btn-secondary" onClick={() => setRetry((n) => n + 1)}>
+            Reintentar
+          </button>
         </div>
       ) : !result ? (
-        <p role="status">Cargando pacientes…</p>
+        <p role="status" className="state-panel state-panel--loading">
+          Cargando pacientes…
+        </p>
       ) : (
         <>
-          <p role="status">{result.total} pacientes encontrados</p>
+          <p role="status" className="result-count">
+            {result.total} pacientes encontrados
+          </p>
           {!result.items.length ? (
-            <p>No se encontraron pacientes.</p>
+            <div className="state-panel state-panel--empty">
+              <p>
+                <strong>No se encontraron pacientes.</strong>
+              </p>
+              <p className="muted">
+                Revise el término de búsqueda o cambie el filtro de estado. Si el paciente es nuevo,
+                regístrelo.
+              </p>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => navigate('/pacientes/nuevo')}
+              >
+                Registrar paciente
+              </button>
+            </div>
           ) : (
             <div className="table-scroll">
-              <table>
+              <table className="data-table data-table--stack">
                 <thead>
                   <tr>
-                    <th>Paciente</th>
-                    <th>Documento</th>
-                    <th>Expediente</th>
-                    <th>Estado</th>
+                    <th scope="col">Paciente</th>
+                    <th scope="col">Documento</th>
+                    <th scope="col">Expediente</th>
+                    <th scope="col">Estado</th>
                   </tr>
                 </thead>
                 <tbody>
                   {result.items.map(({ paciente: p, expediente: e }) => (
                     <tr key={p.id_paciente}>
-                      <td>
+                      <td data-label="Paciente">
                         <a
                           href={`/pacientes/${p.id_paciente}`}
                           onClick={(event) => {
@@ -104,21 +143,36 @@ export function Pacientes({ search }: { search: string }) {
                             .join(' ')}
                         </a>
                       </td>
-                      <td>{p.numero_documento}</td>
-                      <td>{e.numero_expediente}</td>
-                      <td>{e.estado}</td>
+                      <td data-label="Documento" className="cell-code">
+                        {p.numero_documento}
+                      </td>
+                      <td data-label="Expediente" className="cell-code">
+                        {e.numero_expediente}
+                      </td>
+                      <td data-label="Estado">
+                        <span className={`badge badge--${e.estado}`}>{e.estado}</span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
-          <nav aria-label="Paginación" className="actions">
-            <button disabled={page <= 1} onClick={() => go(page - 1)}>
+          <nav aria-label="Paginación" className="pager">
+            <button
+              type="button"
+              className="btn-secondary"
+              disabled={page <= 1}
+              onClick={() => go(page - 1)}
+            >
               Anterior
             </button>
-            <span>Página {page}</span>
+            <span>
+              Página {page} de {pages}
+            </span>
             <button
+              type="button"
+              className="btn-secondary"
               disabled={page * result.page_size >= result.total || page >= 10000}
               onClick={() => go(page + 1)}
             >

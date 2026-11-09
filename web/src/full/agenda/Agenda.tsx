@@ -135,7 +135,6 @@ export function Agenda({ request }: AgendaProps) {
   return (
     <section className="genki-agenda" aria-label="Agenda de citas">
       <header>
-        <p className="agenda-eyebrow">GENKI · AGENDA</p>
         <h1>Tu día, organizado</h1>
         <p>Horarios de Guatemala · UTC−6</p>
       </header>

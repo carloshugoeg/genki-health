@@ -48,11 +48,13 @@ export function ReactivateDialog({
         <h2 id="reactivate-title">
           Reactivar expediente de {patientLabel ?? `paciente ${patientId}`}
         </h2>
-        <p className="muted">
+        <p className="muted dialog-lede">
           Se limpian los metadatos de archivo. El historial clínico se conserva.
         </p>
         <label>
-          Motivo
+          <span>
+            Motivo<span className="req"> *</span>
+          </span>
           <textarea
             name="motivo"
             data-testid="reactivate-motivo"
@@ -66,8 +68,8 @@ export function ReactivateDialog({
             {error}
           </p>
         )}
-        <div className="actions">
-          <button type="button" onClick={onClose} disabled={busy}>
+        <div className="actions dialog-actions">
+          <button type="button" className="btn-secondary" onClick={onClose} disabled={busy}>
             Cancelar
           </button>
           <button data-testid="reactivate-confirm" disabled={busy}>

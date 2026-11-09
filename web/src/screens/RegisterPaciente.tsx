@@ -87,24 +87,39 @@ export function RegisterPaciente() {
   }
   return (
     <section>
-      <h2>Registrar paciente y abrir expediente</h2>
-      <p>El registro se guarda en una sola operación. Los campos con * son obligatorios.</p>
+      <header className="page-header">
+        <div>
+          <h2>Registrar paciente y abrir expediente</h2>
+          <p className="muted">
+            El registro se guarda en una sola operación. Los campos marcados con{' '}
+            <span className="req">*</span> son obligatorios.
+          </p>
+        </div>
+      </header>
       {catalogError ? (
-        <div role="alert">
+        <div role="alert" className="state-panel state-panel--error">
           <p className="error">{catalogError}</p>
-          <button onClick={() => setRetry((n) => n + 1)}>Reintentar catálogos</button>
+          <button type="button" className="btn-secondary" onClick={() => setRetry((n) => n + 1)}>
+            Reintentar catálogos
+          </button>
         </div>
       ) : (
-        !catalogs && <p role="status">Cargando catálogos…</p>
+        !catalogs && (
+          <p role="status" className="state-panel state-panel--loading">
+            Cargando catálogos…
+          </p>
+        )
       )}
-      <form onSubmit={submit}>
-        <fieldset disabled={busy}>
+      <form onSubmit={submit} className="form-stack">
+        <fieldset disabled={busy} className="form-section">
           <legend>Identidad y contacto</legend>
           <div className="form-grid">
             {fields.map(([name, label, max, required]) => (
               <label key={name}>
-                {label}
-                {required ? ' *' : ''}
+                <span>
+                  {label}
+                  {required && <span className="req"> *</span>}
+                </span>
                 <input
                   name={name}
                   required={required}
@@ -114,7 +129,9 @@ export function RegisterPaciente() {
               </label>
             ))}
             <label>
-              Fecha de nacimiento *
+              <span>
+                Fecha de nacimiento<span className="req"> *</span>
+              </span>
               <input
                 name="fecha_nacimiento"
                 type="date"
@@ -123,7 +140,9 @@ export function RegisterPaciente() {
               />
             </label>
             <label>
-              Sexo *
+              <span>
+                Sexo<span className="req"> *</span>
+              </span>
               <select name="sexo" required>
                 <option value="">Seleccione</option>
                 <option value="M">M</option>
@@ -145,10 +164,13 @@ export function RegisterPaciente() {
           </div>
         </fieldset>
         {pediatric && (
-          <fieldset disabled={busy}>
-            <legend>Responsables (de 1 a 5; exactamente un principal)</legend>
+          <fieldset disabled={busy} className="form-section">
+            <legend>Responsables</legend>
+            <p className="field-help">
+              Registre de 1 a 5 responsables y marque exactamente uno como principal.
+            </p>
             {guardians.map((id, index) => (
-              <fieldset key={id}>
+              <fieldset key={id} className="form-subsection">
                 <legend>Responsable {index + 1}</legend>
                 <div className="form-grid">
                   {(
@@ -162,8 +184,12 @@ export function RegisterPaciente() {
                     ] as const
                   ).map(([name, label, max]) => (
                     <label key={name}>
-                      {label}
-                      {name !== 'correo' && name !== 'direccion' ? ' *' : ''}
+                      <span>
+                        {label}
+                        {name !== 'correo' && name !== 'direccion' && (
+                          <span className="req"> *</span>
+                        )}
+                      </span>
                       <input
                         name={`g${id}-${name}`}
                         required={name !== 'correo' && name !== 'direccion'}
@@ -173,7 +199,9 @@ export function RegisterPaciente() {
                     </label>
                   ))}
                   <label>
-                    Parentesco *
+                    <span>
+                      Parentesco<span className="req"> *</span>
+                    </span>
                     <select name={`g${id}-parentesco`}>
                       {['madre', 'padre', 'abuelo', 'tutor_legal', 'otro'].map((p) => (
                         <option key={p} value={p}>
@@ -194,6 +222,7 @@ export function RegisterPaciente() {
                 </div>
                 <button
                   type="button"
+                  className="btn-danger-quiet"
                   disabled={guardians.length === 1}
                   onClick={() => {
                     const remaining = guardians.filter((g) => g !== id);
@@ -207,6 +236,7 @@ export function RegisterPaciente() {
             ))}
             <button
               type="button"
+              className="btn-secondary"
               disabled={guardians.length >= 5}
               onClick={() => {
                 setGuardians([...guardians, nextId]);
@@ -218,15 +248,20 @@ export function RegisterPaciente() {
           </fieldset>
         )}
         {error && (
-          <p className="error" role="alert">
+          <p className="error error-banner" role="alert">
             {error}
           </p>
         )}
-        <div className="actions">
+        <div className="actions form-footer">
           <button data-testid="register-submit" disabled={busy || !catalogs || !!catalogError}>
             {busy ? 'Guardando…' : 'Registrar paciente'}
           </button>
-          <button type="button" disabled={busy} onClick={() => navigate('/pacientes')}>
+          <button
+            type="button"
+            className="btn-secondary"
+            disabled={busy}
+            onClick={() => navigate('/pacientes')}
+          >
             Cancelar
           </button>
         </div>

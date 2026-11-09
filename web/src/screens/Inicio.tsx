@@ -48,34 +48,51 @@ async function countPendingCharges(): Promise<number> {
   return pending;
 }
 
+function guatemalaLongDate(): string {
+  return new Intl.DateTimeFormat('es-GT', {
+    timeZone: 'America/Guatemala',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date());
+}
+
 function Card({
   title,
   value,
   note,
+  hint,
   action,
   onOpen,
 }: {
   title: string;
   value: number | null;
   note: string;
+  hint: string;
   action: string;
   onOpen: () => void;
 }) {
+  const loading = !note && value === null;
   return (
-    <article className="dash-card">
+    <article className="dash-card" data-state={note ? 'error' : loading ? 'loading' : 'ready'}>
       <h2>{title}</h2>
-      <strong>{note ? '—' : value === null ? '…' : value}</strong>
+      <strong aria-busy={loading}>
+        {note ? '—' : loading ? <span className="skeleton" aria-label="Cargando" /> : value}
+      </strong>
       {note ? (
-        <p className="error">{note}</p>
+        <p className="error" role="alert">
+          {note}
+        </p>
       ) : (
-        <button type="button" onClick={onOpen}>
-          {action}
-        </button>
+        <p className="dash-hint">{hint}</p>
       )}
+      <button type="button" className="btn-link" onClick={onOpen}>
+        {action}
+      </button>
     </article>
   );
 }
-
 export function Inicio() {
   const [pacientes, setPacientes] = useState<number | null>(null);
   const [citas, setCitas] = useState<number | null>(null);
@@ -110,14 +127,31 @@ export function Inicio() {
   }, []);
 
   return (
-    <section aria-label="Inicio">
-      <h2>Inicio</h2>
-      <p className="muted">Resumen de la institución en esta sesión.</p>
+    <section aria-label="Inicio" className="inicio">
+      <header className="page-header">
+        <div>
+          <h2>Inicio</h2>
+          <p className="muted">Resumen de la institución en esta sesión, {guatemalaLongDate()}.</p>
+        </div>
+        <div className="page-actions">
+          <button type="button" className="btn-secondary" onClick={() => navigate('/pacientes')}>
+            Buscar paciente
+          </button>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => navigate('/pacientes/nuevo')}
+          >
+            Registrar paciente
+          </button>
+        </div>
+      </header>
       <div className="dash-grid">
         <Card
           title="Pacientes"
           value={pacientes}
           note={notes.pacientes}
+          hint="Registrados en la institución, activos y archivados."
           action="Ver pacientes"
           onOpen={() => navigate('/pacientes')}
         />
@@ -125,6 +159,7 @@ export function Inicio() {
           title="Citas de hoy"
           value={citas}
           note={notes.citas}
+          hint="Programadas para hoy en horario de Guatemala."
           action="Abrir agenda"
           onOpen={() => navigate('/agenda')}
         />
@@ -132,6 +167,7 @@ export function Inicio() {
           title="Cargos pendientes"
           value={cargos}
           note={notes.cargos}
+          hint="Suma de los cargos pendientes de cada paciente."
           action="Ver cargos"
           onOpen={() => navigate('/economia')}
         />

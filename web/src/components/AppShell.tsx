@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
 import { navigate, type AppRoute } from '../router';
+import { INSTITUTION_META, InstitutionMark, institutionKindByName } from './InstitutionMark';
 
 const GROUPS: {
   title: string;
@@ -69,21 +70,56 @@ export function AppShell({
   notice?: ReactNode;
   children: ReactNode;
 }) {
+  const kind = institutionKindByName(institutionName);
+  const engine = kind ? INSTITUTION_META[kind].engine : undefined;
+  const [navOpen, setNavOpen] = useState(false);
+  const navId = useId();
+  useEffect(() => {
+    setNavOpen(false);
+  }, [current]);
+  useEffect(() => {
+    if (!navOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setNavOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [navOpen]);
   return (
-    <div className="app-shell">
-      <aside className="sidepanel">
-        <p className="eyebrow">Bases de Datos II</p>
-        <h1>Genki Health</h1>
-        <nav aria-label="Secciones">
+    <div className="app-shell" data-institution={kind}>
+      <a className="skip-link" href="#contenido">
+        Saltar al contenido
+      </a>
+      <aside className="sidepanel" data-open={navOpen ? 'true' : undefined}>
+        <div className="sidepanel-head">
+          <div className="sidepanel-brand">
+            <p className="eyebrow">Bases de Datos II</p>
+            <h1>Genki Health</h1>
+          </div>
+          <button
+            type="button"
+            className="nav-toggle"
+            aria-expanded={navOpen}
+            aria-controls={navId}
+            onClick={() => setNavOpen((open) => !open)}
+          >
+            <span className="nav-toggle-icon" aria-hidden="true" />
+            {navOpen ? 'Cerrar menú' : 'Menú'}
+          </button>
+        </div>
+        <nav id={navId} aria-label="Secciones">
           {GROUPS.map((group) => (
-            <div key={group.title}>
+            <div key={group.title} className="nav-section">
               <p className="nav-group">{group.title}</p>
               {group.items.map((item) => (
                 <button
                   key={item.path}
                   type="button"
                   aria-current={isCurrent(item.route, current) ? 'page' : undefined}
-                  onClick={() => navigate(item.path)}
+                  onClick={() => {
+                    setNavOpen(false);
+                    navigate(item.path);
+                  }}
                 >
                   {item.label}
                 </button>
@@ -95,22 +131,30 @@ export function AppShell({
       </aside>
       <div className="app-main">
         <header className="topbar">
-          <div>
-            <strong>{institutionName}</strong>
-            <p className="muted">{userLabel}</p>
+          <div className="topbar-identity">
+            <InstitutionMark kind={kind} />
+            <div>
+              <strong>{institutionName}</strong>
+              <p className="muted">
+                {engine && <span className="engine-tag">{engine}</span>}
+                <span className="topbar-user">{userLabel}</span>
+              </p>
+            </div>
           </div>
           <div className="topbar-actions">
             {superadmin && (
-              <button type="button" onClick={() => navigate('/panel')}>
+              <button type="button" className="btn-secondary" onClick={() => navigate('/panel')}>
                 Volver al panel
               </button>
             )}
-            <button type="button" disabled={busy} onClick={onLogout}>
-              Cerrar sesión
+            <button type="button" className="btn-ghost" disabled={busy} onClick={onLogout}>
+              {busy ? 'Cerrando…' : 'Cerrar sesión'}
             </button>
           </div>
         </header>
-        {children}
+        <main id="contenido" className="app-content" tabIndex={-1}>
+          {children}
+        </main>
       </div>
     </div>
   );
