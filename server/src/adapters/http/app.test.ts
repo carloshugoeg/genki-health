@@ -933,15 +933,47 @@ describe('HTTP account users lane3', () => {
       account: identity.account,
       users: identity.users,
     });
-    const token = await loginAs(app, 'hospital@genki.local');
+    const first = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        email: 'hospital@genki.local',
+        password,
+        institution_kind: 'hospital_general',
+      },
+    });
+    expect(first.statusCode).toBe(200);
+    const tokens = first.json() as AuthTokensDto;
     const nueva = `${password}Xtra9`;
+    const wrong = await app.inject({
+      method: 'POST',
+      url: '/api/auth/password',
+      headers: { authorization: `Bearer ${tokens.access_token}` },
+      payload: { anterior: 'no-es-la-clave', nueva },
+    });
+    expect(wrong.statusCode).toBe(401);
+    expect((wrong.json() as ErrorDto).error).toBe('invalid_credentials');
+    const weak = await app.inject({
+      method: 'POST',
+      url: '/api/auth/password',
+      headers: { authorization: `Bearer ${tokens.access_token}` },
+      payload: { anterior: password, nueva: 'corta1' },
+    });
+    expect(weak.statusCode).toBe(400);
+    expect((weak.json() as ErrorDto).error).toBe('password_policy');
     const changed = await app.inject({
       method: 'POST',
       url: '/api/auth/password',
-      headers: { authorization: `Bearer ${token}` },
+      headers: { authorization: `Bearer ${tokens.access_token}` },
       payload: { anterior: password, nueva },
     });
     expect(changed.statusCode).toBe(204);
+    const refresh = await app.inject({
+      method: 'POST',
+      url: '/api/auth/refresh',
+      payload: { refresh_token: tokens.refresh_token },
+    });
+    expect(refresh.statusCode).toBe(401);
 
     const oldLogin = await app.inject({
       method: 'POST',
@@ -977,6 +1009,26 @@ describe('HTTP account users lane3', () => {
       users: identity.users,
     });
     const token = await loginAs(app, 'hospital@genki.local');
+    const rejectedRole = await app.inject({
+      method: 'POST',
+      url: '/api/usuarios',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        action: 'create',
+        nombre_usuario: 'root',
+        correo: 'root@genki.local',
+        rol: 'superadministrador',
+      },
+    });
+    expect(rejectedRole.statusCode).toBe(400);
+    const lastAdmin = await app.inject({
+      method: 'POST',
+      url: '/api/usuarios',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { action: 'deactivate', id: 1 },
+    });
+    expect(lastAdmin.statusCode).toBe(409);
+    expect((lastAdmin.json() as ErrorDto).error).toBe('conflict');
     const created = await app.inject({
       method: 'POST',
       url: '/api/usuarios',
@@ -997,5 +1049,38 @@ describe('HTTP account users lane3', () => {
     expect(body.usuario.rol).toBe('recepcion');
     expect(body.usuario.estado).toBe('activo');
     expect(body.temporal.length).toBe(24);
+    expect(JSON.stringify(body)).not.toContain('hash_contrasena');
+    const audit = await app.inject({
+      method: 'GET',
+      url: '/api/bitacora',
+      headers: { authorization: `Bearer ${token}` },
+    });
+    expect(audit.statusCode).toBe(200);
+    const auditText = JSON.stringify(audit.json());
+    expect(auditText).not.toContain(body.temporal);
+    expect(auditText).toContain('"entidad":"usuario"');
+    const asNew = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        email: 'nuevo-recepcion@genki.local',
+        password: body.temporal,
+        institution_kind: 'hospital_general',
+      },
+    });
+    expect(asNew.statusCode).toBe(200);
+    const recepcion = await loginAs(app, 'recepcion@genki.local');
+    const denied = await app.inject({
+      method: 'POST',
+      url: '/api/usuarios',
+      headers: { authorization: `Bearer ${recepcion}` },
+      payload: {
+        action: 'create',
+        nombre_usuario: 'otro',
+        correo: 'otro@genki.local',
+        rol: 'medico',
+      },
+    });
+    expect(denied.statusCode).toBe(403);
   });
 });

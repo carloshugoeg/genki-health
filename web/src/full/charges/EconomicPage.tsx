@@ -163,7 +163,9 @@ export function EconomicPage({
                   name={field.name}
                   required={!field.optional && field.type !== 'checkbox'}
                   type={
-                    ['number', 'date', 'datetime-local', 'checkbox'].includes(field.type ?? '')
+                    ['number', 'date', 'datetime-local', 'checkbox', 'password'].includes(
+                      field.type ?? '',
+                    )
                       ? field.type
                       : 'text'
                   }

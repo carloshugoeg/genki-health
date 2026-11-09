@@ -100,7 +100,18 @@ it('router_has_exact_mvp_paths', () => {
     '/pacientes/:id/consulta/nueva',
     '/agenda',
     '/economia',
+    '/inventario',
+    '/honorarios',
+    '/facturacion',
+    '/caja',
+    '/personal',
+    '/procedimientos',
+    '/sesiones-dentales',
+    '/cuenta',
+    '/usuarios',
   ]);
+  expect(route('/cuenta')).toBe('cuenta');
+  expect(route('/usuarios')).toBe('usuarios');
   expect(
     [
       '/login',
