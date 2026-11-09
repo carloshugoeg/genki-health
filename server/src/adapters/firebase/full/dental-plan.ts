@@ -54,7 +54,10 @@ export function createFirebaseDentalPlanRepository(deps: {
 
     async op58(input: Op58Request, _context: OperationContext): Promise<Op58Response> {
       return uow.runInTransaction(async () => {
-        const plan = (await uow.read('planes_tratamiento', input.params.id)) as PLAN_TRATAMIENTO | null;
+        const plan = (await uow.read(
+          'planes_tratamiento',
+          input.params.id,
+        )) as PLAN_TRATAMIENTO | null;
         if (!plan) throw new ClinicalError('not_found', NOT_FOUND);
         if (plan.estado !== 'propuesto') throw new ClinicalError('conflict', CONFLICT);
         const updated = { ...plan, estado: 'aceptado' };

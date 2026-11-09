@@ -7,11 +7,7 @@ import { ClinicalError } from '../../../domain/clinical-error.js';
 import { generateTemporalPassword } from '../../../domain/full/account.js';
 import { assertLastActiveAdminGuard } from '../../../domain/full/users.js';
 import type { OperationContext } from '../../../ports/full/context.js';
-import type {
-  Op05Request,
-  Op06Request,
-  UsersRepositoryPort,
-} from '../../../ports/full/users.js';
+import type { Op05Request, Op06Request, UsersRepositoryPort } from '../../../ports/full/users.js';
 import { toPgTimestamptz } from '../mapper.js';
 
 interface UsuarioRow {
@@ -53,6 +49,13 @@ function mapPublic(row: UsuarioRow) {
 
 export function createPostgresUsersRepository(pool: pg.Pool): UsersRepositoryPort {
   return {
+    async profesionalDeUsuario(id_usuario: number): Promise<number | null> {
+      const result = await pool.query<{ id_profesional: number | null }>(
+        `SELECT id_profesional FROM usuario WHERE id_usuario = $1 AND estado = 'activo'`,
+        [id_usuario],
+      );
+      return result.rows[0]?.id_profesional ?? null;
+    },
     async op05(input: Op05Request, context: OperationContext): Promise<UsuarioAdminResult> {
       const body = input.body;
       const client = await pool.connect();
@@ -89,7 +92,11 @@ export function createPostgresUsersRepository(pool: pg.Pool): UsersRepositoryPor
               context.id_usuario,
               String(row.id_usuario),
               toPgTimestamptz(context.now),
-              JSON.stringify({ campos: ['correo', 'rol', 'nombre_usuario'], op: 5, resultado: 'ok' }),
+              JSON.stringify({
+                campos: ['correo', 'rol', 'nombre_usuario'],
+                op: 5,
+                resultado: 'ok',
+              }),
               context.id_institucion,
             ],
           );
@@ -250,10 +257,7 @@ export function createPostgresUsersRepository(pool: pg.Pool): UsersRepositoryPor
       }
       const where = `WHERE ${clauses.join(' AND ')}`;
       const from = `FROM bitacora b JOIN usuario u ON u.id_usuario = b.id_usuario ${where}`;
-      const total = await pool.query<{ n: string }>(
-        `SELECT count(*)::text AS n ${from}`,
-        params,
-      );
+      const total = await pool.query<{ n: string }>(`SELECT count(*)::text AS n ${from}`, params);
       const page = q.page ?? 1;
       const page_size = q.page_size ?? 20;
       params.push(page_size);

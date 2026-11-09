@@ -177,6 +177,34 @@ const AUDIT_KEYS = new Set([
   'id_usuario',
 ]);
 
+const AUDIT_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const AUDIT_DATETIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?(Z|[+-]\d{2}:\d{2})$/;
+const AUDIT_TEXT_MAX = 120;
+const AUDIT_PAGE_MAX = 100_000;
+
+/** `desde`/`hasta` accept `YYYY-MM-DD` or an ISO-8601 datetime with zone; anything else is 400. */
+function parseAuditInstant(value: unknown): { raw: string; ms: number } {
+  if (typeof value !== 'string') throw new ClinicalError('invalid_query', 'Parámetros inválidos');
+  const raw = value.trim();
+  const dateOnly = AUDIT_DATE.test(raw);
+  if (!dateOnly && !AUDIT_DATETIME.test(raw)) {
+    throw new ClinicalError('invalid_query', 'Parámetros inválidos');
+  }
+  const ms = Date.parse(dateOnly ? `${raw}T00:00:00.000Z` : raw);
+  if (Number.isNaN(ms)) throw new ClinicalError('invalid_query', 'Parámetros inválidos');
+  if (dateOnly && new Date(ms).toISOString().slice(0, 10) !== raw) {
+    throw new ClinicalError('invalid_query', 'Parámetros inválidos');
+  }
+  return { raw, ms };
+}
+
+function parseAuditText(value: unknown): string {
+  if (typeof value !== 'string' || value.length > AUDIT_TEXT_MAX) {
+    throw new ClinicalError('invalid_query', 'Parámetros inválidos');
+  }
+  return value;
+}
+
 export function parseAuditQuery(query: Record<string, unknown>): {
   page: number;
   page_size: number;
@@ -194,7 +222,14 @@ export function parseAuditQuery(query: Record<string, unknown>): {
   }
   const page = query.page === undefined ? 1 : Number(query.page);
   const page_size = query.page_size === undefined ? 20 : Number(query.page_size);
-  if (!Number.isInteger(page) || page < 1 || !Number.isInteger(page_size) || page_size < 1 || page_size > 50) {
+  if (
+    !Number.isInteger(page) ||
+    page < 1 ||
+    page > AUDIT_PAGE_MAX ||
+    !Number.isInteger(page_size) ||
+    page_size < 1 ||
+    page_size > 50
+  ) {
     throw new ClinicalError('invalid_query', 'Parámetros inválidos');
   }
   const out: {
@@ -206,25 +241,19 @@ export function parseAuditQuery(query: Record<string, unknown>): {
     id_registro?: string;
     id_usuario?: number;
   } = { page, page_size };
-  if (query.desde !== undefined) {
-    if (typeof query.desde !== 'string') throw new ClinicalError('invalid_query', 'Parámetros inválidos');
-    out.desde = query.desde;
+  const desde = query.desde === undefined ? undefined : parseAuditInstant(query.desde);
+  const hasta = query.hasta === undefined ? undefined : parseAuditInstant(query.hasta);
+  if (desde && hasta && desde.ms > hasta.ms) {
+    throw new ClinicalError('invalid_query', 'Parámetros inválidos');
   }
-  if (query.hasta !== undefined) {
-    if (typeof query.hasta !== 'string') throw new ClinicalError('invalid_query', 'Parámetros inválidos');
-    out.hasta = query.hasta;
-  }
-  if (query.entidad !== undefined) {
-    if (typeof query.entidad !== 'string') throw new ClinicalError('invalid_query', 'Parámetros inválidos');
-    out.entidad = query.entidad;
-  }
-  if (query.id_registro !== undefined) {
-    if (typeof query.id_registro !== 'string') throw new ClinicalError('invalid_query', 'Parámetros inválidos');
-    out.id_registro = query.id_registro;
-  }
+  if (desde) out.desde = desde.raw;
+  if (hasta) out.hasta = hasta.raw;
+  if (query.entidad !== undefined) out.entidad = parseAuditText(query.entidad);
+  if (query.id_registro !== undefined) out.id_registro = parseAuditText(query.id_registro);
   if (query.id_usuario !== undefined) {
     const id = Number(query.id_usuario);
-    if (!Number.isInteger(id) || id < 1) throw new ClinicalError('invalid_query', 'Parámetros inválidos');
+    if (!Number.isInteger(id) || id < 1 || id > 2_147_483_647)
+      throw new ClinicalError('invalid_query', 'Parámetros inválidos');
     out.id_usuario = id;
   }
   return out;

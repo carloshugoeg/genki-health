@@ -371,7 +371,7 @@ describe('AuthPort C3.5 session transitions', () => {
     expect(still.motor).toBe('mysql');
   });
 
-  it('enforces password policy on login input', async () => {
+  it('answers a generic invalid_credentials for a short wrong password on login', async () => {
     const { auth } = await makeAuth();
     await expect(
       auth.login({
@@ -379,6 +379,6 @@ describe('AuthPort C3.5 session transitions', () => {
         password: 'short',
         institution_kind: 'hospital_general',
       }),
-    ).rejects.toMatchObject({ code: 'password_policy' });
+    ).rejects.toMatchObject({ code: 'invalid_credentials' });
   });
 });

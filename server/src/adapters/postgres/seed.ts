@@ -89,6 +89,19 @@ export async function seedPostgres(url: string, rows: SeedRow[], password: strin
         [seq],
       );
     }
+    // Clinical attribution comes from usuario.id_profesional. The FK references the Hospital PG
+    // `profesional` table, so PG id 1 (institution 1, always seeded) satisfies it; for
+    // institutions 2-4 the same id denotes professional 1 of that institution's own engine
+    // catalog (MySQL `profesional`, Mongo `profesionales`, Firestore `professionals`), which
+    // scripts/seed.ts seeds active in every engine. Only NULL links are filled; an existing
+    // link (e.g. set through the users API) is preserved.
+    const DEMO_PROFESIONAL_ID = 1;
+    const linkProfesional = async (correo: string): Promise<void> => {
+      await client.query(
+        'UPDATE usuario SET id_profesional=$1 WHERE correo=$2 AND id_profesional IS NULL',
+        [DEMO_PROFESIONAL_ID, correo],
+      );
+    };
     const roles = ['administrador', 'recepcion', 'medico', 'auditor'];
     for (let institution = 1; institution <= 4; institution++) {
       for (const [index, role] of roles.entries()) {
@@ -113,6 +126,7 @@ export async function seedPostgres(url: string, rows: SeedRow[], password: strin
             throw new Error(
               'Seed existing identity is inactive or lacks Argon2id; preserved without reset',
             );
+          if (role === 'medico') await linkProfesional(correo);
           continue; // Never rehash or reset an existing identity.
         }
         const hash = await argon2.hash(password, { type: argon2.argon2id });
@@ -120,6 +134,7 @@ export async function seedPostgres(url: string, rows: SeedRow[], password: strin
           "INSERT INTO usuario (id_institucion,id_rol,nombre_usuario,correo,hash_contrasena,estado) VALUES ($1,$2,$3,$4,$5,'activo')",
           [institution, index + 1, username, correo, hash],
         );
+        if (role === 'medico') await linkProfesional(correo);
       }
     }
     // Grading superadmin: Hospital PG identity only; password from SEED_PASSWORD.
@@ -160,6 +175,47 @@ export async function seedPostgres(url: string, rows: SeedRow[], password: strin
         [superCorreo, hash],
       );
     }
+    // Remaining Entrega I ROL catalog values (§ROL.nombre: recepcion, enfermeria, medico,
+    // laboratorista, odontologo, administrador). Matched by unique name; never renumbered.
+    for (const nombre of ['enfermeria', 'laboratorista', 'odontologo']) {
+      const found = await client.query('SELECT id_rol FROM rol WHERE nombre=$1', [nombre]);
+      if (found.rowCount) continue;
+      await client.query(
+        'INSERT INTO rol (id_rol,nombre,descripcion) SELECT GREATEST(COALESCE(MAX(id_rol),0),5)+1,$1,$2 FROM rol',
+        [nombre, 'Contenido académico simulado; no usar para atención'],
+      );
+    }
+    // Dental demo identity: Clínica odontológica (institution 4) gates OP-55..60 on `odontologo`.
+    // Linked to professional 1 of the Firestore catalog (see linkProfesional above).
+    const dentalCorreo = 'demo-4-odontologo@example.invalid';
+    const dentalRole = await client.query<{ id_rol: number }>(
+      "SELECT id_rol FROM rol WHERE nombre='odontologo'",
+    );
+    const dentalRoleId = dentalRole.rows[0]!.id_rol;
+    const dentalUser = await client.query(
+      'SELECT id_institucion,id_rol,nombre_usuario,hash_contrasena,estado FROM usuario WHERE correo=$1',
+      [dentalCorreo],
+    );
+    if (dentalUser.rowCount) {
+      const current = dentalUser.rows[0];
+      if (
+        current.id_institucion !== 4 ||
+        current.id_rol !== dentalRoleId ||
+        current.nombre_usuario !== 'demo-4-odontologo'
+      )
+        throw new Error('Seed dental identity fixture conflict');
+      if (current.estado !== 'activo' || !String(current.hash_contrasena).startsWith('$argon2id$'))
+        throw new Error(
+          'Seed existing identity is inactive or lacks Argon2id; preserved without reset',
+        );
+    } else {
+      const hash = await argon2.hash(password, { type: argon2.argon2id });
+      await client.query(
+        "INSERT INTO usuario (id_institucion,id_rol,nombre_usuario,correo,hash_contrasena,estado) VALUES (4,$1,'demo-4-odontologo',$2,$3,'activo')",
+        [dentalRoleId, dentalCorreo, hash],
+      );
+    }
+    await linkProfesional(dentalCorreo);
     const folios = await client.query<{ maximum: number }>(
       "SELECT COALESCE(MAX(substring(folio from '^REC-([0-9]+)$')::bigint),0)::int AS maximum FROM receta",
     );

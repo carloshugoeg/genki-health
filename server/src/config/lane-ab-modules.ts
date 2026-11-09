@@ -11,9 +11,7 @@ import type { PacienteRepositoryPort } from '../ports/paciente-repository.js';
 import type { Lane1FullModules } from '../ports/adapter-resource.js';
 
 /** Clinical → economic reference bridge for lane A stores. */
-export function clinicalEconomicReferences(
-  pacientes: PacienteRepositoryPort,
-): EconomicReferences {
+export function clinicalEconomicReferences(pacientes: PacienteRepositoryPort): EconomicReferences {
   return {
     async patient(id: number) {
       const paciente = await pacientes.findById(asPacienteId(id));

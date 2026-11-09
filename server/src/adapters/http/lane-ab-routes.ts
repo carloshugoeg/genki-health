@@ -4,6 +4,7 @@ import type { InstitutionAdapterRegistry } from '../../config/adapter-registry.j
 import type { AdapterSetWithFull } from '../../config/full-modules.js';
 import type { OperationContext } from '../../ports/full/context.js';
 import { ClinicalError } from '../../domain/clinical-error.js';
+import { profesionalOf } from './actor.js';
 import { agendaPlugin } from './full/agenda.js';
 import { chargesPlugin } from './full/charges.js';
 import { honorariaPlugin } from './full/honoraria.js';
@@ -17,16 +18,11 @@ function actorFrom(
   adapters: AdapterSetWithFull,
   idempotency_key?: string,
 ): OperationContext {
-  const clinical =
-    principal.roles.includes('superadministrador') ||
-    principal.roles.includes('medico') ||
-    principal.roles.includes('enfermeria') ||
-    principal.roles.includes('odontologo') ||
-    principal.roles.includes('laboratorista');
   return {
     id_institucion: principal.id_institucion,
     id_usuario: principal.id_usuario,
-    id_profesional: clinical ? 1 : null,
+    // USUARIO.id_profesional of the authenticated user (null for non-clinical users).
+    id_profesional: profesionalOf(principal),
     roles: principal.roles,
     permissions: [],
     now: adapters.clock.nowIso(),
@@ -65,11 +61,7 @@ export function registerLaneABRoutes(
       if (!principal) throw new ClinicalError('forbidden', 'No autorizado');
       const adapters = resolveSet(principal);
       const header = request.headers['idempotency-key'];
-      return actorFrom(
-        principal,
-        adapters,
-        typeof header === 'string' ? header : undefined,
-      );
+      return actorFrom(principal, adapters, typeof header === 'string' ? header : undefined);
     };
 
     const fullOf = (request: FastifyRequest) => {

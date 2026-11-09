@@ -141,6 +141,16 @@ export const MONGO_INDEXES: Record<string, IndexSpec[]> = {
       options: { unique: true, name: 'uq_inst_codigo_cie10' },
     },
   ],
+  bitacora: [
+    {
+      keys: { institution_id: 1, id_bitacora: 1 },
+      options: { unique: true, name: 'uq_inst_id_bitacora' },
+    },
+    {
+      keys: { institution_id: 1, entidad: 1, id_registro: 1 },
+      options: { name: 'ix_bitacora_registro' },
+    },
+  ],
   counters: [
     {
       keys: { institution_id: 1, name: 1 },

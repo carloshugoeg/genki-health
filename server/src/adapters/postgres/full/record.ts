@@ -2,6 +2,7 @@ import { asPacienteId, type ExpedienteDto, type InstitutionId } from '@genki/sha
 import type { FichaCompleta } from '@genki/shared/full/patient';
 import type { ALERGIA, ANTECEDENTE } from '@genki/shared/full/record';
 import { ClinicalError } from '../../../domain/clinical-error.js';
+import { OPEN_CONSULTATION_BLOCKS_ARCHIVE } from '../../../domain/full/clinical-maintenance.js';
 import type { ClockPort } from '../../../ports/clock.js';
 import type { PacienteRepositoryPort } from '../../../ports/paciente-repository.js';
 import type { UnitOfWorkPort } from '../../../ports/unit-of-work.js';
@@ -223,7 +224,7 @@ export function createPostgresRecordRepository(deps: {
           [expediente.id_expediente],
         );
         if (Number(open.rows[0]?.n ?? 0) > 0) {
-          throw new ClinicalError('conflict', CONFLICT);
+          throw new ClinicalError('consulta_abierta', OPEN_CONSULTATION_BLOCKS_ARCHIVE);
         }
         return deps.pacientes.archiveExpediente({
           id_expediente: expediente.id_expediente,

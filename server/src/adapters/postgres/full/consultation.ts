@@ -21,6 +21,7 @@ import type {
 } from '../../../ports/full/consultation.js';
 import { fromPgNumeric, fromPgTimestamptz, toPgTimestamptz } from '../mapper.js';
 import { postgresQuery } from '../unit-of-work.js';
+import { createPostgresClinicalMaintenance } from './clinical-maintenance.js';
 
 const NOT_FOUND = 'Recurso no encontrado';
 const ARCHIVED = 'Expediente archivado';
@@ -224,5 +225,6 @@ export function createPostgresConsultationRepository(deps: {
     op31: unsupported,
     op32: unsupported,
     op33: unsupported,
+    ...createPostgresClinicalMaintenance({ id_institucion: deps.id_institucion }),
   };
 }

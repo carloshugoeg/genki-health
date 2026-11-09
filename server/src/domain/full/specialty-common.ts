@@ -1,6 +1,9 @@
 import { ClinicalError } from '../clinical-error.js';
 
-export function assertPositiveId(value: unknown, code: 'invalid_query' | 'invalid_body' = 'invalid_query'): number {
+export function assertPositiveId(
+  value: unknown,
+  code: 'invalid_query' | 'invalid_body' = 'invalid_query',
+): number {
   if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 2_147_483_647) {
     throw new ClinicalError(code, 'Solicitud inválida');
   }

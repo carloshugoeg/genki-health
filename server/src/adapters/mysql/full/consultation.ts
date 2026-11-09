@@ -20,6 +20,7 @@ import type {
   Op27Response,
 } from '../../../ports/full/consultation.js';
 import { fromMysqlDatetime, fromMysqlDecimal, toMysqlDatetime } from '../mapper.js';
+import { createMysqlClinicalMaintenance } from './clinical-maintenance.js';
 import { mysqlQueryResult } from './query.js';
 
 const NOT_FOUND = 'Recurso no encontrado';
@@ -209,5 +210,6 @@ export function createMysqlConsultationRepository(deps: {
     op31: unsupported,
     op32: unsupported,
     op33: unsupported,
+    ...createMysqlClinicalMaintenance({ id_institucion: deps.id_institucion }),
   };
 }

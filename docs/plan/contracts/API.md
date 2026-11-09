@@ -127,7 +127,7 @@ All API success/error bodies JSON except 204; health unauthenticated. A fastify 
 |---|---|---|---|
 |GET /health|none|200 `{ok:true,phase:'e2-mvp'}`|503 store_unavailable when real-mode startup checks fail (normally startup exits instead)|
 |GET /api/auth/institutions|none|200 `{institutions:[{kind,nombre,motor}]}` with four existing spellings|500 internal_error|
-|POST /api/auth/login|LoginRequestDto/loginSchema|200 AuthTokensDto|400 invalid_body/password_policy;401 invalid_credentials;500 misconfigured;503 store_unavailable|
+|POST /api/auth/login|LoginRequestDto/loginSchema|200 AuthTokensDto|400 invalid_body;401 invalid_credentials (also for any wrong password, policy not revealed);500 misconfigured;503 store_unavailable|
 |POST /api/auth/refresh|refreshSchema|200 AuthTokensDto|400 invalid_body;401 invalid_token;500 misconfigured;503 store_unavailable|
 |POST /api/auth/logout|refreshSchema (signature required, no access bearer needed)|204 empty; idempotent for a valid, previously revoked signed refresh|400 invalid_body;401 invalid_token (bad/expired JWT);503 store_unavailable|
 |GET /api/auth/me|Bearer|200 AuthPrincipalDto|401 missing_bearer/invalid_token;503 store_unavailable|

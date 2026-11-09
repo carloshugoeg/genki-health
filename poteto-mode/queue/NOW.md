@@ -1,5 +1,7 @@
 # Now
 
+**Handoff fixes lane** on `local/genki-ui-dashboard` (to land on `cursor/genki-ui-dashboard`, no queue claim). It carries the handoff items in `docs/HANDOFF-JORDIN.md` §8: P0 1–5, P1 6–11 and 13, P2 15–17, doc items 19–21, and a UI/UX pass. Items 12, 14 and 18 wait on Carlos. The protocol changes listed in §8 need review by both owners before merging to `main`.
+
 **Hot lane** on `cursor/genki-ui-dashboard` (not a numbered E2 ticket, no queue claim). Patients and professionals show as name plus id, institution screens use a sidepanel and a home dashboard, and `npm run db:setup:all` is safe to run again. Do not start the next numbered ticket from this note.
 
 **Integration lane** on `cursor/genki-integration` (draft PR base `cursor/genki-fixes-1` @ 321b1e8): merge Codex lane A (caja OP61–77) + lane B (agenda OP20–25) with merge commits; GRANTs; assertRoles for A/B; `npm run db:setup:all`.

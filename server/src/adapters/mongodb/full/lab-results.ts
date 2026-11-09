@@ -27,9 +27,7 @@ const NOT_FOUND = 'Recurso no encontrado';
 const CONFLICT = 'Conflicto de recurso';
 
 function sessionOpts():
-  | Pick<FindOptions, 'session'>
-  | Pick<InsertOneOptions, 'session'>
-  | Record<string, never> {
+  Pick<FindOptions, 'session'> | Pick<InsertOneOptions, 'session'> | Record<string, never> {
   const session = activeMongoSession();
   return session ? { session } : {};
 }

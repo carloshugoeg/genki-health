@@ -13,6 +13,7 @@ import type { FichaCompleta } from '@genki/shared/full/patient';
 import type { ALERGIA, ANTECEDENTE } from '@genki/shared/full/record';
 import type { Db, Document, FindOptions, InsertOneOptions } from 'mongodb';
 import { ClinicalError } from '../../../domain/clinical-error.js';
+import { OPEN_CONSULTATION_BLOCKS_ARCHIVE } from '../../../domain/full/clinical-maintenance.js';
 import type { ClockPort } from '../../../ports/clock.js';
 import type { IdPort } from '../../../ports/id.js';
 import type { PacienteRepositoryPort } from '../../../ports/paciente-repository.js';
@@ -20,6 +21,7 @@ import type { UnitOfWorkPort } from '../../../ports/unit-of-work.js';
 import type { AttachmentsRepositoryPort } from '../../../ports/full/attachments.js';
 import type { ConsultationRepositoryPort } from '../../../ports/full/consultation.js';
 import type { RecordRepositoryPort } from '../../../ports/full/record.js';
+import { createMongoClinicalMaintenance } from './clinical-maintenance.js';
 import { makeDocumentId, toBsonDate, toBsonInt } from '../mapper.js';
 import { activeMongoSession } from '../unit-of-work.js';
 
@@ -207,7 +209,7 @@ export function createMongoLane1Repositories(deps: {
           },
           sessionOpts(),
         );
-        if (open) throw new ClinicalError('conflict', CONFLICT);
+        if (open) throw new ClinicalError('consulta_abierta', OPEN_CONSULTATION_BLOCKS_ARCHIVE);
         return deps.pacientes.archiveExpediente({
           id_expediente: expediente.id_expediente,
           motivo_archivo: input.body.motivo_archivo,
@@ -431,6 +433,11 @@ export function createMongoLane1Repositories(deps: {
     op31: unsupported,
     op32: unsupported,
     op33: unsupported,
+    ...createMongoClinicalMaintenance({
+      db: deps.db,
+      id_institucion: deps.id_institucion,
+      ids: deps.ids,
+    }),
   };
 
   return { record, attachments, consultation };

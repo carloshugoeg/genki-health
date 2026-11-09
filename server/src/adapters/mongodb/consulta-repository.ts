@@ -65,7 +65,7 @@ function bsonCantidad(value: number): number {
   return value;
 }
 
-function diagnosticoToBson(dx: DiagnosticoDto): Document {
+export function diagnosticoToBson(dx: DiagnosticoDto): Document {
   return {
     id_diagnostico: toBsonInt(dx.id_diagnostico),
     id_consulta: toBsonInt(dx.id_consulta),
@@ -77,7 +77,7 @@ function diagnosticoToBson(dx: DiagnosticoDto): Document {
   };
 }
 
-function tratamientoToBson(tx: TratamientoDto): Document {
+export function tratamientoToBson(tx: TratamientoDto): Document {
   return {
     id_tratamiento: toBsonInt(tx.id_tratamiento),
     id_diagnostico: toBsonInt(tx.id_diagnostico),
@@ -90,7 +90,7 @@ function tratamientoToBson(tx: TratamientoDto): Document {
   };
 }
 
-function recetaToBson(receta: RecetaDto): Document {
+export function recetaToBson(receta: RecetaDto): Document {
   return {
     id_receta: toBsonInt(receta.id_receta),
     id_consulta: toBsonInt(receta.id_consulta),
@@ -102,7 +102,7 @@ function recetaToBson(receta: RecetaDto): Document {
   };
 }
 
-function detalleToBson(detalle: DetalleRecetaDto): Document {
+export function detalleToBson(detalle: DetalleRecetaDto): Document {
   return {
     id_receta: toBsonInt(detalle.id_receta),
     id_medicamento: toBsonInt(detalle.id_medicamento),
@@ -115,7 +115,7 @@ function detalleToBson(detalle: DetalleRecetaDto): Document {
   };
 }
 
-function diagnosticoFromDoc(doc: Document): DiagnosticoDto {
+export function diagnosticoFromDoc(doc: Document): DiagnosticoDto {
   return {
     id_diagnostico: asDiagnosticoId(asPlainInt(doc.id_diagnostico)),
     id_consulta: asConsultaId(asPlainInt(doc.id_consulta)),
@@ -127,7 +127,7 @@ function diagnosticoFromDoc(doc: Document): DiagnosticoDto {
   };
 }
 
-function tratamientoFromDoc(doc: Document): TratamientoDto {
+export function tratamientoFromDoc(doc: Document): TratamientoDto {
   return {
     id_tratamiento: asTratamientoId(asPlainInt(doc.id_tratamiento)),
     id_diagnostico: asDiagnosticoId(asPlainInt(doc.id_diagnostico)),
@@ -140,7 +140,7 @@ function tratamientoFromDoc(doc: Document): TratamientoDto {
   };
 }
 
-function recetaFromDoc(doc: Document): RecetaDto {
+export function recetaFromDoc(doc: Document): RecetaDto {
   return {
     id_receta: asRecetaId(asPlainInt(doc.id_receta)),
     id_consulta: asConsultaId(asPlainInt(doc.id_consulta)),
@@ -165,7 +165,7 @@ function detalleFromDoc(doc: Document): DetalleRecetaDto {
   };
 }
 
-function consultaFromDoc(doc: Document): ConsultaDto {
+export function consultaFromDoc(doc: Document): ConsultaDto {
   return {
     id_consulta: asConsultaId(asPlainInt(doc.id_consulta)),
     id_expediente: asPlainInt(doc.id_expediente) as ExpedienteId,
@@ -182,7 +182,7 @@ function consultaFromDoc(doc: Document): ConsultaDto {
   };
 }
 
-function assembleCompleta(doc: Document): ConsultaCompleta {
+export function assembleCompleta(doc: Document): ConsultaCompleta {
   const diagnosticos = (Array.isArray(doc.diagnosticos) ? doc.diagnosticos : [])
     .map((row) => diagnosticoFromDoc(row as Document))
     .sort((a, b) => a.id_diagnostico - b.id_diagnostico);
@@ -355,7 +355,7 @@ export class MongoConsultaRepository implements ConsultaRepositoryPort {
         }));
       }
 
-      // Single insert keeps C5.3 consultas find/insert-only (no UPDATE privilege).
+      // Closing a complete consultation is one insert; later maintenance (cierre/anulación) updates in place.
       // afterDiagnostico still runs after a real write so failNext rolls back the txn.
       if (diagnosticos.length === 0) {
         throw new ClinicalError('invalid_bundle', 'Se requiere al menos un diagnóstico');

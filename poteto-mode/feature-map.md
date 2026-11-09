@@ -15,6 +15,10 @@ Rows that share a ticket share a status. Owner is `Carlos/Cursor`, `Jordin/Claud
 
 ## Rollup
 
+- **Handoff fixes (`now`):** on `local/genki-ui-dashboard`.
+  - HTTP 4xx mapping, attachments upload, MySQL growth and vaccines, CIE-10 catalog, the dental demo user, open-consultation close and edit/annul with bitácora in all four engines, user-based `id_profesional`, real ids in the specialty UI, role-gated patient page, idempotent `db:setup:all`, and a UI/UX redesign.
+  - Waiting on Carlos: items 12 (administrador clinical writes), 14 (access-token denylist) and 18 (professor feedback).
+
 - **Lane A+B integration:** caja/agenda modules merged on `cursor/genki-integration` from `cursor/genki-fixes-1`; assertRoles + GRANTs + `db:setup:all`; HTTP `/api/agenda` and `/api/tarifario` mounted for superadmin checks.
 
 - **Lane 2 specialties:** hospitalización (PG OP34–36/38), pediatría (MySQL OP40–47), laboratorio (Mongo OP48–54), odontología (Firestore OP55–58) implemented on `cursor/genki-lane-2-specialties`. OP37 and FS-19 deferred. WHO percentiles not fabricated.

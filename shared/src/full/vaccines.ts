@@ -6,7 +6,12 @@ export type { VACUNA, DOSIS_VACUNA, VACUNA_INTERVALO } from './schema.js';
 
 import type { DOSIS_VACUNA, Page } from './schema.js';
 
-export type DosisSchedule = DOSIS_VACUNA & { atrasada: boolean; version_esquema: string };
+export type DosisSchedule = DOSIS_VACUNA & {
+  atrasada: boolean;
+  version_esquema: string;
+  /** VACUNA.nombre of `id_vacuna`, when the engine joins the catalog. */
+  nombre_vacuna?: string;
+};
 export type DosisPendiente = DosisSchedule & {
   id_paciente: number;
   nombre: string;

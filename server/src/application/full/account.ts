@@ -6,11 +6,7 @@ import {
   parseOp04Params,
 } from '../../domain/full/account.js';
 import type { OperationContext } from '../../ports/full/context.js';
-import type {
-  AccountRepositoryPort,
-  Op03Request,
-  Op04Request,
-} from '../../ports/full/account.js';
+import type { AccountRepositoryPort, Op03Request, Op04Request } from '../../ports/full/account.js';
 
 function rethrow(err: unknown): never {
   if (err instanceof ClinicalError) throw err;
@@ -39,7 +35,10 @@ export async function executeOp04(
   assertAccountAdminRole(actor.roles);
   const id = parseOp04Params(input.params);
   try {
-    return await account.op04({ params: { id }, query: {}, body: {} }, { ...actor, now: actor.now });
+    return await account.op04(
+      { params: { id }, query: {}, body: {} },
+      { ...actor, now: actor.now },
+    );
   } catch (err) {
     rethrow(err);
   }

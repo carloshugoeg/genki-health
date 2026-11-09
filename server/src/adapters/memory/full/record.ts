@@ -3,6 +3,7 @@ import { asPacienteId, type ExpedienteDto } from '@genki/shared';
 import type { FichaCompleta } from '@genki/shared/full/patient';
 import type { ALERGIA, ANTECEDENTE } from '@genki/shared/full/record';
 import { ClinicalError } from '../../../domain/clinical-error.js';
+import { OPEN_CONSULTATION_BLOCKS_ARCHIVE } from '../../../domain/full/clinical-maintenance.js';
 import type { ClockPort } from '../../../ports/clock.js';
 import type { IdPort } from '../../../ports/id.js';
 import type { PacienteRepositoryPort } from '../../../ports/paciente-repository.js';
@@ -311,7 +312,7 @@ export function createMemoryRecordRepository(deps: MemoryRecordDeps): RecordRepo
           throw new ClinicalError('already_archived', ALREADY_ARCHIVED);
         }
         if (hasOpenConsulta(deps.state, expediente.id_expediente)) {
-          throw new ClinicalError('conflict', CONFLICT);
+          throw new ClinicalError('consulta_abierta', OPEN_CONSULTATION_BLOCKS_ARCHIVE);
         }
         if (hasActiveAdmission(deps.state, expediente.id_expediente)) {
           throw new ClinicalError('conflict', CONFLICT);

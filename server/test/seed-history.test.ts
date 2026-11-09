@@ -19,8 +19,9 @@ it('creates the seed consult when none of the rows match the seed stamp', () => 
   expect(seedHistoryPlan(103, [openRow], FAKE_BANNER, SEED_TIME)).toBe('create');
 });
 
-it('requires patient 102 to have no history', () => {
+it('never seeds history for patient 102 and preserves app-recorded consultations', () => {
   expect(seedHistoryPlan(102, [], FAKE_BANNER, SEED_TIME)).toBe('keep');
-  expect(seedHistoryPlan(102, [openRow], FAKE_BANNER, SEED_TIME)).toBe('reject');
+  expect(seedHistoryPlan(102, [openRow], FAKE_BANNER, SEED_TIME)).toBe('keep');
   expect(seedHistoryPlan(102, [seedRow], FAKE_BANNER, SEED_TIME)).toBe('reject');
+  expect(seedHistoryPlan(102, [openRow, seedRow], FAKE_BANNER, SEED_TIME)).toBe('reject');
 });

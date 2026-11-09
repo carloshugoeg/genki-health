@@ -9,8 +9,12 @@ export function assertMilestoneRole(roles: readonly string[]): void {
 
 export function parseHitoBody(body: unknown) {
   if (!isPlainObject(body)) throw new ClinicalError('invalid_body', 'Solicitud inválida');
-  if (typeof body.alcanzado !== 'boolean') throw new ClinicalError('invalid_body', 'Solicitud inválida');
-  if (typeof body.fecha_evaluacion !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(body.fecha_evaluacion)) {
+  if (typeof body.alcanzado !== 'boolean')
+    throw new ClinicalError('invalid_body', 'Solicitud inválida');
+  if (
+    typeof body.fecha_evaluacion !== 'string' ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(body.fecha_evaluacion)
+  ) {
     throw new ClinicalError('invalid_body', 'Solicitud inválida');
   }
   const out: { alcanzado: boolean; fecha_evaluacion: string; observacion?: string | null } = {

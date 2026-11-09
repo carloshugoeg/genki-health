@@ -33,7 +33,15 @@ export class FirebaseCatalogoRepository implements CatalogoRepositoryPort {
           nombre_generico: text(row.nombre_generico),
         }))
         .sort((a, b) => a.id_medicamento - b.id_medicamento);
-      return { municipios, profesionales, medicamentos };
+      const cie10 = (await this.unitOfWork.query('cie10'))
+        .map((row) => ({
+          codigo_cie10: text(row.codigo_cie10),
+          descripcion: text(row.descripcion),
+        }))
+        .sort((a, b) =>
+          a.codigo_cie10 < b.codigo_cie10 ? -1 : a.codigo_cie10 > b.codigo_cie10 ? 1 : 0,
+        );
+      return { municipios, profesionales, medicamentos, cie10 };
     });
   }
 }

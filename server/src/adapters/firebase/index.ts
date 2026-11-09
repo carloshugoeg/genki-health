@@ -10,10 +10,7 @@ import { createFirebaseDentalSessionRepository } from './full/dental-session.js'
 import { FirebaseAgendaRepository } from './full/agenda.js';
 import { FirebaseEconomicStore } from './full/charges.js';
 import { createFirebaseLane1Repositories } from './full/lane1.js';
-import {
-  clinicalEconomicReferences,
-  laneABModulesFrom,
-} from '../../config/lane-ab-modules.js';
+import { clinicalEconomicReferences, laneABModulesFrom } from '../../config/lane-ab-modules.js';
 import { FirebasePacienteRepository } from './paciente-repository.js';
 import { FirebaseConsultaRepository } from './consulta-repository.js';
 

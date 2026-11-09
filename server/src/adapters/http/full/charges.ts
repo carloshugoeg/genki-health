@@ -55,17 +55,19 @@ export function registerEconomicRoute<T>(
         const parsed = schema.safeParse(method === 'get' ? request.query : request.body);
         if (!parsed.success)
           return reply.code(400).send({
-            error: method === 'get' ? 'invalid_query' : 'conflict',
+            error: method === 'get' ? 'invalid_query' : 'invalid_body',
             message: 'Solicitud inválida',
           });
         const params = z
           .object({ id: z.coerce.number().int().positive().optional() })
           .safeParse(request.params);
         if (!params.success || (url.includes(':id') && !params.data.id))
-          return reply.code(400).send({ error: 'invalid_query', message: 'Identificador inválido' });
+          return reply
+            .code(400)
+            .send({ error: 'invalid_query', message: 'Identificador inválido' });
         const header = request.headers['idempotency-key'];
         if (header !== undefined && (typeof header !== 'string' || header.length > 200))
-          return reply.code(400).send({ error: 'conflict', message: 'Clave inválida' });
+          return reply.code(400).send({ error: 'invalid_body', message: 'Clave inválida' });
         const result = await invoke(
           { params: { id: params.data.id ?? 0 }, query: parsed.data, body: parsed.data },
           { ...ctx, ...(header ? { idempotency_key: header } : {}) },

@@ -29,6 +29,14 @@ GRANT SELECT, INSERT ON `__DATABASE__`.`signos_vitales` TO `genki_app`;
 GRANT SELECT, INSERT ON `__DATABASE__`.`consulta_borrador` TO `genki_app`;
 GRANT SELECT, INSERT ON `__DATABASE__`.`medicion_antropometrica` TO `genki_app`;
 GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`expediente` TO `genki_app`;
+-- Mantenimiento de historiales: clinical rows stay append-only except status/annotation columns
+-- (OP-31 close, corrections and annulments are status changes audited in BITACORA, never DELETE).
+GRANT UPDATE (estado, fecha_hora_fin, enfermedad_actual, exploracion_fisica, plan) ON `__DATABASE__`.`consulta` TO `genki_app`;
+GRANT UPDATE (tipo, descripcion) ON `__DATABASE__`.`diagnostico` TO `genki_app`;
+GRANT UPDATE (estado, indicaciones, fecha_fin_estimada) ON `__DATABASE__`.`tratamiento` TO `genki_app`;
+GRANT UPDATE (estado, observaciones) ON `__DATABASE__`.`receta` TO `genki_app`;
+-- BITACORA is created by the full-05-01 module migration (optional on the first bootstrap).
+GRANT SELECT, INSERT ON `__DATABASE__`.`bitacora` TO `genki_app`;
 GRANT SELECT, INSERT ON `__DATABASE__`.`reactivacion_audit` TO `genki_app`;
 GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`id_counter` TO `genki_app`;
 GRANT SELECT, INSERT, UPDATE ON `__DATABASE__`.`antecedente_perinatal` TO `genki_app`;

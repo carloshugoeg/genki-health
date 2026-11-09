@@ -15,7 +15,7 @@ export class MongoCatalogoRepository implements CatalogoRepositoryPort {
     const opts = session ? { session } : {};
     const filter = { institution_id: toBsonInt(this.institutionId) };
 
-    const [municipioDocs, profesionalDocs, medicamentoDocs] = await Promise.all([
+    const [municipioDocs, profesionalDocs, medicamentoDocs, cie10Docs] = await Promise.all([
       this.db.collection('municipios').find(filter, opts).sort({ id_municipio: 1 }).toArray(),
       this.db
         .collection('profesionales')
@@ -27,6 +27,7 @@ export class MongoCatalogoRepository implements CatalogoRepositoryPort {
         .find({ ...filter, activo: true }, opts)
         .sort({ id_medicamento: 1 })
         .toArray(),
+      this.db.collection('catalogo_cie10').find(filter, opts).sort({ codigo_cie10: 1 }).toArray(),
     ]);
 
     return {
@@ -42,6 +43,10 @@ export class MongoCatalogoRepository implements CatalogoRepositoryPort {
       medicamentos: medicamentoDocs.map((row) => ({
         id_medicamento: asPlainInt(row.id_medicamento),
         nombre_generico: String(row.nombre_generico),
+      })),
+      cie10: cie10Docs.map((row) => ({
+        codigo_cie10: String(row.codigo_cie10),
+        descripcion: String(row.descripcion),
       })),
     };
   }

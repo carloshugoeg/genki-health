@@ -43,7 +43,9 @@ export function parseOp35Body(body: unknown): {
   };
   if ('id_consulta_origen' in body) {
     out.id_consulta_origen =
-      body.id_consulta_origen === null ? null : assertPositiveId(body.id_consulta_origen, 'invalid_body');
+      body.id_consulta_origen === null
+        ? null
+        : assertPositiveId(body.id_consulta_origen, 'invalid_body');
   }
   return out;
 }

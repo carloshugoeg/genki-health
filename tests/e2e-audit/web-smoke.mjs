@@ -11,9 +11,28 @@ mkdirSync(OUT, { recursive: true });
 const WEB = process.env.GENKI_WEB ?? 'http://localhost:5173';
 const PASS = process.env.GENKI_PASS ?? 'admin123!';
 const INST = [
-  [1, 'hospital_general'], [2, 'centro_pediatrico'], [3, 'laboratorio_clinico'], [4, 'clinica_odontologica'],
+  [1, 'hospital_general'],
+  [2, 'centro_pediatrico'],
+  [3, 'laboratorio_clinico'],
+  [4, 'clinica_odontologica'],
 ];
-const PAGES = ['/inicio', '/pacientes', '/pacientes/nuevo', '/pacientes/101', '/agenda', '/economia', '/inventario', '/honorarios', '/facturacion', '/caja', '/personal', '/procedimientos', '/sesiones-dentales', '/cuenta', '/usuarios'];
+const PAGES = [
+  '/inicio',
+  '/pacientes',
+  '/pacientes/nuevo',
+  '/pacientes/101',
+  '/agenda',
+  '/economia',
+  '/inventario',
+  '/honorarios',
+  '/facturacion',
+  '/caja',
+  '/personal',
+  '/procedimientos',
+  '/sesiones-dentales',
+  '/cuenta',
+  '/usuarios',
+];
 const report = [];
 const browser = await chromium.launch();
 for (const [n, kind] of INST) {
@@ -21,15 +40,30 @@ for (const [n, kind] of INST) {
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
     const issues = [];
-    page.on('console', (m) => { if (m.type() === 'error') issues.push({ type: 'console', text: m.text().slice(0, 200), url: page.url() }); });
-    page.on('pageerror', (e) => issues.push({ type: 'pageerror', text: String(e).slice(0, 200), url: page.url() }));
-    page.on('response', (r) => { if (r.url().includes('/api/') && r.status() >= 400 && ![401, 403].includes(r.status())) issues.push({ type: 'http', status: r.status(), url: r.url().replace(WEB, ''), at: page.url() }); });
+    page.on('console', (m) => {
+      if (m.type() === 'error')
+        issues.push({ type: 'console', text: m.text().slice(0, 200), url: page.url() });
+    });
+    page.on('pageerror', (e) =>
+      issues.push({ type: 'pageerror', text: String(e).slice(0, 200), url: page.url() }),
+    );
+    page.on('response', (r) => {
+      if (r.url().includes('/api/') && r.status() >= 400 && ![401, 403].includes(r.status()))
+        issues.push({
+          type: 'http',
+          status: r.status(),
+          url: r.url().replace(WEB, ''),
+          at: page.url(),
+        });
+    });
     await page.goto(`${WEB}/login`);
     await page.fill('input[name=email]', `demo-${n}-${role}@example.invalid`);
     await page.fill('input[name=password]', PASS);
     await page.selectOption('[data-testid=login-institution]', kind);
     await page.click('[data-testid=login-submit]');
-    await page.waitForURL(/\/(inicio|panel)/, { timeout: 15000 }).catch(() => issues.push({ type: 'login', text: 'no redirigió tras login' }));
+    await page
+      .waitForURL(/\/(inicio|panel)/, { timeout: 15000 })
+      .catch(() => issues.push({ type: 'login', text: 'no redirigió tras login' }));
     const banner = (await page.content()).includes('persistencia depende del servidor');
     for (const p of PAGES) {
       await page.goto(`${WEB}${p}`);

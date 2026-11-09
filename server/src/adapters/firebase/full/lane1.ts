@@ -12,6 +12,7 @@ import type { ConsultaDraft, SIGNOS_VITALES } from '@genki/shared/full/consultat
 import type { FichaCompleta } from '@genki/shared/full/patient';
 import type { ALERGIA, ANTECEDENTE } from '@genki/shared/full/record';
 import { ClinicalError } from '../../../domain/clinical-error.js';
+import { OPEN_CONSULTATION_BLOCKS_ARCHIVE } from '../../../domain/full/clinical-maintenance.js';
 import type { ClockPort } from '../../../ports/clock.js';
 import type { IdPort } from '../../../ports/id.js';
 import type { PacienteRepositoryPort } from '../../../ports/paciente-repository.js';
@@ -19,6 +20,7 @@ import type { AttachmentsRepositoryPort } from '../../../ports/full/attachments.
 import type { ConsultationRepositoryPort } from '../../../ports/full/consultation.js';
 import type { RecordRepositoryPort } from '../../../ports/full/record.js';
 import type { FirebaseUnitOfWork } from '../unit-of-work.js';
+import { createFirebaseClinicalMaintenance } from './clinical-maintenance.js';
 
 const NOT_FOUND = 'Recurso no encontrado';
 const ARCHIVED = 'Expediente archivado';
@@ -174,7 +176,8 @@ export function createFirebaseLane1Repositories(deps: {
           'consultations',
           (row) => row.id_expediente === expediente.id_expediente && row.estado === 'abierta',
         );
-        if (open.length > 0) throw new ClinicalError('conflict', CONFLICT);
+        if (open.length > 0)
+          throw new ClinicalError('consulta_abierta', OPEN_CONSULTATION_BLOCKS_ARCHIVE);
         return deps.pacientes.archiveExpediente({
           id_expediente: expediente.id_expediente,
           motivo_archivo: input.body.motivo_archivo,
@@ -337,6 +340,11 @@ export function createFirebaseLane1Repositories(deps: {
     op31: unsupported,
     op32: unsupported,
     op33: unsupported,
+    ...createFirebaseClinicalMaintenance({
+      unitOfWork: uow,
+      ids: deps.ids,
+      id_institucion: deps.id_institucion,
+    }),
   };
 
   return { record, attachments, consultation };

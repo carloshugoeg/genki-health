@@ -112,7 +112,107 @@ const medications = (): Row[] =>
     nombre_generico: `Medicamento didáctico ${['A', 'B', 'Inactivo'][id - 1]}`,
     activo: id !== 3,
   }));
-const cie10 = { codigo_cie10: 'Z00.0', descripcion: 'Examen médico general' };
+/**
+ * CIE-10 (OPS/OMS, español) didactic subset for the four institutions' CATALOGO_CIE10.
+ * Z00.0 is the original fixture and must stay byte-identical (seed conflict check).
+ */
+export const CIE10_CATALOG: ReadonlyArray<{ codigo_cie10: string; descripcion: string }> = [
+  { codigo_cie10: 'Z00.0', descripcion: 'Examen médico general' },
+  { codigo_cie10: 'A09', descripcion: 'Diarrea y gastroenteritis de presunto origen infeccioso' },
+  { codigo_cie10: 'B34.9', descripcion: 'Infección viral, no especificada' },
+  { codigo_cie10: 'B86', descripcion: 'Escabiosis' },
+  {
+    codigo_cie10: 'D50.9',
+    descripcion: 'Anemia por deficiencia de hierro sin otra especificación',
+  },
+  {
+    codigo_cie10: 'E10.9',
+    descripcion: 'Diabetes mellitus insulinodependiente, sin mención de complicación',
+  },
+  {
+    codigo_cie10: 'E11.9',
+    descripcion: 'Diabetes mellitus no insulinodependiente, sin mención de complicación',
+  },
+  { codigo_cie10: 'E44.0', descripcion: 'Desnutrición proteicocalórica moderada' },
+  { codigo_cie10: 'E66.9', descripcion: 'Obesidad, no especificada' },
+  { codigo_cie10: 'E78.5', descripcion: 'Hiperlipidemia, no especificada' },
+  { codigo_cie10: 'E86', descripcion: 'Depleción del volumen' },
+  { codigo_cie10: 'F32.9', descripcion: 'Episodio depresivo, no especificado' },
+  { codigo_cie10: 'F41.1', descripcion: 'Trastorno de ansiedad generalizada' },
+  { codigo_cie10: 'G43.9', descripcion: 'Migraña, no especificada' },
+  { codigo_cie10: 'G44.2', descripcion: 'Cefalea debida a tensión' },
+  { codigo_cie10: 'H10.9', descripcion: 'Conjuntivitis, no especificada' },
+  { codigo_cie10: 'H66.9', descripcion: 'Otitis media, no especificada' },
+  { codigo_cie10: 'I10', descripcion: 'Hipertensión esencial (primaria)' },
+  { codigo_cie10: 'I20.9', descripcion: 'Angina de pecho, no especificada' },
+  { codigo_cie10: 'I50.9', descripcion: 'Insuficiencia cardíaca, no especificada' },
+  { codigo_cie10: 'J00', descripcion: 'Rinofaringitis aguda (resfriado común)' },
+  { codigo_cie10: 'J02.9', descripcion: 'Faringitis aguda, no especificada' },
+  { codigo_cie10: 'J03.9', descripcion: 'Amigdalitis aguda, no especificada' },
+  {
+    codigo_cie10: 'J06.9',
+    descripcion: 'Infección aguda de las vías respiratorias superiores, no especificada',
+  },
+  {
+    codigo_cie10: 'J11.1',
+    descripcion: 'Influenza con otras manifestaciones respiratorias, virus no identificado',
+  },
+  { codigo_cie10: 'J18.9', descripcion: 'Neumonía, no especificada' },
+  { codigo_cie10: 'J20.9', descripcion: 'Bronquitis aguda, no especificada' },
+  { codigo_cie10: 'J21.9', descripcion: 'Bronquiolitis aguda, no especificada' },
+  { codigo_cie10: 'J45.9', descripcion: 'Asma, no especificada' },
+  { codigo_cie10: 'K00.6', descripcion: 'Alteraciones en la erupción dentaria' },
+  { codigo_cie10: 'K02.1', descripcion: 'Caries de la dentina' },
+  { codigo_cie10: 'K02.9', descripcion: 'Caries dental, no especificada' },
+  { codigo_cie10: 'K04.0', descripcion: 'Pulpitis' },
+  { codigo_cie10: 'K04.7', descripcion: 'Absceso periapical sin fístula' },
+  { codigo_cie10: 'K05.0', descripcion: 'Gingivitis aguda' },
+  { codigo_cie10: 'K05.1', descripcion: 'Gingivitis crónica' },
+  { codigo_cie10: 'K05.3', descripcion: 'Periodontitis crónica' },
+  {
+    codigo_cie10: 'K08.1',
+    descripcion: 'Pérdida de dientes debida a accidente, extracción o enfermedad periodontal local',
+  },
+  { codigo_cie10: 'K29.7', descripcion: 'Gastritis, no especificada' },
+  { codigo_cie10: 'K30', descripcion: 'Dispepsia' },
+  { codigo_cie10: 'K59.0', descripcion: 'Constipación' },
+  { codigo_cie10: 'L20.9', descripcion: 'Dermatitis atópica, no especificada' },
+  { codigo_cie10: 'L22', descripcion: 'Dermatitis del pañal' },
+  { codigo_cie10: 'L30.9', descripcion: 'Dermatitis, no especificada' },
+  { codigo_cie10: 'N39.0', descripcion: 'Infección de vías urinarias, sitio no especificado' },
+  { codigo_cie10: 'R05', descripcion: 'Tos' },
+  { codigo_cie10: 'R10.4', descripcion: 'Otros dolores abdominales y los no especificados' },
+  { codigo_cie10: 'R11', descripcion: 'Náusea y vómito' },
+  { codigo_cie10: 'R50.9', descripcion: 'Fiebre, no especificada' },
+  { codigo_cie10: 'R51', descripcion: 'Cefalea' },
+  { codigo_cie10: 'R53', descripcion: 'Malestar y fatiga' },
+  { codigo_cie10: 'R73.9', descripcion: 'Hiperglicemia, no especificada' },
+  { codigo_cie10: 'S02.5', descripcion: 'Fractura de los dientes' },
+  { codigo_cie10: 'Z00.1', descripcion: 'Control de salud de rutina del niño' },
+  { codigo_cie10: 'Z01.2', descripcion: 'Examen odontológico' },
+  { codigo_cie10: 'Z34.9', descripcion: 'Supervisión de embarazo normal no especificado' },
+];
+/** CIE-10 chapter (roman numeral) by code range; SQL engines only (Mongo/Firestore layouts omit it). */
+export function cie10Capitulo(codigo: string): string | null {
+  if (codigo === 'Z00.0') return null; // original fixture row predates the chapter column fill
+  const letter = codigo[0]!;
+  const num = Number(codigo.slice(1, 3));
+  if (letter === 'A' || letter === 'B') return 'I';
+  if (letter === 'D' && num >= 50) return 'III';
+  if (letter === 'E') return 'IV';
+  if (letter === 'F') return 'V';
+  if (letter === 'G') return 'VI';
+  if (letter === 'H') return num < 60 ? 'VII' : 'VIII';
+  if (letter === 'I') return 'IX';
+  if (letter === 'J') return 'X';
+  if (letter === 'K') return 'XI';
+  if (letter === 'L') return 'XII';
+  if (letter === 'N') return 'XIV';
+  if (letter === 'R') return 'XVIII';
+  if (letter === 'S') return 'XIX';
+  if (letter === 'Z') return 'XXI';
+  return null;
+}
 
 export function sqlFixtures(institution: 1 | 2): SqlRow[] {
   const rows: SqlRow[] = [];
@@ -167,7 +267,8 @@ export function sqlFixtures(institution: 1 | 2): SqlRow[] {
       presentacion: FAKE_BANNER,
       requiere_receta: true,
     });
-  add('catalogo_cie10', 'codigo_cie10', { ...cie10, capitulo: null });
+  for (const row of CIE10_CATALOG)
+    add('catalogo_cie10', 'codigo_cie10', { ...row, capitulo: cie10Capitulo(row.codigo_cie10) });
   for (const patient of patients(institution)) {
     add('paciente', 'id_paciente', { ...patient });
     add('expediente', 'id_expediente', record(patient.id_paciente), preservedRecord);
@@ -207,7 +308,11 @@ export function documentFixtures(institution: 3 | 4): DocRow[] {
       id: Number(data.id_medicamento),
       data,
     })),
-    { collection: mongo ? 'catalogo_cie10' : 'cie10', id: 'Z00.0', data: cie10 },
+    ...CIE10_CATALOG.map((data) => ({
+      collection: mongo ? 'catalogo_cie10' : 'cie10',
+      id: data.codigo_cie10,
+      data: { ...data },
+    })),
   ];
   for (const patient of patients(institution)) {
     rows.push({
@@ -428,7 +533,7 @@ export async function runSeed(
         page_size: 1,
       });
       report(
-        `institution=${index + 1} engine=${INSTITUTIONS[index]!.engine} patients=${counts.total}${index === 0 ? ' identities=17' : ''}`,
+        `institution=${index + 1} engine=${INSTITUTIONS[index]!.engine} patients=${counts.total}${index === 0 ? ' identities=18' : ''}`,
       );
     }
   } catch (error) {

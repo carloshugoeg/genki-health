@@ -2,7 +2,15 @@ import { ClinicalError } from '../clinical-error.js';
 import { assertPositiveId, assertRoles, isPlainObject } from './specialty-common.js';
 
 export const DENTAL_ROLES = ['odontologo'] as const;
-const ESTADOS = ['sana', 'caries', 'obturada', 'ausente', 'corona', 'implante', 'endodoncia'] as const;
+const ESTADOS = [
+  'sana',
+  'caries',
+  'obturada',
+  'ausente',
+  'corona',
+  'implante',
+  'endodoncia',
+] as const;
 
 export function assertDentalRole(roles: readonly string[]): void {
   assertRoles(roles, DENTAL_ROLES);
@@ -41,6 +49,6 @@ export function parsePiezaPatch(body: unknown) {
 }
 
 export const FDI_TEETH = [
-  11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 41,
-  42, 43, 44, 45, 46, 47, 48,
+  11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38,
+  41, 42, 43, 44, 45, 46, 47, 48,
 ] as const;

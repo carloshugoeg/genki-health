@@ -1,5 +1,10 @@
 import { asPacienteId, type InstitutionId } from '@genki/shared';
-import type { DOSIS_VACUNA, DosisPendiente, DosisSchedule, Page } from '@genki/shared/full/vaccines';
+import type {
+  DOSIS_VACUNA,
+  DosisPendiente,
+  DosisSchedule,
+  Page,
+} from '@genki/shared/full/vaccines';
 import { ClinicalError } from '../../../domain/clinical-error.js';
 import type { ClockPort } from '../../../ports/clock.js';
 import type { PacienteRepositoryPort } from '../../../ports/paciente-repository.js';
@@ -55,10 +60,45 @@ export function createMysqlVaccinesRepository(deps: {
         );
         if (!expediente) throw new ClinicalError('not_found', NOT_FOUND);
         const today = (deps.clock.nowIso() || new Date().toISOString()).slice(0, 10);
+        // OP-43: idempotent scheduled-dose creation from the explicit VACUNA_INTERVALO catalog.
+        // fecha_programada = birth date + catalog age in months; never invented dates.
+        // The expediente row lock serializes concurrent first reads of the same schedule.
+        if (expediente.estado !== 'archivado') {
+          await mysqlQueryResult(
+            `SELECT id_expediente FROM expediente WHERE id_expediente = ? FOR UPDATE`,
+            [expediente.id_expediente],
+          );
+          await mysqlQueryResult(
+            `INSERT INTO dosis_vacuna (
+               id_institucion, id_expediente, id_vacuna, numero_dosis, fecha_programada, estado
+             )
+             SELECT vi.id_institucion, e.id_expediente, vi.id_vacuna, vi.numero_dosis,
+                    DATE_ADD(p.fecha_nacimiento, INTERVAL vi.edad_meses MONTH), 'programada'
+               FROM expediente e
+               JOIN paciente p ON p.id_paciente = e.id_paciente
+               JOIN vacuna_intervalo vi ON vi.id_institucion = p.id_institucion
+               JOIN vacuna v
+                 ON v.id_institucion = vi.id_institucion AND v.id_vacuna = vi.id_vacuna
+              WHERE e.id_expediente = ? AND p.id_institucion = ?
+                AND vi.numero_dosis <= v.dosis_totales
+                AND NOT EXISTS (
+                  SELECT 1 FROM dosis_vacuna d
+                   WHERE d.id_institucion = vi.id_institucion
+                     AND d.id_expediente = e.id_expediente
+                     AND d.id_vacuna = vi.id_vacuna
+                     AND d.numero_dosis = vi.numero_dosis
+                )
+              ORDER BY vi.id_vacuna ASC, vi.numero_dosis ASC`,
+            [expediente.id_expediente, deps.id_institucion],
+          );
+        }
         const result = await mysqlQueryResult<Record<string, unknown>>(
-          `SELECT * FROM dosis_vacuna
-            WHERE id_institucion = ? AND id_expediente = ?
-            ORDER BY id_dosis ASC`,
+          `SELECT d.*, v.nombre AS nombre_vacuna
+             FROM dosis_vacuna d
+             LEFT JOIN vacuna v
+               ON v.id_institucion = d.id_institucion AND v.id_vacuna = d.id_vacuna
+            WHERE d.id_institucion = ? AND d.id_expediente = ?
+            ORDER BY d.fecha_programada ASC, d.id_vacuna ASC, d.numero_dosis ASC`,
           [deps.id_institucion, expediente.id_expediente],
         );
         return result.rows.map((row): DosisSchedule => {
@@ -67,6 +107,7 @@ export function createMysqlVaccinesRepository(deps: {
             ...d,
             atrasada: d.estado === 'programada' && d.fecha_programada < today,
             version_esquema: 'MVP-1',
+            ...(row.nombre_vacuna != null ? { nombre_vacuna: String(row.nombre_vacuna) } : {}),
           };
         });
       });
@@ -131,14 +172,15 @@ export function createMysqlVaccinesRepository(deps: {
         const page = input.query.page ?? 1;
         const page_size = input.query.page_size ?? 20;
         const result = await mysqlQueryResult<Record<string, unknown>>(
-          `SELECT d.*, p.id_paciente,
+          `SELECT d.*, p.id_paciente, v.nombre AS nombre_vacuna,
                   CONCAT(p.primer_nombre, ' ', p.primer_apellido) AS nombre,
                   p.telefono
              FROM dosis_vacuna d
-             INNER JOIN expediente e
-               ON e.id_institucion = d.id_institucion AND e.id_expediente = d.id_expediente
+             INNER JOIN expediente e ON e.id_expediente = d.id_expediente
              INNER JOIN paciente p
-               ON p.id_institucion = e.id_institucion AND p.id_paciente = e.id_paciente
+               ON p.id_institucion = d.id_institucion AND p.id_paciente = e.id_paciente
+             LEFT JOIN vacuna v
+               ON v.id_institucion = d.id_institucion AND v.id_vacuna = d.id_vacuna
             WHERE d.id_institucion = ?
               AND d.estado = 'programada'
               AND d.fecha_programada <= ?
@@ -152,6 +194,7 @@ export function createMysqlVaccinesRepository(deps: {
             ...d,
             atrasada: d.fecha_programada < today,
             version_esquema: 'MVP-1',
+            ...(row.nombre_vacuna != null ? { nombre_vacuna: String(row.nombre_vacuna) } : {}),
             id_paciente: Number(row.id_paciente),
             nombre: String(row.nombre ?? ''),
             telefono: row.telefono == null ? null : String(row.telefono),

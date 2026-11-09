@@ -93,8 +93,9 @@ export async function installMysqlSecurity(
           : 0;
       // These tables are created by later module migrations, so the first bootstrap can run before they exist.
       const optionalModule =
-        /\b(lane_a_|agenda_cita|agenda_lock|agenda_cita_id|reactivacion_audit)\b/.test(statement) &&
-        errno === 1146;
+        /\b(lane_a_\w+|agenda_cita|agenda_lock|agenda_cita_id|reactivacion_audit|bitacora)\b/.test(
+          statement,
+        ) && errno === 1146;
       if (!optionalModule) throw error;
     }
   }

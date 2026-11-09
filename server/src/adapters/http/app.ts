@@ -26,6 +26,8 @@ import { registerAccountRoutes } from './full/account.js';
 import { registerUsersRoutes } from './full/users.js';
 import { registerLaneABRoutes } from './lane-ab-routes.js';
 import { registerSpecialtyRoutes } from './specialty-routes.js';
+import { createProfesionalResolver } from './actor.js';
+import { registerClinicalMaintenanceRoutes } from './clinical-maintenance-routes.js';
 import {
   archiveSchema,
   closeSchema,
@@ -163,6 +165,24 @@ export function buildHttpApp(options: HttpAppOptions) {
     return sendMapped(reply, error);
   });
 
+  // USUARIO.id_profesional for attribution (JWT claims unchanged); cached per user for 60 s.
+  const profesionales = createProfesionalResolver(
+    options.users?.profesionalDeUsuario
+      ? (id_usuario) => options.users!.profesionalDeUsuario!(id_usuario)
+      : undefined,
+    {
+      superadminFallback: async (principal) => {
+        const adapters = options.registry.resolve(
+          principal.institution_kind,
+          principal.id_institucion,
+        );
+        const { profesionales: rows } = await adapters.catalogos.list();
+        const ids = rows.map((row) => row.id_profesional).sort((a, b) => a - b);
+        return ids[0] ?? null;
+      },
+    },
+  );
+
   async function requirePrincipal(
     request: FastifyRequest,
     reply: FastifyReply,
@@ -176,6 +196,7 @@ export function buildHttpApp(options: HttpAppOptions) {
     }
     try {
       const principal = await options.auth.verifyAccessToken(token);
+      await profesionales.attach(principal);
       request.principal = principal;
       return principal;
     } catch (error) {
@@ -469,6 +490,7 @@ export function buildHttpApp(options: HttpAppOptions) {
   registerFullClinicalRoutes(app, { registry: options.registry, requirePrincipal });
   registerSpecialtyRoutes(app, { registry: options.registry, requirePrincipal });
   registerLaneABRoutes(app, { registry: options.registry, requirePrincipal });
+  registerClinicalMaintenanceRoutes(app, { registry: options.registry, requirePrincipal });
   if (options.account) {
     registerAccountRoutes(app, {
       account: options.account,

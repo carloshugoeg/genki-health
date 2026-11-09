@@ -107,3 +107,43 @@ Plan sugerido (con aprobación de Carlos):
 - No subir `.env`, la cuenta de servicio, keyfiles ni `.local-runtime/`.
 - No usar servicios pagos ni hacer deploy a producción.
 - La contraseña de los demos y del superadmin se queda en `admin123!`.
+
+## 8. Estado tras los fixes (9 nov 2026, tarde)
+
+Auditoría `2611091735`: flujo 566/579, 0 respuestas 5xx, aislamiento 52/52. Después de esa corrida se corrigieron vacunas (`id_profesional` desde el usuario) y la auditoría de odontología (usa `demo-4-odontologo`). Falta volver a correr esos 5 casos: Firestore real agotó la cuota diaria del plan gratuito (`RESOURCE_EXHAUSTED`), y mientras no se restablezca la API no arranca.
+
+| # | Estado | Nota |
+|---|---|---|
+| 1 | Hecho | Errores 4xx de Fastify: 400 `invalid_body`, 413 `payload_too_large`, 415 `unsupported_media_type` |
+| 2 | Hecho (parcial) | JSON con `nombre_archivo` → 201 en los 4 motores; multipart → 415; la UI permite subir. No hay endpoint para listar ni descargar documentos (requiere cambiar `ports/`) |
+| 3 | Hecho | `demo-4-odontologo@example.invalid` (rol `odontologo`, contraseña `admin123!`) |
+| 4 | Hecho | MySQL `growth.ts`: el alcance por institución pasa por `expediente → paciente`; `edad_meses` se calcula |
+| 5 | Hecho | `desde`/`hasta` validados → 400 `invalid_query` |
+| 6 | Hecho | `POST /api/consultas/:id/cierre`; `PATCH` y `POST …/anulacion` para diagnósticos, tratamientos y recetas, con bitácora; 409 `consulta_abierta` al archivar |
+| 7 | Hecho | 56 códigos CIE-10 en los 4 motores, expuestos en `/api/catalogos` (`cie10`) |
+| 8 | Hecho | El esquema MySQL genera las dosis al abrirse; `vacunas/pendientes` tiene parámetros opcionales (`hasta`, `page`, `page_size`) |
+| 9 | Hecho (parcial) | Cama, admisión y diagnóstico salen de datos reales. No hay endpoint para listar admisiones; la UI recuerda la admisión activa |
+| 10 | Hecho | `equipo` y `consumos` son opcionales; `id_profesional` sale del usuario |
+| 11 | Hecho | `profesionalOf(principal)` busca `usuario.id_profesional` (caché de 60 s); el JWT no cambia |
+| 12 | Pendiente (Carlos) | Cambia permisos por rol; la rúbrica no lo exige |
+| 13 | Hecho | La ficha oculta secciones por rol; 0 respuestas 403 con 10 usuarios demo |
+| 14 | Documentado | `docs/ARCHITECTURE.md`; la denylist requiere aprobación de cambio de auth |
+| 15–17 | Hecho | Fecha de nacimiento futura → 400; login con contraseña incorrecta → 401 genérico; 413 en JSON |
+| 18 | Pendiente | Esperando el feedback del profesor |
+| 19, 21 | Hecho | Documento comparativo: consultas equivalentes en los 4 motores, cifrado en reposo fuera de alcance, resultados de la auditoría |
+| 20 | Hecho | Las migraciones corren con la conexión admin; dos corridas seguidas de `db:setup:all` terminan limpias (~5.5 min) |
+
+**Cambios de protocolo que revisan ambos dueños** (`AGENTS.md`):
+- `ConsultationRepositoryPort` gana 5 métodos.
+- Migraciones aditivas `full-05-01-clinical-maintenance.sql` (PG y MySQL), `full-13-vaccine-intervals.sql` (MySQL), y enums y `bitacora` en el validador de Mongo.
+- GRANTs de columna nuevos.
+- Filas ROL `enfermeria`, `laboratorista` y `odontologo`.
+- Los usuarios demo clínicos quedan vinculados a `id_profesional = 1`.
+
+Pendiente de decisión: el FK de `usuario.id_profesional` apunta a la tabla `profesional` de PostgreSQL (solo la institución 1). Para las instituciones 2–4, el id se refiere al profesional del motor de cada institución. Hay que decidir si se acepta así o se quita el FK.
+
+**Tests:**
+- Typecheck, lint, Prettier y depcruise limpios.
+- Servidor: 182 pasan y 6 fallan. Son las suites `test/full/lane{1,2}*.persistence.test.ts`, que también fallan en `51acf26` por el arnés de entorno.
+- Web: 21/21.
+- repo-truth: 36/38; los mismos 2 fallos que en `51acf26`.

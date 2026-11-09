@@ -36,6 +36,12 @@ GRANT SELECT, INSERT ON paciente, responsable, consulta, diagnostico, tratamient
   detalle_receta, antecedente, alergia, documento_adjunto, signos_vitales, consulta_borrador,
   nota_evolucion TO genki_app;
 GRANT SELECT, INSERT, UPDATE ON expediente, id_counter, cama, admision TO genki_app;
+-- Mantenimiento de historiales: clinical rows stay append-only except status/annotation columns
+-- (OP-31 close; corrections and annulments are status changes audited in BITACORA, never DELETE).
+GRANT UPDATE (estado, fecha_hora_fin, enfermedad_actual, exploracion_fisica, plan) ON consulta TO genki_app;
+GRANT UPDATE (tipo, descripcion) ON diagnostico TO genki_app;
+GRANT UPDATE (estado, indicaciones, fecha_fin_estimada) ON tratamiento TO genki_app;
+GRANT UPDATE (estado, observaciones) ON receta TO genki_app;
 GRANT USAGE, SELECT ON SEQUENCE paciente_id_paciente_seq, responsable_id_responsable_seq,
   expediente_id_expediente_seq, consulta_id_consulta_seq, diagnostico_id_diagnostico_seq,
   tratamiento_id_tratamiento_seq, receta_id_receta_seq,
@@ -64,6 +70,11 @@ DO $$ BEGIN
 EXCEPTION WHEN undefined_table THEN NULL; END $$;
 DO $$ BEGIN
   GRANT SELECT ON permiso, rol_permiso TO genki_identity;
+EXCEPTION WHEN undefined_table THEN NULL; END $$;
+DO $$ BEGIN
+  -- Clinical corrections write their BITACORA row in the same transaction (insert only).
+  GRANT INSERT ON bitacora TO genki_app;
+  GRANT USAGE ON SEQUENCE bitacora_id_bitacora_seq TO genki_app;
 EXCEPTION WHEN undefined_table THEN NULL; END $$;
 DO $$ BEGIN
   GRANT SELECT, INSERT ON reactivacion_audit TO genki_app;

@@ -12,6 +12,7 @@ export const CLINICAL_ERROR_CODES = [
   'invalid_guardians',
   'expediente_archived',
   'already_archived',
+  'consulta_abierta',
   'invalid_bundle',
   'reference_not_found',
   'conflict',

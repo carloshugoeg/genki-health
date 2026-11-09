@@ -10,6 +10,10 @@ const date = z
     const d = new Date(s + 'T00:00:00.000Z');
     return !Number.isNaN(d.valueOf()) && d.toISOString().slice(0, 10) === s;
   });
+/** A birth date cannot be later than today (UTC calendar day; GT is UTC-6, so never ahead). */
+const birthDate = date.refine((s) => s <= new Date().toISOString().slice(0, 10), {
+  message: 'fecha_nacimiento no puede ser futura',
+});
 const iso = z.string().datetime({ offset: false });
 const doc = text(25).transform((s) => s.toUpperCase());
 const email = z.string().trim().email().max(120);
@@ -56,7 +60,7 @@ export const registerSchema = z
     segundo_nombre: nullable(60),
     primer_apellido: text(60),
     segundo_apellido: nullable(60),
-    fecha_nacimiento: date,
+    fecha_nacimiento: birthDate,
     sexo: z.enum(['M', 'F', 'X']),
     tipo_sangre: nullable(5),
     telefono: nullable(25),

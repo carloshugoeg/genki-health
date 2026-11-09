@@ -13,10 +13,7 @@ import { createMysqlGrowthRepository } from './full/growth.js';
 import { createMysqlMilestonesRepository } from './full/milestones.js';
 import { createMysqlRecordRepository } from './full/record.js';
 import { createMysqlVaccinesRepository } from './full/vaccines.js';
-import {
-  clinicalEconomicReferences,
-  laneABModulesFrom,
-} from '../../config/lane-ab-modules.js';
+import { clinicalEconomicReferences, laneABModulesFrom } from '../../config/lane-ab-modules.js';
 import { MysqlIdPort } from './id.js';
 import { MysqlPacienteRepository } from './paciente-repository.js';
 import { MysqlUnitOfWork } from './unit-of-work.js';

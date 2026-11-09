@@ -1,7 +1,4 @@
-import type {
-  ANTECEDENTE_PERINATAL,
-  MEDICION_ANTROPOMETRICA,
-} from '@genki/shared/full/growth';
+import type { ANTECEDENTE_PERINATAL, MEDICION_ANTROPOMETRICA } from '@genki/shared/full/growth';
 import { ClinicalError } from '../../domain/clinical-error.js';
 import {
   assertGrowthRole,
