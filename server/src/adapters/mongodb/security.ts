@@ -41,6 +41,32 @@ function privilege(
   return { resource: { db: dbName, collection }, actions };
 }
 
+const LANE_AB_COLLECTIONS = [
+  'agenda_cita',
+  'agenda_lock',
+  'agenda_counter',
+  'lane_a_locks',
+  'lane_a_charges',
+  'lane_a_services',
+  'lane_a_charge_events',
+  'lane_a_audit',
+  'lane_a_counters',
+  'lane_a_professionals',
+  'lane_a_contracts',
+  'lane_a_personnel_types',
+  'lane_a_tariffs',
+  'lane_a_supplies',
+  'lane_a_consumptions',
+  'lane_a_metadata',
+  'lane_a_participations',
+  'lane_a_roles',
+  'lane_a_honoraria_snapshots',
+  'lane_a_invoices',
+  'lane_a_invoice_lines',
+  'lane_a_payments',
+  'lane_a_commands',
+] as const;
+
 function appPrivileges(dbName: string) {
   return [
     privilege(dbName, 'pacientes', ['find', 'insert']),
@@ -49,6 +75,9 @@ function appPrivileges(dbName: string) {
     privilege(dbName, 'expedientes', ['find', 'insert', 'update']),
     privilege(dbName, 'counters', ['find', 'insert', 'update']),
     ...CATALOG_COLLECTIONS.map((name) => privilege(dbName, name, ['find'])),
+    ...LANE_AB_COLLECTIONS.map((name) =>
+      privilege(dbName, name, ['find', 'insert', 'update']),
+    ),
   ];
 }
 
