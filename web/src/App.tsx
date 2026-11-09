@@ -38,15 +38,6 @@ function economicClient(): EconomicClient {
   }) as EconomicClient;
 }
 
-function DevNotice() {
-  return (
-    <p className="notice">
-      Vista de desarrollo: la persistencia depende del servidor conectado. El servidor de esta base
-      usa memoria; sus datos y sesiones se pierden al reiniciarlo. No acredita persistencia nativa.
-    </p>
-  );
-}
-
 function Brand({ children }: { children?: ReactNode }) {
   return (
     <header className="brand">
@@ -54,7 +45,6 @@ function Brand({ children }: { children?: ReactNode }) {
       <h1>Genki Health</h1>
       <p className="lede">Historiales clínicos por institución</p>
       {children}
-      <DevNotice />
     </header>
   );
 }
@@ -215,7 +205,6 @@ export function App() {
       busy={busy}
       current={current}
       onLogout={() => void signOut()}
-      notice={<DevNotice />}
     >
       {screen}
       <details className="out-of-scope">
