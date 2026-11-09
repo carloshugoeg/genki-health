@@ -438,7 +438,7 @@ describe('HTTP patient search detail catalog archive', () => {
     void pedToken;
   });
 
-  it('reactivate_route_absent', async () => {
+  it('op19_reactivate_expediente', async () => {
     const hospital = createTestMemoryAdapterSet('hospital_general', 1);
     const pediatric = createTestMemoryAdapterSet('centro_pediatrico', 2);
     const auth = await authWithHospitalRoles();
@@ -452,25 +452,44 @@ describe('HTTP patient search detail catalog archive', () => {
       payload: adult('REACT-1'),
     });
     const id = (created.json() as PacienteResumen).paciente.id_paciente;
-    await app.inject({
+    const archived = await app.inject({
       method: 'POST',
       url: `/api/pacientes/${id}/archivo`,
       headers: { authorization: `Bearer ${token}` },
       payload: { motivo_archivo: 'inactividad' },
     });
+    expect(archived.statusCode).toBe(200);
+    expect((archived.json() as { estado: string }).estado).toBe('archivado');
 
-    for (const method of ['POST', 'PUT', 'PATCH'] as const) {
+    const reactivated = await app.inject({
+      method: 'POST',
+      url: `/api/pacientes/${id}/reactivacion`,
+      headers: {
+        authorization: `Bearer ${token}`,
+        'idempotency-key': 'op19-react-1',
+      },
+      payload: { motivo: 'Reingreso administrativo de prueba' },
+    });
+    expect(reactivated.statusCode).toBe(200);
+    const body = reactivated.json() as {
+      estado: string;
+      fecha_archivo: string | null;
+      motivo_archivo: string | null;
+      observacion_archivo: string | null;
+    };
+    expect(body.estado).toBe('activo');
+    expect(body.fecha_archivo).toBeNull();
+    expect(body.motivo_archivo).toBeNull();
+    expect(body.observacion_archivo).toBeNull();
+
+    for (const method of ['PUT', 'PATCH'] as const) {
       const missing = await app.inject({
         method,
         url: `/api/pacientes/${id}/reactivacion`,
         headers: { authorization: `Bearer ${token}` },
-        payload: {},
+        payload: { motivo: 'x' },
       });
       expect(missing.statusCode).toBe(404);
-      expect(missing.json()).toEqual({
-        error: 'not_found',
-        message: 'Recurso no encontrado',
-      });
     }
   });
 

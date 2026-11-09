@@ -192,7 +192,7 @@ export function App() {
       ) : null}
       <details className="out-of-scope">
         <summary>Fuera del alcance de esta entrega</summary>
-        <p>Gestión de usuarios y contraseñas; reactivación de expediente.</p>
+        <p>Operaciones clínicas especializadas no montadas en este panel.</p>
       </details>
     </main>
   );

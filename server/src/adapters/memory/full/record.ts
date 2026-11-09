@@ -329,8 +329,32 @@ export function createMemoryRecordRepository(deps: MemoryRecordDeps): RecordRepo
       });
     },
 
-    async op19(_input: Op19Request, _context: OperationContext): Promise<Op19Response> {
-      throw new ClinicalError('misconfigured', 'OP19 belongs to a later record chunk');
+    async op19(input: Op19Request, context: OperationContext): Promise<Op19Response> {
+      assertStore(deps.isStoreUnavailable);
+      return replayOrStart(context, input.body, async () => {
+        const idPaciente = asPacienteId(input.params.id);
+        const expediente = await deps.pacientes.findExpedienteByPaciente(idPaciente);
+        if (!expediente) {
+          throw new ClinicalError('not_found', NOT_FOUND);
+        }
+        if (expediente.estado !== 'archivado') {
+          throw new ClinicalError('conflict', CONFLICT);
+        }
+        const auditId = await deps.ids.nextInt('reactivacion_audit');
+        putExtensionRow(namespace(), 'reactivacion_audit', auditId, {
+          id: auditId,
+          id_expediente: expediente.id_expediente,
+          id_usuario: context.id_usuario,
+          motivo: input.body.motivo,
+          fecha_hora: context.now || deps.clock.nowIso(),
+          archivo_previo: {
+            fecha_archivo: expediente.fecha_archivo,
+            motivo_archivo: expediente.motivo_archivo,
+            observacion_archivo: expediente.observacion_archivo,
+          },
+        });
+        return deps.pacientes.reactivateExpediente({ id_expediente: expediente.id_expediente });
+      });
     },
   };
 

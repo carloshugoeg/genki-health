@@ -8,6 +8,7 @@ import type {
   PacienteId,
   PacientePage,
   PacienteResumen,
+  ReactivateExpedienteInput,
   ResponsableInput,
 } from '@genki/shared';
 import { asExpedienteId, asPacienteId } from '@genki/shared';
@@ -29,6 +30,7 @@ const GUARDIAN_REQUIRED = 'Se requiere responsable principal';
 const INVALID_GUARDIANS = 'Debe existir exactamente un responsable principal';
 const ALREADY_ARCHIVED = 'El expediente ya está archivado';
 const NOT_FOUND = 'Recurso no encontrado';
+const CONFLICT = 'Conflicto de recurso';
 
 function cloneDto<T>(value: T): T {
   return structuredClone(value);
@@ -422,6 +424,49 @@ export class MysqlPacienteRepository implements PacienteRepositoryPort {
           input.observacion_archivo ?? null,
           input.id_expediente,
         ],
+      );
+
+      const [updatedRows] = await mysqlQuery<RowDataPacket[]>(
+        `SELECT e.*
+           FROM expediente e
+           INNER JOIN paciente p ON p.id_paciente = e.id_paciente
+          WHERE p.id_institucion = ? AND e.id_expediente = ?`,
+        [this.id_institucion, input.id_expediente],
+      );
+      const updated = updatedRows[0];
+      if (!updated) {
+        throw new ClinicalError('not_found', NOT_FOUND);
+      }
+      return cloneDto(expedienteFromRow(updated));
+    });
+  }
+
+  async reactivateExpediente(input: ReactivateExpedienteInput): Promise<ExpedienteDto> {
+    return this.unitOfWork.runInTransaction(async () => {
+      const [rows] = await mysqlQuery<RowDataPacket[]>(
+        `SELECT e.*
+           FROM expediente e
+           INNER JOIN paciente p ON p.id_paciente = e.id_paciente
+          WHERE p.id_institucion = ? AND e.id_expediente = ?
+          FOR UPDATE OF e`,
+        [this.id_institucion, input.id_expediente],
+      );
+      const existing = rows[0];
+      if (!existing) {
+        throw new ClinicalError('not_found', NOT_FOUND);
+      }
+      if (String(existing.estado) !== 'archivado') {
+        throw new ClinicalError('conflict', CONFLICT);
+      }
+
+      await mysqlQuery(
+        `UPDATE expediente
+            SET estado = 'activo',
+                fecha_archivo = NULL,
+                motivo_archivo = NULL,
+                observacion_archivo = NULL
+          WHERE id_expediente = ?`,
+        [input.id_expediente],
       );
 
       const [updatedRows] = await mysqlQuery<RowDataPacket[]>(

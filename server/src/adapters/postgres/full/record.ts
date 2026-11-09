@@ -236,8 +236,32 @@ export function createPostgresRecordRepository(deps: {
       });
     },
 
-    async op19(_input: Op19Request, _context: OperationContext): Promise<Op19Response> {
-      throw new ClinicalError('misconfigured', 'OP19 belongs to a later record chunk');
+    async op19(input: Op19Request, context: OperationContext): Promise<Op19Response> {
+      return deps.unitOfWork.runInTransaction(async () => {
+        const idPaciente = asPacienteId(input.params.id);
+        const expediente = await deps.pacientes.findExpedienteByPaciente(idPaciente);
+        if (!expediente) throw new ClinicalError('not_found', NOT_FOUND);
+        if (expediente.estado !== 'archivado') {
+          throw new ClinicalError('conflict', CONFLICT);
+        }
+        await postgresQuery(
+          `INSERT INTO reactivacion_audit (
+             id_institucion, id_expediente, id_usuario, motivo, fecha_hora,
+             fecha_archivo_previa, motivo_archivo_previo, observacion_archivo_previa
+           ) VALUES ($1, $2, $3, $4, $5::timestamptz, $6::timestamptz, $7, $8)`,
+          [
+            deps.id_institucion,
+            expediente.id_expediente,
+            context.id_usuario,
+            input.body.motivo,
+            toPgTimestamptz(context.now || deps.clock.nowIso()),
+            expediente.fecha_archivo ? toPgTimestamptz(expediente.fecha_archivo) : null,
+            expediente.motivo_archivo,
+            expediente.observacion_archivo,
+          ],
+        );
+        return deps.pacientes.reactivateExpediente({ id_expediente: expediente.id_expediente });
+      });
     },
   };
 }

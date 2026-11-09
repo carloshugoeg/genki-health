@@ -46,6 +46,26 @@ GRANT USAGE, SELECT ON SEQUENCE paciente_id_paciente_seq, responsable_id_respons
 GRANT SELECT ON usuario, rol, institucion, auth_session TO genki_identity;
 GRANT INSERT ON auth_session TO genki_identity;
 GRANT UPDATE (revoked_at) ON auth_session TO genki_identity;
+GRANT UPDATE (hash_contrasena, estado, intentos_fallidos, id_rol, id_profesional, nombre_usuario, correo, ultimo_acceso)
+  ON usuario TO genki_identity;
+GRANT INSERT ON usuario TO genki_identity;
+DO $$ BEGIN
+  GRANT UPDATE (debe_cambiar_contrasena, auth_version) ON usuario TO genki_identity;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  GRANT UPDATE ON auth_session TO genki_identity;
+EXCEPTION WHEN undefined_table THEN NULL; END $$;
+DO $$ BEGIN
+  GRANT SELECT, INSERT ON bitacora TO genki_identity;
+  GRANT USAGE, SELECT ON SEQUENCE bitacora_id_bitacora_seq TO genki_identity;
+EXCEPTION WHEN undefined_table THEN NULL; END $$;
+DO $$ BEGIN
+  GRANT SELECT ON permiso, rol_permiso TO genki_identity;
+EXCEPTION WHEN undefined_table THEN NULL; END $$;
+DO $$ BEGIN
+  GRANT SELECT, INSERT ON reactivacion_audit TO genki_app;
+  GRANT USAGE, SELECT ON SEQUENCE reactivacion_audit_id_reactivacion_seq TO genki_app;
+EXCEPTION WHEN undefined_table THEN NULL; END $$;
 
 GRANT SELECT ON reporte_pacientes TO genki_report;
 

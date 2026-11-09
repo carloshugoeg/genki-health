@@ -41,6 +41,7 @@ async function main(): Promise<void> {
   await run('npx', ['tsx', 'server/test/full/agenda/manage.ts', 'migrate']);
   await run('npx', ['tsx', 'server/test/full/procedure/manage.ts', 'migrate', 'postgres']);
   await run('npx', ['tsx', 'server/test/full/dental-session/manage.ts', 'migrate']);
+  await run('npx', ['tsx', 'server/test/full/lane3/manage.ts', 'migrate']);
 
   await run('npm', ['run', 'db:bootstrap']);
 

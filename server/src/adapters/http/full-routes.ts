@@ -7,6 +7,7 @@ import {
   executeOp15,
   executeOp16,
   executeOp18,
+  executeOp19,
 } from '../../application/full/record.js';
 import type { AdapterSet, InstitutionAdapterRegistry } from '../../config/adapter-registry.js';
 import { fullModulesFromSet, type AdapterSetWithFull } from '../../config/full-modules.js';
@@ -198,6 +199,35 @@ export function registerFullClinicalRoutes(
         actorFrom(principal, adapters, idempotencyKey(request)),
       );
       return reply.code(201).send(result);
+    } catch (error) {
+      return sendMapped(reply, error);
+    }
+  });
+
+  app.post('/api/pacientes/:id/reactivacion', async (request, reply) => {
+    const principal = await options.requirePrincipal(request, reply);
+    if (!principal) return;
+    if (!hasAnyRole(principal, ['administrador'])) {
+      const mapped = forbiddenError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    const params = paramsSchema.safeParse(request.params);
+    if (!params.success) {
+      const mapped = invalidQueryError();
+      return reply.code(mapped.status).send(mapped.body);
+    }
+    try {
+      const adapters = options.registry.resolve(
+        principal.institution_kind,
+        principal.id_institucion,
+      ) as AdapterSetWithFull;
+      const idem =
+        idempotencyKey(request) ?? `reactivacion-${params.data.id}-${Date.now()}`;
+      return await executeOp19(
+        fullContext(adapters),
+        { params: { id: params.data.id }, query: {}, body: request.body as never },
+        actorFrom(principal, adapters, idem),
+      );
     } catch (error) {
       return sendMapped(reply, error);
     }
