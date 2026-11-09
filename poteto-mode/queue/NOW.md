@@ -1,5 +1,7 @@
 # Now
 
+**Hotfix lane** on `cursor/genki-fixes-1` (draft PR base `cursor/genki-lane-2-specialties` @ 628e7e75): Mongo open-consulta tratamientos validator, lane 1–2 GRANT gaps, superadmin clinical-role bypass via central `assertRoles`.
+
 **Lane 2 specialties in review** on `cursor/genki-lane-2-specialties` (draft PR stacked on `cursor/genki-lane-1-clinical-shared`). Scope: FS-08/09(OP36 only)/10, FS-12/13/14, FS-15/16, FS-17/18. OP37 and FS-19 deferred.
 
 **No active agent claim.** E2-P3A-03 is Done on `cursor/e2-p3a-03-pg-paciente-a348` (stacked on `cursor/e2-p3a-02-pg-migrations-e038`). Do not start the next ticket until an owner opens that claim.
