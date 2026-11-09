@@ -19,14 +19,24 @@ const counters = [
   'receta_folio',
 ];
 
-/** Demo-only native bootstrap uses the existing buffered transaction boundary. */
-export async function seedFirebase(options: FirestoreOptions, rows: SeedDocument[]): Promise<void> {
+function assertSeedTarget(options: FirestoreOptions): void {
+  const realProject =
+    process.env.FIRESTORE_MODE === 'real' &&
+    Boolean(options.projectId) &&
+    options.projectId === process.env.GCLOUD_PROJECT &&
+    options.projectId !== 'demo-genki-health' &&
+    !/^demo-[a-z0-9-]+$/.test(options.projectId);
   if (
     options.id_institucion !== 4 ||
     options.kind !== 'clinica_odontologica' ||
-    options.projectId !== 'demo-genki-health'
+    (options.projectId !== 'demo-genki-health' && !realProject)
   )
     throw new Error('Seed requires the fixed demo institution/project');
+}
+
+/** Demo-only native bootstrap uses the existing buffered transaction boundary. */
+export async function seedFirebase(options: FirestoreOptions, rows: SeedDocument[]): Promise<void> {
+  assertSeedTarget(options);
   const uow = new FirebaseUnitOfWork(options);
   try {
     await uow.runInTransaction(async () => {
@@ -95,12 +105,7 @@ export async function seedFirebase(options: FirestoreOptions, rows: SeedDocument
 
 /** Static snapshot only after clinical history/archive completes, never presented as live reporting. */
 export async function seedFirebaseReport(options: FirestoreOptions): Promise<void> {
-  if (
-    options.id_institucion !== 4 ||
-    options.kind !== 'clinica_odontologica' ||
-    options.projectId !== 'demo-genki-health'
-  )
-    throw new Error('Seed requires the fixed demo institution/project');
+  assertSeedTarget(options);
   const uow = new FirebaseUnitOfWork(options);
   try {
     await uow.runInTransaction(async () => {

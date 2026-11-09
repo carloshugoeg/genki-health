@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
-import { deleteApp, initializeApp, type App } from 'firebase-admin/app';
+import { applicationDefault, deleteApp, initializeApp, type App } from 'firebase-admin/app';
 import {
   getFirestore,
   type DocumentData,
@@ -49,6 +49,20 @@ export class FirebaseUnitOfWork implements UnitOfWorkPort {
 
   constructor(private readonly options: FirestoreOptions) {
     const { projectId, emulatorHost } = options;
+    this.root = `institutions/${integerId(options.id_institucion)}`;
+    if (process.env.FIRESTORE_MODE === 'real') {
+      if (!projectId || projectId === 'demo-genki-health' || /^demo-[a-z0-9-]+$/.test(projectId)) {
+        throw new Error('Real Firestore mode requires a non-demo project id');
+      }
+      // Admin SDK routes through FIRESTORE_EMULATOR_HOST when set; clear it for ADC.
+      delete process.env.FIRESTORE_EMULATOR_HOST;
+      this.app = initializeApp(
+        { credential: applicationDefault(), projectId },
+        `genki-firestore-${randomUUID()}`,
+      );
+      this.db = getFirestore(this.app);
+      return;
+    }
     if (
       !/^demo-[a-z0-9-]+$/.test(projectId) ||
       !/^(127\.0\.0\.1|localhost|\[::1\]):[0-9]+$/.test(emulatorHost) ||
@@ -58,7 +72,6 @@ export class FirebaseUnitOfWork implements UnitOfWorkPort {
         'Explicit demo project and matching loopback FIRESTORE_EMULATOR_HOST required',
       );
     }
-    this.root = `institutions/${integerId(options.id_institucion)}`;
     this.app = initializeApp({ projectId }, `genki-firestore-${randomUUID()}`);
     this.db = getFirestore(this.app);
     this.db.settings({ host: emulatorHost, ssl: false });

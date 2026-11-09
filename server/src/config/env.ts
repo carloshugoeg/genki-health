@@ -88,13 +88,25 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env): RuntimeEnv {
   const mysql = database(source, 'MYSQL_URL', ['mysql:'], 'genki_app_login');
   const mongo = database(source, 'MONGODB_URI', ['mongodb:'], 'genkiApp');
   mongo.searchParams.set('directConnection', 'true');
-  const emulatorHost = required(source, 'FIRESTORE_EMULATOR_HOST');
+  const firestoreMode = (source.FIRESTORE_MODE ?? 'emulator').trim() || 'emulator';
+  if (firestoreMode !== 'emulator' && firestoreMode !== 'real')
+    throw new Error('FIRESTORE_MODE must be emulator or real');
   const projectId = required(source, 'GCLOUD_PROJECT');
-  if (
-    !/^(127\.0\.0\.1|localhost|\[::1\]):[0-9]+$/.test(emulatorHost) ||
-    projectId !== 'demo-genki-health'
-  )
-    throw new Error('Firestore requires the loopback emulator and demo-genki-health project');
+  const emulatorHost = (source.FIRESTORE_EMULATOR_HOST ?? '').trim();
+  if (firestoreMode === 'emulator') {
+    if (
+      !emulatorHost ||
+      !/^(127\.0\.0\.1|localhost|\[::1\]):[0-9]+$/.test(emulatorHost) ||
+      projectId !== 'demo-genki-health'
+    )
+      throw new Error('Firestore requires the loopback emulator and demo-genki-health project');
+  } else if (
+    !projectId ||
+    projectId === 'demo-genki-health' ||
+    /^demo-[a-z0-9-]+$/.test(projectId)
+  ) {
+    throw new Error('FIRESTORE_MODE=real requires a non-demo GCLOUD_PROJECT');
+  }
   return {
     mode,
     jwtSecret,
