@@ -65,19 +65,17 @@ export class MongodbAgendaStore implements AgendaStore {
               return counter!.value;
             },
             put: async (c) => {
-              await this.db
-                .collection<CitaDocument>('agenda_cita')
-                .replaceOne(
-                  { id_institucion: institution, id_cita: c.id_cita },
-                  {
-                    ...c,
-                    _id: `${institution}:${c.id_cita}`,
-                    id_institucion: institution,
-                    fecha_hora: new Date(c.fecha_hora),
-                    fecha_creacion: new Date(c.fecha_creacion),
-                  },
-                  { upsert: true, session },
-                );
+              await this.db.collection<CitaDocument>('agenda_cita').replaceOne(
+                { id_institucion: institution, id_cita: c.id_cita },
+                {
+                  ...c,
+                  _id: `${institution}:${c.id_cita}`,
+                  id_institucion: institution,
+                  fecha_hora: new Date(c.fecha_hora),
+                  fecha_creacion: new Date(c.fecha_creacion),
+                },
+                { upsert: true, session },
+              );
             },
           });
         },

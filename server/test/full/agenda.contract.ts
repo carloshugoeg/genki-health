@@ -55,7 +55,7 @@ export function agendaContract(name: string, create: () => Promise<AgendaReposit
       expect(
         await repo.op25(
           { params: {}, query: { fecha: '2026-11-09' }, body: {} },
-          { ...context, id_institucion: asInstitutionId(2) },
+          { ...context, id_institucion: asInstitutionId(context.id_institucion + 1) },
         ),
       ).toEqual([]);
     });
