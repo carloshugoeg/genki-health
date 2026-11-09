@@ -4,6 +4,7 @@ import type { AdapterResource, FirestoreOptions } from '../../ports/index.js';
 import { FirebaseUnitOfWork } from './unit-of-work.js';
 import { FirebaseId } from './id.js';
 import { FirebaseCatalogoRepository } from './catalogo-repository.js';
+import { createFirebaseLane1Repositories } from './full/lane1.js';
 import { FirebasePacienteRepository } from './paciente-repository.js';
 import { FirebaseConsultaRepository } from './consulta-repository.js';
 
@@ -30,21 +31,30 @@ export async function createFirebaseAdapterSet(
     await unitOfWork.query('municipios');
     const ids = new FirebaseId(unitOfWork);
     const clock = scoped.clock ?? { nowIso: () => new Date().toISOString() };
+    const pacientes = new FirebasePacienteRepository(
+      unitOfWork,
+      ids,
+      scoped.id_institucion,
+      scoped.kind,
+      () => clock.nowIso(),
+    );
+    const full = createFirebaseLane1Repositories({
+      unitOfWork,
+      id_institucion: scoped.id_institucion,
+      pacientes,
+      ids,
+      clock,
+    });
     return {
       set: {
         engine: 'firebase',
         unitOfWork,
         ids,
         clock,
-        pacientes: new FirebasePacienteRepository(
-          unitOfWork,
-          ids,
-          scoped.id_institucion,
-          scoped.kind,
-          () => clock.nowIso(),
-        ),
+        pacientes,
         consultas: new FirebaseConsultaRepository(unitOfWork, ids, () => clock.nowIso()),
         catalogos: new FirebaseCatalogoRepository(unitOfWork),
+        full,
       },
       close: () => unitOfWork.close(),
     };

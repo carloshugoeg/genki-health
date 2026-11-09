@@ -21,6 +21,7 @@ import {
   notFoundEnvelope,
   toErrorDto,
 } from './errors.js';
+import { archiveViaOp18, registerFullClinicalRoutes } from './full-routes.js';
 import {
   archiveSchema,
   closeSchema,
@@ -28,6 +29,7 @@ import {
   registerSchema,
   searchSchema,
 } from './schemas.js';
+import type { AdapterSetWithFull } from '../../config/full-modules.js';
 
 export interface HttpAppOptions {
   registry: InstitutionAdapterRegistry;
@@ -424,7 +426,18 @@ export function buildHttpApp(options: HttpAppOptions) {
       const adapters = options.registry.resolve(
         principal.institution_kind,
         principal.id_institucion,
-      );
+      ) as AdapterSetWithFull;
+      if (adapters.full) {
+        const idem = request.headers['idempotency-key'];
+        const archived = await archiveViaOp18(
+          adapters,
+          principal,
+          params.data.id,
+          body.data,
+          typeof idem === 'string' ? idem : `archive-${params.data.id}-${Date.now()}`,
+        );
+        return reply.code(200).send(archived);
+      }
       const id_paciente = asPacienteId(params.data.id);
       const expediente = await adapters.pacientes.findExpedienteByPaciente(id_paciente);
       if (!expediente) {
@@ -443,6 +456,8 @@ export function buildHttpApp(options: HttpAppOptions) {
       return sendMapped(reply, error);
     }
   });
+
+  registerFullClinicalRoutes(app, { registry: options.registry, requirePrincipal });
 
   return app;
 }

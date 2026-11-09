@@ -3,6 +3,7 @@ import { MongoClient } from 'mongodb';
 import type { AdapterResource, ClockPort, EngineOptions } from '../../ports/index.js';
 import { MongoCatalogoRepository } from './catalogo-repository.js';
 import { MongoConsultaRepository } from './consulta-repository.js';
+import { createMongoLane1Repositories } from './full/lane1.js';
 import { MongoIdPort } from './id.js';
 import { MongoPacienteRepository } from './paciente-repository.js';
 import { assertMongoPrimaryReady } from './schema.js';
@@ -39,22 +40,32 @@ export async function createMongoAdapterSet(options: EngineOptions): Promise<Ada
   const ids = new MongoIdPort(db, options.id_institucion);
   const afterWrite = options.afterWrite ?? (() => {});
 
+  const pacientes = new MongoPacienteRepository(
+    db,
+    options.id_institucion,
+    options.kind,
+    ids,
+    unitOfWork,
+    () => clock.nowIso(),
+    afterWrite,
+  );
+  const full = createMongoLane1Repositories({
+    db,
+    id_institucion: options.id_institucion,
+    pacientes,
+    ids,
+    unitOfWork,
+    clock,
+  });
   const set = {
     engine: engineForKind(options.kind),
     clock,
     ids,
     unitOfWork,
-    pacientes: new MongoPacienteRepository(
-      db,
-      options.id_institucion,
-      options.kind,
-      ids,
-      unitOfWork,
-      () => clock.nowIso(),
-      afterWrite,
-    ),
+    pacientes,
     consultas: new MongoConsultaRepository(db, options.id_institucion, ids, unitOfWork, afterWrite),
     catalogos: new MongoCatalogoRepository(db, options.id_institucion),
+    full,
   };
 
   return {

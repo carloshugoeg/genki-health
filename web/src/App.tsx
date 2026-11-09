@@ -130,10 +130,9 @@ export function App() {
       <details className="out-of-scope">
         <summary>Fuera del alcance de esta entrega</summary>
         <p>
-          Agenda; signos vitales; alergias, antecedentes y adjuntos; hospitalización y notas de
-          evolución; crecimiento, vacunas e hitos; laboratorio especializado; odontograma y planes;
-          inventario, honorarios, facturación y caja; gestión de usuarios y contraseñas;
-          reactivación.
+          Agenda; hospitalización y notas de evolución; crecimiento, vacunas e hitos; laboratorio
+          especializado; odontograma y planes; inventario, honorarios, facturación y caja; gestión
+          de usuarios y contraseñas; reactivación de expediente.
         </p>
       </details>
     </main>

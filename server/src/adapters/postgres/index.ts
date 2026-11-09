@@ -2,6 +2,9 @@ import pg from 'pg';
 import type { AdapterResource, EngineOptions } from '../../ports/index.js';
 import { PostgresCatalogoRepository } from './catalogo-repository.js';
 import { PostgresConsultaRepository } from './consulta-repository.js';
+import { createPostgresAttachmentsRepository } from './full/attachments.js';
+import { createPostgresConsultationRepository } from './full/consultation.js';
+import { createPostgresRecordRepository } from './full/record.js';
 import { PostgresIdPort } from './id.js';
 import { PostgresPacienteRepository } from './paciente-repository.js';
 import { PostgresUnitOfWork } from './unit-of-work.js';
@@ -34,6 +37,12 @@ export async function createPostgresAdapterSet(options: EngineOptions): Promise<
     unitOfWork,
     options.afterWrite,
   );
+  const fullDeps = {
+    id_institucion: options.id_institucion,
+    pacientes,
+    unitOfWork,
+    clock,
+  };
 
   return {
     set: {
@@ -44,6 +53,11 @@ export async function createPostgresAdapterSet(options: EngineOptions): Promise<
       unitOfWork,
       clock,
       ids,
+      full: {
+        record: createPostgresRecordRepository(fullDeps),
+        attachments: createPostgresAttachmentsRepository(fullDeps),
+        consultation: createPostgresConsultationRepository(fullDeps),
+      },
     },
     async close(): Promise<void> {
       await pool.end();

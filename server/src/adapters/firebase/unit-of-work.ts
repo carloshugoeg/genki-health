@@ -23,6 +23,11 @@ const collections = new Set([
   'documentKeys',
   'counters',
   'reportes',
+  'antecedentes',
+  'alergias',
+  'documentos_adjuntos',
+  'signos_vitales',
+  'consulta_borradores',
 ]);
 type Row = DocumentData;
 interface Intent {

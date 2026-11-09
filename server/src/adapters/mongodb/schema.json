@@ -296,13 +296,17 @@
           "bsonType": "date"
         },
         "fecha_hora_fin": {
-          "bsonType": "date"
+          "bsonType": [
+            "date",
+            "null"
+          ]
         },
         "tipo": {
           "bsonType": "string",
           "enum": [
             "primera_vez",
-            "seguimiento"
+            "seguimiento",
+            "emergencia"
           ]
         },
         "motivo_consulta": {
@@ -329,12 +333,14 @@
         "estado": {
           "bsonType": "string",
           "enum": [
-            "cerrada"
+            "abierta",
+            "cerrada",
+            "anulada"
           ]
         },
         "diagnosticos": {
           "bsonType": "array",
-          "minItems": 1,
+          "minItems": 0,
           "maxItems": 10,
           "items": {
             "bsonType": "object",
@@ -543,6 +549,20 @@
               }
             }
           }
+        },
+        "borrador": {
+          "bsonType": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        },
+        "signos_vitales": {
+          "bsonType": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
         }
       }
     }
@@ -691,6 +711,116 @@
           "bsonType": "string"
         },
         "next": {
+          "bsonType": "int"
+        }
+      }
+    }
+  },
+  "antecedentes": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_antecedente"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_antecedente": {
+          "bsonType": "int"
+        }
+      }
+    }
+  },
+  "alergias": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_alergia"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_alergia": {
+          "bsonType": "int"
+        }
+      }
+    }
+  },
+  "documentos_adjuntos": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_documento"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_documento": {
+          "bsonType": "int"
+        }
+      }
+    }
+  },
+  "signos_vitales": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_signos"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_signos": {
+          "bsonType": "int"
+        }
+      }
+    }
+  },
+  "consulta_borradores": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "institution_id",
+        "id_consulta"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "_id": {
+          "bsonType": "string"
+        },
+        "institution_id": {
+          "bsonType": "int"
+        },
+        "id_consulta": {
           "bsonType": "int"
         }
       }
