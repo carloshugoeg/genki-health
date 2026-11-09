@@ -22,7 +22,8 @@
     "db:reset:test": "tsx --import dotenv/config scripts/db-migrate.ts --reset",
     "firebase:start": "firebase emulators:start --only firestore --project demo-genki-health --config infra/firebase/firebase.json",
     "depcruise": "dependency-cruiser --config .dependency-cruiser.cjs server/src",
-    "validate": "bash scripts/validate.sh"
+    "validate": "bash scripts/validate.sh",
+    "db:seed": "tsx --import dotenv/config scripts/seed.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.12.0",

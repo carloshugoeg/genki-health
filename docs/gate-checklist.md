@@ -88,3 +88,13 @@ Copy these when a gate FAIL names the matching reason. Keep the owning branch ti
 ## E2-P5-01 — bloqueo de integración privada (2026-11-08)
 
 No se marca ningún gate completo. Se resolvieron los cuatro heads remotos con `git ls-remote`; se integraron las dependencias con merge commits privados. No hay implementación de semillas ni prueba física. Bloqueo: IDs fijos C5.5 frente a IDs generados internamente por las cuatro implementaciones de registro. No se ejecutó `validate.sh`, ni flujos/E2E/revisiones opcionales.
+
+## E2-P5-01 — corrección autorizada y handoff
+
+Implementado el bootstrap demo-only con IDs exactos 101/102/103, sin cambiar API/ports/schema. La observación de bloqueo anterior es histórica y queda resuelta por autorización explícita de Carlos. No se marca ningún gate físico completo.
+
+- `npm ci` con proxy heredado y cache temporal del workspace: exit 0; lockfile sin cambios.
+- `npm run build`, `npm run typecheck`, `npm run lint`: resultados reales registrados en el journal.
+- Compilación explícita de `scripts/seed.ts` y `server/test/seeds.test.ts` con TypeScript estricto: resultado en journal; el tsconfig normal no incluye estos paths.
+- Las cuatro pruebas físicas requeridas se añadieron en `server/test/seeds.test.ts`, sin skip ni memory fallback. No ejecutadas por instrucción actual de Carlos: solamente build/type/lint, sin suites/revisiones opcionales.
+- Sin ejecución de `db:seed`, motores, emulador, validate.sh, E2E, deployment, cambio de configuración, credenciales ni P5-02. No se declara readiness desde compilación.
